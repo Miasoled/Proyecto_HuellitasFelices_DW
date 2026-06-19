@@ -1,18 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.ViewModels;
 
 namespace HuellitasFelices.Controllers
 {
+    [Authorize]
     public class MascotasController : Controller
     {
         private readonly AppDbContext _context;
+        private const int TamanioPagina = 20;
 
         public MascotasController(AppDbContext context)
         {
@@ -20,10 +20,34 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: Mascotas
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int pagina = 1, string? busqueda = null)
         {
-            var appDbContext = _context.Mascotas.Include(m => m.Dueno);
-            return View(await appDbContext.ToListAsync());
+            var consulta = _context.Mascotas
+                .AsNoTracking()
+                .Include(m => m.Dueno)
+                .Where(m => m.Activo)
+                .OrderBy(m => m.Nombre)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(busqueda))
+                consulta = consulta.Where(m => m.Nombre.Contains(busqueda) || m.Especie.Contains(busqueda));
+
+            var totalRegistros = await consulta.CountAsync();
+            var mascotas = await consulta
+                .Skip((pagina - 1) * TamanioPagina)
+                .Take(TamanioPagina)
+                .ToListAsync();
+
+            ViewBag.Paginacion = new PaginacionViewModel
+            {
+                PaginaActual = pagina,
+                TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)TamanioPagina),
+                TotalRegistros = totalRegistros,
+                TamanioPagina = TamanioPagina,
+                Busqueda = busqueda
+            };
+
+            return View(mascotas);
         }
 
         // GET: Mascotas/Details/5
@@ -144,15 +168,16 @@ namespace HuellitasFelices.Controllers
         // POST: Mascotas/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Supervisor")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var mascota = await _context.Mascotas.FindAsync(id);
             if (mascota != null)
             {
-                _context.Mascotas.Remove(mascota);
+                mascota.Activo = false;
+                mascota.FechaEliminacion = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

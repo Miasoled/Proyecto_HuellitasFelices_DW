@@ -1,9 +1,11 @@
 using HuellitasFelices.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace HuellitasFelices.Data
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<IdentityUser>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -16,19 +18,25 @@ namespace HuellitasFelices.Data
         public DbSet<Empleado> Empleados { get; set; }
         public DbSet<AnimalAdopcion> AnimalesAdopcion { get; set; }
         public DbSet<SolicitudAdopcion> SolicitudesAdopcion { get; set; }
+        public DbSet<Tratamiento> Tratamientos { get; set; }
+        public DbSet<Pago> Pagos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Mascota -> Dueno (un dueño puede tener muchas mascotas)
+            // Mapeo explícito de nombres de tablas
+            modelBuilder.Entity<Tratamiento>().ToTable("Tratamientos");
+            modelBuilder.Entity<Pago>().ToTable("Pagos");
+
+            // Mascota -> Dueno
             modelBuilder.Entity<Mascota>()
                 .HasOne(m => m.Dueno)
                 .WithMany(d => d.Mascotas)
                 .HasForeignKey(m => m.DuenoId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // Consulta -> Mascota (una mascota puede tener muchas consultas)
+            // Consulta -> Mascota
             modelBuilder.Entity<Consulta>()
                 .HasOne(c => c.Mascota)
                 .WithMany(m => m.Consultas)
@@ -40,6 +48,20 @@ namespace HuellitasFelices.Data
                 .HasOne(s => s.AnimalAdopcion)
                 .WithMany(a => a.Solicitudes)
                 .HasForeignKey(s => s.AnimalAdopcionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Tratamiento -> Consulta
+            modelBuilder.Entity<Tratamiento>()
+                .HasOne(t => t.Consulta)
+                .WithMany(c => c.Tratamientos)
+                .HasForeignKey(t => t.ConsultaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Pago -> Dueno
+            modelBuilder.Entity<Pago>()
+                .HasOne(p => p.Dueno)
+                .WithMany(d => d.Pagos)
+                .HasForeignKey(p => p.DuenoId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

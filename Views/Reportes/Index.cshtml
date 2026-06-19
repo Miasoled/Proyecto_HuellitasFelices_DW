@@ -1,0 +1,213 @@
+@model HuellitasFelices.ViewModels.ReporteViewModel
+@{ ViewData["Title"] = "Reportes"; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Reportes</li>
+        </ol></nav>
+        <h1><i class="bi bi-bar-chart-line-fill me-2"></i>Reportes y estadísticas</h1>
+        <small style="opacity:.8">Panel de análisis en tiempo real</small>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="report-kpi">
+                <div class="kpi-icon" style="background:#dcfce7"><i class="bi bi-cash-coin text-success fs-4"></i></div>
+                <div>
+                    <p class="kpi-value text-success">$@Model.TotalIngresosPagos.ToString("N0")</p>
+                    <p class="kpi-label">Ingresos por pagos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="report-kpi">
+                <div class="kpi-icon" style="background:#dbeafe"><i class="bi bi-clipboard2-pulse-fill text-primary fs-4"></i></div>
+                <div>
+                    <p class="kpi-value text-primary">$@Model.TotalIngresosConsultas.ToString("N0")</p>
+                    <p class="kpi-label">Ingresos por consultas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="report-kpi">
+                <div class="kpi-icon" style="background:#fef9c3"><i class="bi bi-graph-up text-warning fs-4"></i></div>
+                <div>
+                    <p class="kpi-value text-warning">$@Model.PromedioMontoPago.ToString("N2")</p>
+                    <p class="kpi-label">Promedio por pago</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="report-kpi">
+                <div class="kpi-icon" style="background:#e0f2fe"><i class="bi bi-calculator" style="color:#0284c7; font-size:1.4rem"></i></div>
+                <div>
+                    <p class="kpi-value" style="color:#0284c7">$@Model.PromedioCostoConsulta.ToString("N2")</p>
+                    <p class="kpi-label">Promedio por consulta</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteos -->
+    <div class="hf-card mb-4">
+        <div class="hf-card-header"><i class="bi bi-table"></i> Total de registros por tabla</div>
+        <div class="card-body">
+            <div class="row text-center g-3">
+                @{
+                    var items = new[] {
+                        ("bi-patch-heart-fill","text-success","#dcfce7", Model.TotalMascotas.ToString("N0"), "Total mascotas"),
+                        ("bi-patch-heart","text-success","#dcfce7", Model.MascotasActivas.ToString("N0"), "Activas"),
+                        ("bi-dash-circle","text-danger","#fee2e2", Model.MascotasInactivas.ToString("N0"), "Inactivas"),
+                        ("bi-people-fill","text-primary","#dbeafe", Model.TotalDuenos.ToString("N0"), "Dueños"),
+                        ("bi-clipboard2-pulse","text-info","#e0f2fe", Model.TotalConsultas.ToString("N0"), "Consultas"),
+                        ("bi-credit-card","text-success","#dcfce7", Model.PagosActivos.ToString("N0"), "Pagos activos"),
+                        ("bi-x-circle","text-danger","#fee2e2", Model.PagosInactivos.ToString("N0"), "Pagos inactivos")
+                    };
+                }
+                @foreach (var (icon, color, bg, val, label) in items)
+                {
+                    <div class="col-6 col-md-3 col-lg">
+                        <div style="background:@bg; border-radius:14px; padding:20px 12px">
+                            <i class="bi @icon @color" style="font-size:1.6rem; display:block; margin-bottom:8px"></i>
+                            <div style="font-size:1.4rem; font-weight:800; line-height:1" class="@color">@val</div>
+                            <div style="font-size:.8rem; color:var(--text-soft); margin-top:4px">@label</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Top 10 motivos -->
+        <div class="col-lg-6">
+            <div class="hf-card h-100">
+                <div class="hf-card-header"><i class="bi bi-trophy-fill"></i> Top 10 motivos de consulta</div>
+                <div class="table-responsive">
+                    <table class="hf-table">
+                        <thead><tr><th>#</th><th>Motivo</th><th>Consultas</th><th>Ingresos</th></tr></thead>
+                        <tbody>
+                            @{ int r = 1; }
+                            @foreach (var item in Model.Top10Motivos)
+                            {
+                                <tr>
+                                    <td><span class="badge-info-hf" style="font-size:.78rem">@r</span></td>
+                                    <td><strong style="font-size:.9rem">@item.Motivo</strong></td>
+                                    <td><span class="badge-success-hf">@item.Cantidad.ToString("N0")</span></td>
+                                    <td style="font-size:.88rem; color:var(--primary)">$@item.TotalIngresos.ToString("N2")</td>
+                                </tr>
+                                r++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 10 dueños -->
+        <div class="col-lg-6">
+            <div class="hf-card h-100">
+                <div class="hf-card-header"><i class="bi bi-people-fill"></i> Top 10 dueños con más mascotas</div>
+                <div class="table-responsive">
+                    <table class="hf-table">
+                        <thead><tr><th>#</th><th>Dueño</th><th>Email</th><th>Mascotas</th></tr></thead>
+                        <tbody>
+                            @{ int r2 = 1; }
+                            @foreach (var item in Model.Top10DuenosConMascotas)
+                            {
+                                <tr>
+                                    <td><span class="badge-success-hf" style="font-size:.78rem">@r2</span></td>
+                                    <td><strong style="font-size:.9rem">@item.Nombre</strong></td>
+                                    <td style="font-size:.82rem; color:var(--text-soft)">@item.Email</td>
+                                    <td><span class="badge-info-hf">@item.TotalMascotas</span></td>
+                                </tr>
+                                r2++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Consultas por mes -->
+        <div class="col-lg-5">
+            <div class="hf-card h-100">
+                <div class="hf-card-header"><i class="bi bi-calendar3"></i> Consultas por mes (últimos 12)</div>
+                <div class="table-responsive">
+                    <table class="hf-table">
+                        <thead><tr><th>Mes</th><th>Consultas</th><th>Ingresos</th></tr></thead>
+                        <tbody>
+                            @foreach (var item in Model.ConsultasPorMes)
+                            {
+                                <tr>
+                                    <td style="font-size:.88rem; font-weight:600">@item.NombreMes</td>
+                                    <td><span class="badge-info-hf">@item.TotalConsultas.ToString("N0")</span></td>
+                                    <td style="color:var(--primary); font-size:.88rem">$@item.TotalIngresos.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr style="background:var(--primary-bg)">
+                                <td style="font-weight:700; font-size:.88rem">Total</td>
+                                <td><span class="badge-success-hf">@Model.ConsultasPorMes.Sum(c => c.TotalConsultas).ToString("N0")</span></td>
+                                <td style="color:var(--primary); font-weight:700; font-size:.88rem">$@Model.ConsultasPorMes.Sum(c => c.TotalIngresos).ToString("N2")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagos por método -->
+        <div class="col-lg-3">
+            <div class="hf-card h-100">
+                <div class="hf-card-header"><i class="bi bi-wallet2"></i> Pagos por método</div>
+                <div class="table-responsive">
+                    <table class="hf-table">
+                        <thead><tr><th>Método</th><th>Cant.</th><th>Total</th></tr></thead>
+                        <tbody>
+                            @foreach (var item in Model.PagosPorMetodo)
+                            {
+                                <tr>
+                                    <td style="font-size:.88rem; font-weight:600">@item.MetodoPago</td>
+                                    <td><span class="badge-warning-hf">@item.Cantidad.ToString("N0")</span></td>
+                                    <td style="color:var(--primary); font-size:.88rem">$@item.Total.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empleados por cargo -->
+        <div class="col-lg-4">
+            <div class="hf-card h-100">
+                <div class="hf-card-header"><i class="bi bi-person-badge"></i> Empleados por cargo</div>
+                <div class="table-responsive">
+                    <table class="hf-table">
+                        <thead><tr><th>Cargo</th><th>Cant.</th><th>Salario prom.</th></tr></thead>
+                        <tbody>
+                            @foreach (var item in Model.EmpleadosPorCargo)
+                            {
+                                <tr>
+                                    <td style="font-size:.88rem; font-weight:600">@item.Cargo</td>
+                                    <td><span class="badge-info-hf">@item.Cantidad</span></td>
+                                    <td style="font-size:.88rem; color:var(--text-soft)">$@item.SalarioPromedio.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></div>

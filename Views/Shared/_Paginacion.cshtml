@@ -1,0 +1,45 @@
+@using HuellitasFelices.ViewModels
+@model PaginacionViewModel
+
+@if (Model != null && Model.TotalPaginas > 1)
+{
+    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+        <small class="text-muted">
+            <i class="bi bi-table me-1"></i>
+            Mostrando página <strong>@Model.PaginaActual</strong> de <strong>@Model.TotalPaginas</strong>
+            &mdash; <strong>@Model.TotalRegistros.ToString("N0")</strong> registros en total
+        </small>
+        <nav>
+            <ul class="pagination pagination-sm mb-0 gap-1">
+                <li class="page-item @(!Model.TienePaginaAnterior ? "disabled" : "")">
+                    <a class="page-link" href="?pagina=1&busqueda=@Model.Busqueda">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item @(!Model.TienePaginaAnterior ? "disabled" : "")">
+                    <a class="page-link" href="?pagina=@(Model.PaginaActual - 1)&busqueda=@Model.Busqueda">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+
+                @for (int i = Math.Max(1, Model.PaginaActual - 2); i <= Math.Min(Model.TotalPaginas, Model.PaginaActual + 2); i++)
+                {
+                    <li class="page-item @(i == Model.PaginaActual ? "active" : "")">
+                        <a class="page-link" href="?pagina=@i&busqueda=@Model.Busqueda">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(!Model.TienePaginaSiguiente ? "disabled" : "")">
+                    <a class="page-link" href="?pagina=@(Model.PaginaActual + 1)&busqueda=@Model.Busqueda">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item @(!Model.TienePaginaSiguiente ? "disabled" : "")">
+                    <a class="page-link" href="?pagina=@Model.TotalPaginas&busqueda=@Model.Busqueda">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}

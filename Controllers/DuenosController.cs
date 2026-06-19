@@ -1,18 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.ViewModels;
 
 namespace HuellitasFelices.Controllers
 {
+    [Authorize]
     public class DuenosController : Controller
     {
         private readonly AppDbContext _context;
+        private const int TamanioPagina = 20;
 
         public DuenosController(AppDbContext context)
         {
@@ -20,9 +20,33 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: Duenos
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int pagina = 1, string? busqueda = null)
         {
-            return View(await _context.Duenos.ToListAsync());
+            var consulta = _context.Duenos
+                .AsNoTracking()
+                .Where(d => d.Activo)
+                .OrderBy(d => d.Nombre)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(busqueda))
+                consulta = consulta.Where(d => d.Nombre.Contains(busqueda) || d.Email!.Contains(busqueda));
+
+            var totalRegistros = await consulta.CountAsync();
+            var duenos = await consulta
+                .Skip((pagina - 1) * TamanioPagina)
+                .Take(TamanioPagina)
+                .ToListAsync();
+
+            ViewBag.Paginacion = new PaginacionViewModel
+            {
+                PaginaActual = pagina,
+                TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)TamanioPagina),
+                TotalRegistros = totalRegistros,
+                TamanioPagina = TamanioPagina,
+                Busqueda = busqueda
+            };
+
+            return View(duenos);
         }
 
         // GET: Duenos/Details/5
@@ -134,18 +158,19 @@ namespace HuellitasFelices.Controllers
             return View(dueno);
         }
 
-        // POST: Duenos/Delete/5
+        // POST: Duenos/Delete/5 — Solo Administrador y Supervisor
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Supervisor")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var dueno = await _context.Duenos.FindAsync(id);
             if (dueno != null)
             {
-                _context.Duenos.Remove(dueno);
+                dueno.Activo = false;
+                dueno.FechaEliminacion = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

@@ -25,13 +25,19 @@ namespace HuellitasFelices.Models
         [Display(Name = "Estado")]
         public string Estado { get; set; } = "Pendiente"; // Pendiente, Aprobada, Rechazada
 
+        public bool Activo { get; set; } = true;
+
+        [Display(Name = "Fecha de eliminación")]
+        public DateTime? FechaEliminacion { get; set; }
+
         [Display(Name = "Fecha de solicitud")]
         public DateTime FechaSolicitud { get; set; } = DateTime.UtcNow;
 
-        public bool Activo { get; set; } = true;
-
         [Display(Name = "Fecha de registro")]
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+
+        [Display(Name = "Fecha de actualización")]
+        public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
 
         // Llave foránea
         [Required]

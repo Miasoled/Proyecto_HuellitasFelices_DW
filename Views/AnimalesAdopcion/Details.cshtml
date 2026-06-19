@@ -1,66 +1,43 @@
 @model HuellitasFelices.Models.AnimalAdopcion
-
-@{
-    ViewData["Title"] = "Details";
-}
-
-<h1>Details</h1>
-
-<div>
-    <h4>AnimalAdopcion</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Especie)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Especie)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Raza)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Raza)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EdadAproximada)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EdadAproximada)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Descripcion)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Descripcion)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Disponible)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Disponible)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Activo)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Activo)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FechaCreacion)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FechaCreacion)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+@{ ViewData["Title"] = "Detalle de animal"; }
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Adopciones</a></li>
+        <li class="breadcrumb-item active">Detalle</li>
+    </ol></nav>
+    <h1><i class="bi bi-house-heart-fill me-2"></i>@Model.Nombre</h1>
+</div></div>
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-7">
+    <div class="hf-card">
+        <div class="hf-card-header"><i class="bi bi-house-heart me-2"></i>Información del animal</div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                @if (!string.IsNullOrEmpty(Model.FotoUrl))
+                {
+                    <div class="col-12 text-center mb-2">
+                        <img src="@Model.FotoUrl" alt="@Model.Nombre"
+                             style="max-height:280px;max-width:100%;object-fit:cover;border-radius:14px;box-shadow:var(--shadow)" />
+                    </div>
+                }
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-tag me-1"></i>Nombre</small><strong>@Model.Nombre</strong></div>
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-info-circle me-1"></i>Especie</small><span class="badge-success-hf">@Model.Especie</span></div>
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-bookmark me-1"></i>Raza</small><strong>@(Model.Raza ?? "—")</strong></div>
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-calendar me-1"></i>Edad aprox.</small><strong>@Model.EdadAproximada años</strong></div>
+                <div class="col-12"><small class="text-muted d-block"><i class="bi bi-chat-left-dots me-1"></i>Descripción</small><p style="margin:0">@(Model.Descripcion ?? "—")</p></div>
+                <div class="col-md-6">
+                    <small class="text-muted d-block"><i class="bi bi-heart me-1"></i>Disponibilidad</small>
+                    @if (Model.Disponible) { <span class="badge-success-hf"><i class="bi bi-check-circle me-1"></i>Disponible</span> }
+                    else { <span class="badge-danger-hf"><i class="bi bi-x-circle me-1"></i>Adoptado</span> }
+                </div>
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>Ingreso</small><strong>@Model.FechaCreacion.ToLocalTime().ToString("dd/MM/yyyy")</strong></div>
+            </div>
+        </div>
+        <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-primary-hf"><i class="bi bi-pencil"></i> Editar</a>
+            <a asp-controller="SolicitudesAdopcion" asp-action="Create" class="btn-outline-hf"><i class="bi bi-file-earmark-plus"></i> Solicitar adopción</a>
+            <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+    </div>
+</div></div></div></div>

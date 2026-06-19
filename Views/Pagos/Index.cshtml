@@ -1,0 +1,65 @@
+@model IEnumerable<HuellitasFelices.Models.Pago>
+@using HuellitasFelices.ViewModels
+@{ ViewData["Title"] = "Pagos"; var p = ViewBag.Paginacion as PaginacionViewModel; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Pagos</li>
+        </ol></nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-credit-card-fill me-2"></i>Pagos</h1>
+                <small style="opacity:.8">@(p?.TotalRegistros.ToString("N0") ?? "–") pagos registrados</small>
+            </div>
+            <a asp-action="Create" class="btn-hero-primary"><i class="bi bi-plus-lg"></i> Nuevo pago</a>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <form method="get" class="search-bar">
+            <input type="text" name="busqueda" value="@p?.Busqueda" class="form-control" placeholder="Estado o método de pago…" />
+            <button type="submit" class="btn-search"><i class="bi bi-search"></i></button>
+            @if (!string.IsNullOrEmpty(p?.Busqueda)) { <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-3"><i class="bi bi-x-lg"></i></a> }
+        </form>
+        @if (p != null) { <small class="text-muted">Página @p.PaginaActual de @p.TotalPaginas</small> }
+    </div>
+
+    <div class="hf-card"><div class="table-responsive">
+        <table class="hf-table">
+            <thead><tr>
+                <th>Monto</th><th>Método</th><th>Estado</th><th>Dueño</th><th>Fecha de pago</th><th style="width:130px">Acciones</th>
+            </tr></thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><strong style="color:var(--primary)">$@item.Monto.ToString("N2")</strong></td>
+                        <td><span class="badge-info-hf"><i class="bi bi-wallet2 me-1"></i>@item.MetodoPago</span></td>
+                        <td>
+                            @{
+                                var cls = item.Estado switch {
+                                    "Pagado"   => "badge-success-hf",
+                                    "Anulado"  => "badge-danger-hf",
+                                    _ => "badge-warning-hf"
+                                };
+                            }
+                            <span class="@cls">@item.Estado</span>
+                        </td>
+                        <td style="font-size:.88rem">@item.Dueno?.Nombre</td>
+                        <td style="font-size:.85rem; color:var(--text-soft)">@item.FechaPago.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td><div class="d-flex gap-1">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-edit"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-view"><i class="bi bi-eye"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-delete"><i class="bi bi-trash"></i></a>
+                        </div></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+    @if (p != null) { @await Html.PartialAsync("_Paginacion", p) }
+</div></div>

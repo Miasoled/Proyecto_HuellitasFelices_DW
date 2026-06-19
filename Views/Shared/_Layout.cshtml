@@ -1,65 +1,261 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - HuellitasFelices</title>
+    <title>@ViewData["Title"] - Huellitas Felices</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/HuellitasFelices.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">HuellitasFelices</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav me-auto">
+
+<!-- ═══════════════ NAVBAR ═══════════════ -->
+<nav class="navbar navbar-expand-lg hf-nav">
+    <div class="container">
+        <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+            <span class="brand-icon"><i class="bi bi-heart-pulse-fill"></i></span>
+            Huellitas Felices
+        </a>
+
+        <button class="navbar-toggler border-0" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMenu">
+            <ul class="navbar-nav me-auto align-items-lg-center">
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-house"></i> Inicio
+                    </a>
+                </li>
+
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    @if (User.IsInRole("Cliente"))
+                    {
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Home" asp-action="Index">Inicio</a>
+                            <a class="nav-link" asp-controller="Account" asp-action="MiPanel">
+                                <i class="bi bi-grid-1x2"></i> Mi panel
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Duenos" asp-action="Index">Dueños</a>
+                            <a class="nav-link" asp-controller="AnimalesAdopcion" asp-action="Index">
+                                <i class="bi bi-heart"></i> Adopciones
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Mascotas" asp-action="Index">Mascotas</a>
+                            <a class="nav-link" asp-controller="Consultas" asp-action="Create">
+                                <i class="bi bi-calendar-plus"></i> Agendar cita
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Consultas" asp-action="Index">Consultas</a>
+                    }
+                    else
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-clipboard2-pulse"></i> Clínica
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Mascotas" asp-action="Index">
+                                    <i class="bi bi-patch-heart text-success"></i> Mascotas
+                                </a></li>
+                                <li><a class="dropdown-item" asp-controller="Duenos" asp-action="Index">
+                                    <i class="bi bi-people text-primary"></i> Dueños
+                                </a></li>
+                                <li><a class="dropdown-item" asp-controller="Consultas" asp-action="Index">
+                                    <i class="bi bi-stethoscope text-info"></i> Consultas
+                                </a></li>
+                                @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor") || User.IsInRole("Operador"))
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-controller="Tratamientos" asp-action="Index">
+                                        <i class="bi bi-capsule text-warning"></i> Tratamientos
+                                    </a></li>
+                                    <li><a class="dropdown-item" asp-controller="Pagos" asp-action="Index">
+                                        <i class="bi bi-credit-card text-success"></i> Pagos
+                                    </a></li>
+                                }
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="Empleados" asp-action="Index">Empleados</a>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-heart"></i> Adopción
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="AnimalesAdopcion" asp-action="Index">
+                                    <i class="bi bi-emoji-smile text-warning"></i> Animales
+                                </a></li>
+                                <li><a class="dropdown-item" asp-controller="SolicitudesAdopcion" asp-action="Index">
+                                    <i class="bi bi-file-earmark-text text-primary"></i> Solicitudes
+                                </a></li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="AnimalesAdopcion" asp-action="Index">Adopciones</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="SolicitudesAdopcion" asp-action="Index">Solicitudes</a>
-                        </li>
-                    </ul>
+
+                        @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Empleados" asp-action="Index">
+                                    <i class="bi bi-person-badge"></i> Empleados
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Reportes" asp-action="Index">
+                                    <i class="bi bi-bar-chart-line"></i> Reportes
+                                </a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                    <i class="bi bi-gear"></i> Admin
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Usuarios">
+                                        <i class="bi bi-people-fill text-primary"></i> Usuarios
+                                    </a></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="RegisterInterno">
+                                        <i class="bi bi-person-plus text-success"></i> Nuevo usuario
+                                    </a></li>
+                                </ul>
+                            </li>
+                        }
+                    }
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="AnimalesAdopcion" asp-action="Index">
+                            <i class="bi bi-heart"></i> Adopción
+                        </a>
+                    </li>
+                }
+            </ul>
+
+            <ul class="navbar-nav align-items-lg-center">
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link user-pill dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i>
+                            @(User.Identity.Name?.Split('@')[0])
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li class="px-3 py-2">
+                                <small class="text-muted d-block" style="font-size:.78rem">Conectado como</small>
+                                <strong style="font-size:.88rem">@User.Identity.Name</strong>
+                                <br>
+                                @if (User.IsInRole("Administrador"))
+                                    { <span class="badge-success-hf" style="font-size:.75rem">Administrador</span> }
+                                else if (User.IsInRole("Supervisor"))
+                                    { <span class="badge-info-hf" style="font-size:.75rem">Supervisor</span> }
+                                else if (User.IsInRole("Operador"))
+                                    { <span class="badge-warning-hf" style="font-size:.75rem">Operador</span> }
+                                else if (User.IsInRole("Cliente"))
+                                    { <span class="badge-success-hf" style="font-size:.75rem">Cliente</span> }
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="px-1">
+                                    <button type="submit" class="dropdown-item text-danger rounded-2">
+                                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link btn-nav-outline" asp-controller="Account" asp-action="Login">
+                            <i class="bi bi-box-arrow-in-right"></i> Ingresar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn-nav-cta nav-link" asp-controller="Account" asp-action="Register">
+                            <i class="bi bi-person-plus"></i> Regístrate
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- ═══════════════ CONTENT ═══════════════ -->
+<main>@RenderBody()</main>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer class="hf-footer">
+    <div class="container">
+        <div class="row g-4 pb-2">
+            <div class="col-lg-4 col-md-6">
+                <div class="footer-brand">
+                    <span><i class="bi bi-heart-pulse-fill text-white"></i></span>
+                    Huellitas Felices
+                </div>
+                <p style="font-size:.9rem; line-height:1.7; max-width:300px">
+                    Clínica veterinaria comprometida con la salud y el bienestar
+                    de tus mascotas. Atención de calidad, precios accesibles.
+                </p>
+                <div class="d-flex gap-3 mt-3">
+                    <a href="#" style="color:rgba(255,255,255,.5); font-size:1.3rem"><i class="bi bi-facebook"></i></a>
+                    <a href="#" style="color:rgba(255,255,255,.5); font-size:1.3rem"><i class="bi bi-instagram"></i></a>
+                    <a href="#" style="color:rgba(255,255,255,.5); font-size:1.3rem"><i class="bi bi-whatsapp"></i></a>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - HuellitasFelices - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="col-lg-2 col-md-6">
+                <h6>Servicios</h6>
+                <a href="#"><i class="bi bi-dot"></i> Consultas</a>
+                <a href="#"><i class="bi bi-dot"></i> Vacunación</a>
+                <a href="#"><i class="bi bi-dot"></i> Salud dental</a>
+                <a href="#"><i class="bi bi-dot"></i> Tratamientos</a>
+                <a href="#"><i class="bi bi-dot"></i> Cirugía</a>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <h6>Acceso</h6>
+                <a asp-controller="Account" asp-action="Login">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+                </a>
+                <a asp-controller="Account" asp-action="Register">
+                    <i class="bi bi-person-plus"></i> Registrarse
+                </a>
+                <a asp-controller="AnimalesAdopcion" asp-action="Index">
+                    <i class="bi bi-heart"></i> Adopciones
+                </a>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <h6>Contacto</h6>
+                <a href="#"><i class="bi bi-geo-alt"></i> Av. Amazonas y Naciones Unidas, Quito</a>
+                <a href="tel:022345678"><i class="bi bi-telephone"></i> (02) 234-5678</a>
+                <a href="tel:0991234567"><i class="bi bi-phone"></i> 099-123-4567</a>
+                <a href="mailto:info@huellitas.ec"><i class="bi bi-envelope"></i> info@huellitas.ec</a>
+                <div class="mt-3 p-3 rounded-3" style="background:rgba(255,255,255,.06); font-size:.85rem">
+                    <i class="bi bi-clock me-1"></i>
+                    <strong>Lun – Vie</strong> 8:00 – 20:00 &nbsp;|&nbsp;
+                    <strong>Sáb – Dom</strong> 9:00 – 16:00
+                </div>
+            </div>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+        <div class="footer-bottom d-flex flex-wrap justify-content-between align-items-center">
+            <span>&copy; 2026 Huellitas Felices. Todos los derechos reservados.</span>
+            <span style="font-size:.8rem; opacity:.5">
+                Desarrollado con ASP.NET Core + PostgreSQL
+            </span>
+        </div>
+    </div>
+</footer>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

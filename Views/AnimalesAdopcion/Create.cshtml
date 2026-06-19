@@ -1,68 +1,104 @@
 @model HuellitasFelices.Models.AnimalAdopcion
+@{ ViewData["Title"] = "Nuevo animal"; }
 
-@{
-    ViewData["Title"] = "Create";
-}
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Adopciones</a></li>
+        <li class="breadcrumb-item active">Nuevo</li>
+    </ol></nav>
+    <h1><i class="bi bi-house-heart-fill me-2"></i>Nuevo animal en adopción</h1>
+</div></div>
 
-<h1>Create</h1>
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-7">
+    <div class="hf-card">
+        <div class="hf-card-header"><i class="bi bi-house-heart me-2"></i>Datos del animal</div>
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Nombre" class="form-label"><i class="bi bi-tag me-1"></i>Nombre</label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Ej: Peluso" />
+                        <span asp-validation-for="Nombre" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Especie" class="form-label"><i class="bi bi-info-circle me-1"></i>Especie</label>
+                        <select asp-for="Especie" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            <option>Perro</option><option>Gato</option>
+                            <option>Conejo</option><option>Ave</option><option>Otro</option>
+                        </select>
+                        <span asp-validation-for="Especie" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Raza" class="form-label"><i class="bi bi-bookmark me-1"></i>Raza</label>
+                        <input asp-for="Raza" class="form-control" placeholder="Mestizo, Labrador…" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="EdadAproximada" class="form-label"><i class="bi bi-calendar me-1"></i>Edad aprox. (años)</label>
+                        <input asp-for="EdadAproximada" class="form-control" type="number" min="0" max="30" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Descripcion" class="form-label"><i class="bi bi-chat-left-dots me-1"></i>Descripción</label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3"
+                                  placeholder="Describe el carácter y particularidades del animal…"></textarea>
+                    </div>
 
-<h4>AnimalAdopcion</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
-                <input asp-for="Nombre" class="form-control" />
-                <span asp-validation-for="Nombre" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Especie" class="control-label"></label>
-                <input asp-for="Especie" class="form-control" />
-                <span asp-validation-for="Especie" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Raza" class="control-label"></label>
-                <input asp-for="Raza" class="form-control" />
-                <span asp-validation-for="Raza" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EdadAproximada" class="control-label"></label>
-                <input asp-for="EdadAproximada" class="form-control" />
-                <span asp-validation-for="EdadAproximada" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Descripcion" class="control-label"></label>
-                <input asp-for="Descripcion" class="form-control" />
-                <span asp-validation-for="Descripcion" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Disponible" /> @Html.DisplayNameFor(model => model.Disponible)
-                </label>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Activo" /> @Html.DisplayNameFor(model => model.Activo)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="FechaCreacion" class="control-label"></label>
-                <input asp-for="FechaCreacion" class="form-control" />
-                <span asp-validation-for="FechaCreacion" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+                    <!-- URL de imagen -->
+                    <div class="col-12">
+                        <label asp-for="FotoUrl" class="form-label">
+                            <i class="bi bi-image me-1"></i>URL de la foto
+                        </label>
+                        <input asp-for="FotoUrl" class="form-control"
+                               placeholder="https://ejemplo.com/foto-del-animal.jpg"
+                               oninput="previewUrl(this.value)" />
+                        <small class="text-muted">Pega la URL directa de una imagen (termina en .jpg, .png, etc.)</small>
+                    </div>
+
+                    <!-- Preview de la URL -->
+                    <div class="col-12" id="urlPreviewBox" style="display:none">
+                        <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;max-height:220px">
+                            <img id="urlPreviewImg" src="" alt="Preview"
+                                 style="width:100%;max-height:220px;object-fit:cover"
+                                 onerror="document.getElementById('urlPreviewBox').style.display='none'" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-2">
+                            <input asp-for="Disponible" class="form-check-input" role="switch" />
+                            <label asp-for="Disponible" class="form-check-label fw-semibold">Disponible para adopción</label>
+                        </div>
+                    </div>
+                    <div class="col-12 d-flex gap-3 pt-2">
+                        <button type="submit" class="btn-primary-hf">
+                            <i class="bi bi-check-lg"></i> Guardar
+                        </button>
+                        <a asp-action="Index" class="btn-outline-hf">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</div></div>
+</div></div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        function previewUrl(url) {
+            const box = document.getElementById('urlPreviewBox');
+            const img = document.getElementById('urlPreviewImg');
+            if (url && url.startsWith('http')) {
+                img.src = url;
+                box.style.display = 'block';
+            } else {
+                box.style.display = 'none';
+            }
+        }
+    </script>
 }

@@ -1,54 +1,66 @@
 @model HuellitasFelices.Models.Dueno
+@{ ViewData["Title"] = "Detalle del dueño"; }
 
-@{
-    ViewData["Title"] = "Details";
-}
-
-<h1>Details</h1>
-
-<div>
-    <h4>Dueno</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Telefono)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Telefono)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Email)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Email)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Direccion)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Direccion)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Activo)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Activo)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FechaCreacion)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FechaCreacion)
-        </dd>
-    </dl>
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Dueños</a></li>
+            <li class="breadcrumb-item active">Detalle</li>
+        </ol></nav>
+        <h1><i class="bi bi-person-lines-fill me-2"></i>Detalle del dueño</h1>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-7">
+    <div class="hf-card">
+        <div class="hf-card-header"><i class="bi bi-person-fill me-2"></i>@Model.Nombre</div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted" style="font-size:.82rem; text-transform:uppercase; letter-spacing:.4px">
+                        <i class="bi bi-phone me-1"></i>Teléfono
+                    </label>
+                    <p style="font-weight:600; margin:0">@Model.Telefono</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted" style="font-size:.82rem; text-transform:uppercase; letter-spacing:.4px">
+                        <i class="bi bi-envelope me-1"></i>Email
+                    </label>
+                    <p style="font-weight:600; margin:0">@(Model.Email ?? "—")</p>
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-muted" style="font-size:.82rem; text-transform:uppercase; letter-spacing:.4px">
+                        <i class="bi bi-geo-alt me-1"></i>Dirección
+                    </label>
+                    <p style="font-weight:600; margin:0">@(Model.Direccion ?? "—")</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted" style="font-size:.82rem; text-transform:uppercase; letter-spacing:.4px">
+                        <i class="bi bi-calendar me-1"></i>Fecha de registro
+                    </label>
+                    <p style="font-weight:600; margin:0">@Model.FechaCreacion.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted" style="font-size:.82rem; text-transform:uppercase; letter-spacing:.4px">
+                        <i class="bi bi-toggle-on me-1"></i>Estado
+                    </label>
+                    <p style="margin:0">
+                        @if (Model.Activo) { <span class="badge-success-hf">Activo</span> }
+                        else { <span class="badge-danger-hf">Inactivo</span> }
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div style="padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:10px">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-primary-hf">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <a asp-action="Index" class="btn-outline-hf">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+</div></div>
+</div></div>

@@ -26,7 +26,13 @@ namespace HuellitasFelices.Models
 
         public bool Activo { get; set; } = true;
 
+        [Display(Name = "Fecha de eliminación")]
+        public DateTime? FechaEliminacion { get; set; }
+
         [Display(Name = "Fecha de ingreso")]
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+
+        [Display(Name = "Fecha de actualización")]
+        public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
     }
 }

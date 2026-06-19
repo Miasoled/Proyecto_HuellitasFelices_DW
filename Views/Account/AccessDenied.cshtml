@@ -1,0 +1,17 @@
+@{ ViewData["Title"] = "Acceso denegado"; }
+
+<div style="background:var(--gray-50); min-height:calc(100vh - 120px); display:flex; align-items:center; padding:40px 16px">
+    <div style="max-width:500px; margin:0 auto; text-align:center">
+        <div style="width:80px;height:80px;background:#fee2e2;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px">
+            <i class="bi bi-shield-x-fill" style="font-size:2.5rem; color:#dc2626"></i>
+        </div>
+        <h2 style="font-weight:800; color:var(--text-dark); margin-bottom:12px">Acceso denegado</h2>
+        <p style="color:var(--text-soft); font-size:1rem; line-height:1.7; margin-bottom:28px">
+            No tienes permisos para acceder a esta sección.
+            Contacta al administrador si crees que esto es un error.
+        </p>
+        <a asp-controller="Home" asp-action="Index" class="btn-primary-hf">
+            <i class="bi bi-arrow-left"></i> Volver al inicio
+        </a>
+    </div>
+</div>

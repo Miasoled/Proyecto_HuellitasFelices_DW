@@ -1,65 +1,107 @@
 @model IEnumerable<HuellitasFelices.Models.Dueno>
+@using HuellitasFelices.ViewModels
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Dueños";
+    var paginacion = ViewBag.Paginacion as PaginacionViewModel;
 }
 
-<h1>Index</h1>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+                <li class="breadcrumb-item active">Dueños</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-people-fill me-2"></i>Dueños</h1>
+                <small style="opacity:.8">@(paginacion?.TotalRegistros.ToString("N0") ?? "–") registros activos</small>
+            </div>
+            <a asp-action="Create" class="btn-hero-primary">
+                <i class="bi bi-plus-lg"></i> Nuevo dueño
+            </a>
+        </div>
+    </div>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Nombre)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Telefono)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Direccion)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Activo)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FechaCreacion)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Nombre)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Telefono)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Direccion)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Activo)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FechaCreacion)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="content-wrapper">
+    <div class="container">
+
+        <!-- Search -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <form method="get" class="search-bar">
+                <input type="text" name="busqueda" value="@paginacion?.Busqueda"
+                       class="form-control" placeholder="Buscar por nombre o email…" />
+                <button type="submit" class="btn-search">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+                @if (!string.IsNullOrEmpty(paginacion?.Busqueda))
+                {
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-3">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                }
+            </form>
+            @if (paginacion != null)
+            {
+                <small class="text-muted">
+                    Página @paginacion.PaginaActual de @paginacion.TotalPaginas
+                </small>
+            }
+        </div>
+
+        <!-- Table -->
+        <div class="hf-card">
+            <div class="table-responsive">
+                <table class="hf-table">
+                    <thead>
+                        <tr>
+                            <th><i class="bi bi-person me-1"></i>Nombre</th>
+                            <th><i class="bi bi-telephone me-1"></i>Teléfono</th>
+                            <th><i class="bi bi-envelope me-1"></i>Email</th>
+                            <th><i class="bi bi-geo-alt me-1"></i>Dirección</th>
+                            <th><i class="bi bi-calendar me-1"></i>Registro</th>
+                            <th style="width:140px">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><strong>@item.Nombre</strong></td>
+                                <td>@item.Telefono</td>
+                                <td style="font-size:.88rem">@item.Email</td>
+                                <td style="font-size:.88rem; color:var(--text-soft)">@item.Direccion</td>
+                                <td style="font-size:.85rem; color:var(--text-soft)">
+                                    @item.FechaCreacion.ToLocalTime().ToString("dd/MM/yyyy")
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-view">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        @if (paginacion != null)
+        {
+            @await Html.PartialAsync("_Paginacion", paginacion)
+        }
+    </div>
+</div>

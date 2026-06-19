@@ -1,11 +1,95 @@
 using HuellitasFelices.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace HuellitasFelices.Data
 {
     public static class SeedData
     {
-        public static void Initialize(AppDbContext context)
+        public static async Task Initialize(
+            AppDbContext context,
+            UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager)
         {
+            // ===== ROLES =====
+            string[] roles = { "Administrador", "Supervisor", "Operador", "Consulta", "Cliente" };
+            foreach (var role in roles)
+            {
+                if (!await roleManager.RoleExistsAsync(role))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(role));
+                }
+            }
+
+            // ===== USUARIO ADMINISTRADOR =====
+            var adminEmail = "admin@huellitasfelices.com";
+            if (await userManager.FindByEmailAsync(adminEmail) == null)
+            {
+                var admin = new IdentityUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(admin, "Admin1234*");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(admin, "Administrador");
+                }
+            }
+
+            // ===== USUARIO SUPERVISOR =====
+            var supervisorEmail = "supervisor@huellitasfelices.com";
+            if (await userManager.FindByEmailAsync(supervisorEmail) == null)
+            {
+                var supervisor = new IdentityUser
+                {
+                    UserName = supervisorEmail,
+                    Email = supervisorEmail,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(supervisor, "Super1234*");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(supervisor, "Supervisor");
+                }
+            }
+
+            // ===== USUARIO OPERADOR =====
+            var operadorEmail = "operador@huellitasfelices.com";
+            if (await userManager.FindByEmailAsync(operadorEmail) == null)
+            {
+                var operador = new IdentityUser
+                {
+                    UserName = operadorEmail,
+                    Email = operadorEmail,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(operador, "Oper1234*");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(operador, "Operador");
+                }
+            }
+
+            // ===== USUARIO CONSULTA =====
+            var consultaEmail = "consulta@huellitasfelices.com";
+            if (await userManager.FindByEmailAsync(consultaEmail) == null)
+            {
+                var consulta = new IdentityUser
+                {
+                    UserName = consultaEmail,
+                    Email = consultaEmail,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(consulta, "Cons1234*");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(consulta, "Consulta");
+                }
+            }
+
+            // ===== DATOS DE PRUEBA =====
+
             // Empleados
             if (!context.Empleados.Any())
             {
@@ -56,6 +140,34 @@ namespace HuellitasFelices.Data
                     new Consulta { Motivo = "Desparasitación", Diagnostico = "Tratamiento aplicado", Costo = 25.00m, MascotaId = mascotas[2].Id, Activo = true },
                     new Consulta { Motivo = "Revisión general", Diagnostico = "Todo en orden", Costo = 30.00m, MascotaId = mascotas[3].Id, Activo = true },
                     new Consulta { Motivo = "Corte de uñas", Diagnostico = "Procedimiento estético", Costo = 15.00m, MascotaId = mascotas[4].Id, Activo = true }
+                );
+                context.SaveChanges();
+            }
+
+            // Tratamientos
+            if (!context.Tratamientos.Any())
+            {
+                var consultas = context.Consultas.ToList();
+                context.Tratamientos.AddRange(
+                    new Tratamiento { Nombre = "Vacuna Antirrábica", Descripcion = "Vacuna obligatoria anual", Costo = 15.00m, Medicamento = "Rabisin", ConsultaId = consultas[0].Id, Activo = true },
+                    new Tratamiento { Nombre = "Dieta balanceada", Descripcion = "Plan alimenticio supervisado", Costo = 10.00m, Medicamento = "N/A", ConsultaId = consultas[1].Id, Activo = true },
+                    new Tratamiento { Nombre = "Antiparasitario", Descripcion = "Desparasitación interna", Costo = 12.00m, Medicamento = "Drontal", ConsultaId = consultas[2].Id, Activo = true },
+                    new Tratamiento { Nombre = "Vitaminas", Descripcion = "Suplemento vitamínico", Costo = 8.00m, Medicamento = "Vitovet", ConsultaId = consultas[3].Id, Activo = true },
+                    new Tratamiento { Nombre = "Limpieza dental", Descripcion = "Profilaxis dental", Costo = 20.00m, Medicamento = "N/A", ConsultaId = consultas[4].Id, Activo = true }
+                );
+                context.SaveChanges();
+            }
+
+            // Pagos
+            if (!context.Pagos.Any())
+            {
+                var duenos = context.Duenos.ToList();
+                context.Pagos.AddRange(
+                    new Pago { Monto = 35.00m, MetodoPago = "Efectivo", Estado = "Pagado", DuenoId = duenos[0].Id, Activo = true },
+                    new Pago { Monto = 20.00m, MetodoPago = "Tarjeta", Estado = "Pagado", DuenoId = duenos[1].Id, Activo = true },
+                    new Pago { Monto = 25.00m, MetodoPago = "Transferencia", Estado = "Pagado", DuenoId = duenos[2].Id, Activo = true },
+                    new Pago { Monto = 30.00m, MetodoPago = "Efectivo", Estado = "Pendiente", DuenoId = duenos[3].Id, Activo = true },
+                    new Pago { Monto = 15.00m, MetodoPago = "Tarjeta", Estado = "Pagado", DuenoId = duenos[4].Id, Activo = true }
                 );
                 context.SaveChanges();
             }

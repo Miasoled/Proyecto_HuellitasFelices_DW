@@ -1,66 +1,31 @@
 @model HuellitasFelices.Models.Mascota
-
-@{
-    ViewData["Title"] = "Details";
-}
-
-<h1>Details</h1>
-
-<div>
-    <h4>Mascota</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nombre)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nombre)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Especie)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Especie)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Raza)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Raza)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Edad)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Edad)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Peso)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Peso)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Activo)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Activo)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FechaCreacion)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FechaCreacion)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Dueno)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Dueno.Nombre)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+@{ ViewData["Title"] = "Detalle de mascota"; }
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Mascotas</a></li>
+        <li class="breadcrumb-item active">Detalle</li>
+    </ol></nav>
+    <h1><i class="bi bi-patch-heart-fill me-2"></i>@Model.Nombre</h1>
+</div></div>
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-7">
+    <div class="hf-card">
+        <div class="hf-card-header"><i class="bi bi-patch-heart me-2"></i>Información de la mascota</div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-tag me-1"></i>Nombre</small><strong>@Model.Nombre</strong></div>
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-info-circle me-1"></i>Especie</small><span class="badge-success-hf">@Model.Especie</span></div>
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-bookmark me-1"></i>Raza</small><strong>@(Model.Raza ?? "—")</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block"><i class="bi bi-calendar me-1"></i>Edad</small><strong>@Model.Edad años</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block"><i class="bi bi-speedometer me-1"></i>Peso</small><strong>@Model.Peso kg</strong></div>
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-person me-1"></i>Dueño</small><strong>@(Model.Dueno?.Nombre ?? "Sin dueño")</strong></div>
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>Registro</small><strong>@Model.FechaCreacion.ToLocalTime().ToString("dd/MM/yyyy")</strong></div>
+            </div>
+        </div>
+        <div style="padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:10px">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-primary-hf"><i class="bi bi-pencil"></i> Editar</a>
+            <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
+    </div>
+</div></div></div></div>

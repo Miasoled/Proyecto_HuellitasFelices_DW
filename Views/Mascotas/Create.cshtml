@@ -1,67 +1,58 @@
 @model HuellitasFelices.Models.Mascota
-
-@{
-    ViewData["Title"] = "Create";
-}
-
-<h1>Create</h1>
-
-<h4>Mascota</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
-                <input asp-for="Nombre" class="form-control" />
-                <span asp-validation-for="Nombre" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Especie" class="control-label"></label>
-                <input asp-for="Especie" class="form-control" />
-                <span asp-validation-for="Especie" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Raza" class="control-label"></label>
-                <input asp-for="Raza" class="form-control" />
-                <span asp-validation-for="Raza" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Edad" class="control-label"></label>
-                <input asp-for="Edad" class="form-control" />
-                <span asp-validation-for="Edad" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Peso" class="control-label"></label>
-                <input asp-for="Peso" class="form-control" />
-                <span asp-validation-for="Peso" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Activo" /> @Html.DisplayNameFor(model => model.Activo)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="FechaCreacion" class="control-label"></label>
-                <input asp-for="FechaCreacion" class="form-control" />
-                <span asp-validation-for="FechaCreacion" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DuenoId" class="control-label"></label>
-                <select asp-for="DuenoId" class ="form-control" asp-items="ViewBag.DuenoId"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+@{ ViewData["Title"] = "Nueva mascota"; }
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Mascotas</a></li>
+        <li class="breadcrumb-item active">Nueva</li>
+    </ol></nav>
+    <h1><i class="bi bi-patch-heart-fill me-2"></i>Nueva mascota</h1>
+</div></div>
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-7">
+    <div class="hf-card">
+        <div class="hf-card-header"><i class="bi bi-patch-heart me-2"></i>Información de la mascota</div>
+        <div class="card-body p-4">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Nombre" class="form-label"><i class="bi bi-tag me-1"></i>Nombre</label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Ej: Max" />
+                        <span asp-validation-for="Nombre" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Especie" class="form-label"><i class="bi bi-info-circle me-1"></i>Especie</label>
+                        <input asp-for="Especie" class="form-control" placeholder="Perro, Gato…" />
+                        <span asp-validation-for="Especie" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Raza" class="form-label"><i class="bi bi-bookmark me-1"></i>Raza</label>
+                        <input asp-for="Raza" class="form-control" placeholder="Labrador, Persa…" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Edad" class="form-label"><i class="bi bi-calendar me-1"></i>Edad (años)</label>
+                        <input asp-for="Edad" class="form-control" type="number" min="0" max="30" />
+                        <span asp-validation-for="Edad" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="Peso" class="form-label"><i class="bi bi-speedometer me-1"></i>Peso (kg)</label>
+                        <input asp-for="Peso" class="form-control" type="number" step="0.1" />
+                        <span asp-validation-for="Peso" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="DuenoId" class="form-label"><i class="bi bi-person me-1"></i>Dueño</label>
+                        <select asp-for="DuenoId" asp-items="ViewBag.DuenoId" class="form-select">
+                            <option value="">-- Sin dueño asignado --</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex gap-3 pt-2">
+                        <button type="submit" class="btn-primary-hf"><i class="bi bi-check-lg"></i> Guardar</button>
+                        <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Cancelar</a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+</div></div></div></div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

@@ -1,8 +1,370 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
+    Layout = "_Layout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+    <div class="container py-5" style="position:relative; z-index:2">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="hero-badge">
+                    <i class="bi bi-patch-check-fill"></i>
+                    Clínica veterinaria de confianza
+                </div>
+                <h1 class="mt-2 mb-3">
+                    Tus mascotas<br>
+                    merecen lo <span style="color:#86efac">mejor</span>
+                </h1>
+                <p class="mb-4">
+                    Atención veterinaria de calidad, precios accesibles y todos
+                    los servicios que tu mascota necesita — en un solo lugar.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Consultas" asp-action="Create" class="btn-hero-primary">
+                            <i class="bi bi-calendar-plus-fill"></i> Agendar cita
+                        </a>
+                        <a asp-controller="AnimalesAdopcion" asp-action="Index" class="btn-hero-ghost">
+                            <i class="bi bi-heart"></i> Ver adopciones
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Register" class="btn-hero-primary">
+                            <i class="bi bi-person-plus-fill"></i> Crear cuenta gratis
+                        </a>
+                        <a asp-controller="Account" asp-action="Login" class="btn-hero-ghost">
+                            <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-flex justify-content-center">
+                <div style="background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+                            border-radius:24px; padding:40px; backdrop-filter:blur(8px);">
+                    <div class="row g-3" style="width:280px">
+                        <div class="col-6">
+                            <div style="background:rgba(255,255,255,.12); border-radius:16px; padding:20px; text-align:center">
+                                <i class="bi bi-heart-pulse-fill" style="font-size:2rem; color:#86efac"></i>
+                                <p style="color:white; font-size:.8rem; margin:8px 0 0; font-weight:600">Consultas</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="background:rgba(255,255,255,.12); border-radius:16px; padding:20px; text-align:center">
+                                <i class="bi bi-syringe" style="font-size:2rem; color:#93c5fd"></i>
+                                <p style="color:white; font-size:.8rem; margin:8px 0 0; font-weight:600">Vacunas</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="background:rgba(255,255,255,.12); border-radius:16px; padding:20px; text-align:center">
+                                <i class="bi bi-capsule" style="font-size:2rem; color:#fbbf24"></i>
+                                <p style="color:white; font-size:.8rem; margin:8px 0 0; font-weight:600">Tratamientos</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="background:rgba(255,255,255,.12); border-radius:16px; padding:20px; text-align:center">
+                                <i class="bi bi-house-heart-fill" style="font-size:2rem; color:#f9a8d4"></i>
+                                <p style="color:white; font-size:.8rem; margin:8px 0 0; font-weight:600">Adopciones</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ STATS ═══════════ -->
+<section class="section-gray py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-icon" style="background:#dcfce7">
+                        <i class="bi bi-patch-heart-fill text-success fs-4"></i>
+                    </div>
+                    <h3 class="text-success">@ViewBag.TotalMascotas.ToString("N0")</h3>
+                    <p>Mascotas registradas</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-icon" style="background:#dbeafe">
+                        <i class="bi bi-people-fill text-primary fs-4"></i>
+                    </div>
+                    <h3 class="text-primary">@ViewBag.TotalDuenos.ToString("N0")</h3>
+                    <p>Dueños atendidos</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-icon" style="background:#e0f2fe">
+                        <i class="bi bi-clipboard2-pulse-fill fs-4" style="color:#0284c7"></i>
+                    </div>
+                    <h3 style="color:#0284c7">@ViewBag.TotalConsultas.ToString("N0")</h3>
+                    <p>Consultas realizadas</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-icon" style="background:#fef9c3">
+                        <i class="bi bi-house-heart-fill text-warning fs-4"></i>
+                    </div>
+                    <h3 class="text-warning">@ViewBag.AnimalesAdopcion.ToString("N0")</h3>
+                    <p>En adopción</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ SERVICIOS ═══════════ -->
+<section class="section-white py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="section-label"><i class="bi bi-stars"></i> Nuestros servicios</span>
+            <h2 class="section-title">Atención veterinaria integral</h2>
+            <p class="section-sub">Todo lo que tu mascota necesita en un solo lugar, con profesionales de confianza.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div class="sc-icon" style="background:#dcfce7">
+                        <i class="bi bi-clipboard2-pulse-fill text-success fs-4"></i>
+                    </div>
+                    <h5>Consultas veterinarias</h5>
+                    <p>Diagnóstico y tratamiento por veterinarios especializados con amplia experiencia clínica.</p>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Consultas" asp-action="Create" class="btn-primary-hf">
+                            <i class="bi bi-calendar-plus"></i> Agendar cita
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn-outline-hf">
+                            <i class="bi bi-box-arrow-in-right"></i> Ingresar
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div class="sc-icon" style="background:#dbeafe">
+                        <i class="bi bi-syringe text-primary fs-4"></i>
+                    </div>
+                    <h5>Vacunación</h5>
+                    <p>Plan de vacunación completo para perros y gatos. Protege la salud de tu mascota cada año.</p>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Consultas" asp-action="Create" class="btn-outline-hf">
+                            <i class="bi bi-calendar-check"></i> Programar
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Register" class="btn-outline-hf">
+                            <i class="bi bi-person-plus"></i> Registrarme
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div class="sc-icon" style="background:#fef9c3">
+                        <i class="bi bi-capsule text-warning fs-4"></i>
+                    </div>
+                    <h5>Tratamientos</h5>
+                    <p>Desparasitación, antibióticos, antiinflamatorios y planes de tratamiento personalizados.</p>
+                    <a asp-controller="Account" asp-action="Login" class="btn-outline-hf">
+                        <i class="bi bi-info-circle"></i> Ver más
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div class="sc-icon" style="background:#fce7f3">
+                        <i class="bi bi-activity" style="color:#db2777; font-size:1.5rem"></i>
+                    </div>
+                    <h5>Cirugía y emergencias</h5>
+                    <p>Servicio de cirugía menor y atención de emergencias durante todo el horario de atención.</p>
+                    <a href="#contacto" class="btn-outline-hf">
+                        <i class="bi bi-telephone"></i> Contactar
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div class="sc-icon" style="background:#e0f2fe">
+                        <i class="bi bi-stars" style="color:#0284c7; font-size:1.5rem"></i>
+                    </div>
+                    <h5>Salud dental</h5>
+                    <p>Limpieza dental profesional y tratamientos odontológicos especializados para mascotas.</p>
+                    <a asp-controller="Account" asp-action="Login" class="btn-outline-hf">
+                        <i class="bi bi-calendar-plus"></i> Reservar
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div class="sc-icon" style="background:#dcfce7">
+                        <i class="bi bi-house-heart-fill text-success fs-4"></i>
+                    </div>
+                    <h5>Adopciones</h5>
+                    <p>Dale un hogar a un animal rescatado. Todos nuestros animales están vacunados y revisados.</p>
+                    <a asp-controller="AnimalesAdopcion" asp-action="Index" class="btn-primary-hf">
+                        <i class="bi bi-heart"></i> Ver animales
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ ADOPCION CTA ═══════════ -->
+<section class="section-green py-5">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <span class="section-label"><i class="bi bi-house-heart"></i> Programa de adopción</span>
+                <h2 class="section-title mt-2">¡Dale un hogar lleno de amor!</h2>
+                <p class="text-muted mt-3">
+                    Tenemos <strong class="text-success">@ViewBag.AnimalesAdopcion animales</strong> esperando
+                    una familia. Todos revisados por nuestros veterinarios, vacunados y listos para integrarse a tu hogar.
+                </p>
+                <div class="row g-3 mt-3">
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;background:#dcfce7;border-radius:8px;display:flex;align-items:center;justify-content:center">
+                                <i class="bi bi-check2 text-success fw-bold"></i>
+                            </div>
+                            <span style="font-size:.9rem">Revisados por veterinarios</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;background:#dcfce7;border-radius:8px;display:flex;align-items:center;justify-content:center">
+                                <i class="bi bi-check2 text-success fw-bold"></i>
+                            </div>
+                            <span style="font-size:.9rem">Vacunación al día</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;background:#dcfce7;border-radius:8px;display:flex;align-items:center;justify-content:center">
+                                <i class="bi bi-check2 text-success fw-bold"></i>
+                            </div>
+                            <span style="font-size:.9rem">Acompañamiento post-adopción</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:32px;height:32px;background:#dcfce7;border-radius:8px;display:flex;align-items:center;justify-content:center">
+                                <i class="bi bi-check2 text-success fw-bold"></i>
+                            </div>
+                            <span style="font-size:.9rem">Sin costo de adopción</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <a asp-controller="AnimalesAdopcion" asp-action="Index" class="btn-primary-hf">
+                        <i class="bi bi-arrow-right-circle-fill"></i> Ver animales disponibles
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <div style="background:white; border-radius:20px; padding:32px; box-shadow:0 8px 32px rgba(0,0,0,.08)">
+                    <div style="font-size:.85rem; color:var(--text-soft); margin-bottom:16px; font-weight:600; text-transform:uppercase; letter-spacing:.5px">
+                        <i class="bi bi-bar-chart-fill text-success me-1"></i> Estadísticas de adopción
+                    </div>
+                    <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded-3" style="background:var(--primary-bg)">
+                        <i class="bi bi-house-heart-fill text-success fs-3"></i>
+                        <div>
+                            <div style="font-size:1.5rem; font-weight:800; color:var(--primary)">@ViewBag.AnimalesAdopcion</div>
+                            <div style="font-size:.82rem; color:var(--text-soft)">Animales disponibles hoy</div>
+                        </div>
+                    </div>
+                    <p style="font-size:.88rem; color:var(--text-soft); margin:0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Los datos se actualizan en tiempo real desde nuestra base de datos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ CTA REGISTRO ═══════════ -->
+@if (User.Identity == null || !User.Identity.IsAuthenticated)
+{
+    <section style="background:var(--primary-dark); padding:64px 0">
+        <div class="container text-center">
+            <i class="bi bi-stars" style="font-size:2.5rem; color:#86efac; display:block; margin-bottom:16px"></i>
+            <h2 style="color:white; font-size:2rem; font-weight:800; margin-bottom:12px">
+                ¿Primera vez aquí?
+            </h2>
+            <p style="color:rgba(255,255,255,.7); font-size:1.05rem; max-width:500px; margin:0 auto 28px">
+                Crea tu cuenta gratis y gestiona la salud de tus mascotas en línea.
+                Agenda citas, revisa historial y solicita adopciones.
+            </p>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <a asp-controller="Account" asp-action="Register" class="btn-hero-primary">
+                    <i class="bi bi-person-plus-fill"></i> Crear cuenta gratis
+                </a>
+                <a asp-controller="Account" asp-action="Login" class="btn-hero-ghost">
+                    <i class="bi bi-box-arrow-in-right"></i> Ya tengo cuenta
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+<!-- ═══════════ CONTACTO ═══════════ -->
+<section id="contacto" class="section-gray py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="section-label"><i class="bi bi-chat-dots"></i> Estamos aquí</span>
+            <h2 class="section-title">Contáctanos</h2>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-3 col-sm-6">
+                <div style="background:white; border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; text-align:center; box-shadow:var(--shadow); height:100%">
+                    <div style="width:52px;height:52px;background:#dcfce7;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+                        <i class="bi bi-geo-alt-fill text-success fs-4"></i>
+                    </div>
+                    <h6 style="font-weight:700">Dirección</h6>
+                    <p style="color:var(--text-soft); font-size:.88rem; margin:0">Av. Amazonas y Naciones Unidas<br>Quito, Ecuador</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div style="background:white; border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; text-align:center; box-shadow:var(--shadow); height:100%">
+                    <div style="width:52px;height:52px;background:#dbeafe;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+                        <i class="bi bi-telephone-fill text-primary fs-4"></i>
+                    </div>
+                    <h6 style="font-weight:700">Teléfono</h6>
+                    <p style="color:var(--text-soft); font-size:.88rem; margin:0">(02) 234-5678<br>099-123-4567</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div style="background:white; border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; text-align:center; box-shadow:var(--shadow); height:100%">
+                    <div style="width:52px;height:52px;background:#fef9c3;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+                        <i class="bi bi-clock-fill text-warning fs-4"></i>
+                    </div>
+                    <h6 style="font-weight:700">Horario</h6>
+                    <p style="color:var(--text-soft); font-size:.88rem; margin:0">Lun – Vie: 8:00 – 20:00<br>Sáb – Dom: 9:00 – 16:00</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div style="background:white; border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; text-align:center; box-shadow:var(--shadow); height:100%">
+                    <div style="width:52px;height:52px;background:#fce7f3;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+                        <i class="bi bi-envelope-fill" style="color:#db2777; font-size:1.5rem"></i>
+                    </div>
+                    <h6 style="font-weight:700">Email</h6>
+                    <p style="color:var(--text-soft); font-size:.88rem; margin:0">info@huellitas.ec<br>adopciones@huellitas.ec</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

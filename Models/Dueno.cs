@@ -27,10 +27,17 @@ namespace HuellitasFelices.Models
 
         public bool Activo { get; set; } = true;
 
+        [Display(Name = "Fecha de eliminación")]
+        public DateTime? FechaEliminacion { get; set; }
+
         [Display(Name = "Fecha de registro")]
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
+        [Display(Name = "Fecha de actualización")]
+        public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
+
         // Navegación
         public ICollection<Mascota> Mascotas { get; set; } = new List<Mascota>();
+        public ICollection<Pago> Pagos { get; set; } = new List<Pago>();
     }
 }

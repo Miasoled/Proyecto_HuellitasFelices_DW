@@ -1,0 +1,56 @@
+@model IEnumerable<HuellitasFelices.Models.Tratamiento>
+@using HuellitasFelices.ViewModels
+@{ ViewData["Title"] = "Tratamientos"; var p = ViewBag.Paginacion as PaginacionViewModel; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Tratamientos</li>
+        </ol></nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-capsule-pill me-2"></i>Tratamientos</h1>
+                <small style="opacity:.8">@(p?.TotalRegistros.ToString("N0") ?? "–") tratamientos registrados</small>
+            </div>
+            <a asp-action="Create" class="btn-hero-primary"><i class="bi bi-plus-lg"></i> Nuevo tratamiento</a>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <form method="get" class="search-bar">
+            <input type="text" name="busqueda" value="@p?.Busqueda" class="form-control" placeholder="Nombre o medicamento…" />
+            <button type="submit" class="btn-search"><i class="bi bi-search"></i></button>
+            @if (!string.IsNullOrEmpty(p?.Busqueda)) { <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-3"><i class="bi bi-x-lg"></i></a> }
+        </form>
+        @if (p != null) { <small class="text-muted">Página @p.PaginaActual de @p.TotalPaginas</small> }
+    </div>
+
+    <div class="hf-card"><div class="table-responsive">
+        <table class="hf-table">
+            <thead><tr>
+                <th>Nombre</th><th>Descripción</th><th>Medicamento</th><th>Costo</th><th>Registro</th><th style="width:130px">Acciones</th>
+            </tr></thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><strong>@item.Nombre</strong></td>
+                        <td style="font-size:.88rem; color:var(--text-soft)">@item.Descripcion</td>
+                        <td><span class="badge-warning-hf"><i class="bi bi-capsule me-1"></i>@item.Medicamento</span></td>
+                        <td><span class="badge-success-hf">$@item.Costo.ToString("N2")</span></td>
+                        <td style="font-size:.85rem; color:var(--text-soft)">@item.FechaCreacion.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td><div class="d-flex gap-1">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-edit"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-view"><i class="bi bi-eye"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-delete"><i class="bi bi-trash"></i></a>
+                        </div></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+    @if (p != null) { @await Html.PartialAsync("_Paginacion", p) }
+</div></div>

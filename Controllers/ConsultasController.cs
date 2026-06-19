@@ -1,18 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.ViewModels;
 
 namespace HuellitasFelices.Controllers
 {
+    [Authorize]
     public class ConsultasController : Controller
     {
         private readonly AppDbContext _context;
+        private const int TamanioPagina = 20;
 
         public ConsultasController(AppDbContext context)
         {
@@ -20,10 +20,34 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: Consultas
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int pagina = 1, string? busqueda = null)
         {
-            var appDbContext = _context.Consultas.Include(c => c.Mascota);
-            return View(await appDbContext.ToListAsync());
+            var consulta = _context.Consultas
+                .AsNoTracking()
+                .Include(c => c.Mascota)
+                .Where(c => c.Activo)
+                .OrderByDescending(c => c.FechaConsulta)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(busqueda))
+                consulta = consulta.Where(c => c.Motivo.Contains(busqueda));
+
+            var totalRegistros = await consulta.CountAsync();
+            var consultas = await consulta
+                .Skip((pagina - 1) * TamanioPagina)
+                .Take(TamanioPagina)
+                .ToListAsync();
+
+            ViewBag.Paginacion = new PaginacionViewModel
+            {
+                PaginaActual = pagina,
+                TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)TamanioPagina),
+                TotalRegistros = totalRegistros,
+                TamanioPagina = TamanioPagina,
+                Busqueda = busqueda
+            };
+
+            return View(consultas);
         }
 
         // GET: Consultas/Details/5
@@ -48,7 +72,6 @@ namespace HuellitasFelices.Controllers
         // GET: Consultas/Create
         public IActionResult Create()
         {
-            ViewData["MascotaId"] = new SelectList(_context.Mascotas, "Id", "Especie");
             return View();
         }
 
@@ -57,15 +80,43 @@ namespace HuellitasFelices.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Motivo,Diagnostico,Costo,FechaConsulta,Activo,FechaCreacion,MascotaId")] Consulta consulta)
+        public async Task<IActionResult> Create([Bind("Id,Motivo,Diagnostico,Costo,FechaConsulta,Activo,FechaCreacion")] Consulta consulta, string nombreMascota)
         {
+            ModelState.Remove("MascotaId");
+            ModelState.Remove("Mascota");
+
+            if (string.IsNullOrWhiteSpace(nombreMascota))
+            {
+                ModelState.AddModelError("MascotaId", "El nombre de la mascota es obligatorio.");
+            }
+
             if (ModelState.IsValid)
             {
+                var mascota = await _context.Mascotas
+                    .FirstOrDefaultAsync(m => m.Nombre.ToLower() == nombreMascota.Trim().ToLower() && m.Activo);
+
+                if (mascota == null)
+                {
+                    mascota = new Mascota
+                    {
+                        Nombre = nombreMascota.Trim(),
+                        Especie = "Perro",
+                        Raza = "Mestizo",
+                        Edad = 1,
+                        Peso = 5.0m,
+                        Activo = true,
+                        FechaCreacion = DateTime.UtcNow,
+                        FechaActualizacion = DateTime.UtcNow
+                    };
+                    _context.Mascotas.Add(mascota);
+                    await _context.SaveChangesAsync();
+                }
+
+                consulta.MascotaId = mascota.Id;
                 _context.Add(consulta);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["MascotaId"] = new SelectList(_context.Mascotas, "Id", "Especie", consulta.MascotaId);
             return View(consulta);
         }
 
@@ -77,12 +128,13 @@ namespace HuellitasFelices.Controllers
                 return NotFound();
             }
 
-            var consulta = await _context.Consultas.FindAsync(id);
+            var consulta = await _context.Consultas
+                .Include(c => c.Mascota)
+                .FirstOrDefaultAsync(c => c.Id == id);
             if (consulta == null)
             {
                 return NotFound();
             }
-            ViewData["MascotaId"] = new SelectList(_context.Mascotas, "Id", "Especie", consulta.MascotaId);
             return View(consulta);
         }
 
@@ -91,15 +143,45 @@ namespace HuellitasFelices.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Motivo,Diagnostico,Costo,FechaConsulta,Activo,FechaCreacion,MascotaId")] Consulta consulta)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Motivo,Diagnostico,Costo,FechaConsulta,Activo,FechaCreacion")] Consulta consulta, string nombreMascota)
         {
             if (id != consulta.Id)
             {
                 return NotFound();
             }
 
+            ModelState.Remove("MascotaId");
+            ModelState.Remove("Mascota");
+
+            if (string.IsNullOrWhiteSpace(nombreMascota))
+            {
+                ModelState.AddModelError("MascotaId", "El nombre de la mascota es obligatorio.");
+            }
+
             if (ModelState.IsValid)
             {
+                var mascota = await _context.Mascotas
+                    .FirstOrDefaultAsync(m => m.Nombre.ToLower() == nombreMascota.Trim().ToLower() && m.Activo);
+
+                if (mascota == null)
+                {
+                    mascota = new Mascota
+                    {
+                        Nombre = nombreMascota.Trim(),
+                        Especie = "Perro",
+                        Raza = "Mestizo",
+                        Edad = 1,
+                        Peso = 5.0m,
+                        Activo = true,
+                        FechaCreacion = DateTime.UtcNow,
+                        FechaActualizacion = DateTime.UtcNow
+                    };
+                    _context.Mascotas.Add(mascota);
+                    await _context.SaveChangesAsync();
+                }
+
+                consulta.MascotaId = mascota.Id;
+
                 try
                 {
                     _context.Update(consulta);
@@ -118,7 +200,6 @@ namespace HuellitasFelices.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["MascotaId"] = new SelectList(_context.Mascotas, "Id", "Especie", consulta.MascotaId);
             return View(consulta);
         }
 
@@ -144,15 +225,16 @@ namespace HuellitasFelices.Controllers
         // POST: Consultas/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Supervisor")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var consulta = await _context.Consultas.FindAsync(id);
             if (consulta != null)
             {
-                _context.Consultas.Remove(consulta);
+                consulta.Activo = false;
+                consulta.FechaEliminacion = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

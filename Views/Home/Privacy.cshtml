@@ -1,6 +1,40 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@{
+    ViewData["Title"] = "Política de privacidad";
 }
-<h1>@ViewData["Title"]</h1>
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active">Privacidad</li>
+    </ol></nav>
+    <h1><i class="bi bi-shield-shaded me-2"></i>Política de privacidad</h1>
+</div></div>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-8">
+    <div class="hf-card">
+        <div class="hf-card-header"><i class="bi bi-info-circle me-2"></i>Términos y protección de datos</div>
+        <div class="card-body p-4" style="line-height:1.8">
+            <h5 class="text-primary mb-3">1. Uso de la Información</h5>
+            <p class="text-muted mb-4">
+                En **Huellitas Felices**, nos tomamos muy en serio la seguridad y confidencialidad de la información de las mascotas y sus dueños. Los datos recolectados (como nombres, teléfonos, correos y registros médicos) son de uso exclusivo de la clínica para proveer una mejor atención veterinaria.
+            </p>
+
+            <h5 class="text-primary mb-3">2. Confidencialidad y Seguridad</h5>
+            <p class="text-muted mb-4">
+                Utilizamos medidas técnicas de última generación (incluyendo cifrado de contraseñas mediante **ASP.NET Core Identity** y almacenamiento seguro en base de datos **PostgreSQL**) para garantizar que los datos no sean accedidos de forma no autorizada.
+            </p>
+
+            <h5 class="text-primary mb-3">3. Derechos del Usuario</h5>
+            <p class="text-muted mb-4">
+                Como usuario registrado, tienes el derecho de acceder, actualizar y solicitar la eliminación lógica de tu información en cualquier momento mediante tu panel personal o contactando al administrador del sistema.
+            </p>
+
+            <hr class="my-4">
+            <div class="text-center">
+                <a asp-controller="Home" asp-action="Index" class="btn-primary-hf">
+                    <i class="bi bi-house"></i> Volver al inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div></div></div></div>

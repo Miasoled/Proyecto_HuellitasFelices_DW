@@ -1,18 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.ViewModels;
 
 namespace HuellitasFelices.Controllers
 {
+    [Authorize(Roles = "Administrador,Supervisor")]
     public class EmpleadosController : Controller
     {
         private readonly AppDbContext _context;
+        private const int TamanioPagina = 20;
 
         public EmpleadosController(AppDbContext context)
         {
@@ -20,9 +20,33 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: Empleados
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int pagina = 1, string? busqueda = null)
         {
-            return View(await _context.Empleados.ToListAsync());
+            var consulta = _context.Empleados
+                .AsNoTracking()
+                .Where(e => e.Activo)
+                .OrderBy(e => e.Nombre)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(busqueda))
+                consulta = consulta.Where(e => e.Nombre.Contains(busqueda) || e.Cargo.Contains(busqueda));
+
+            var totalRegistros = await consulta.CountAsync();
+            var empleados = await consulta
+                .Skip((pagina - 1) * TamanioPagina)
+                .Take(TamanioPagina)
+                .ToListAsync();
+
+            ViewBag.Paginacion = new PaginacionViewModel
+            {
+                PaginaActual = pagina,
+                TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)TamanioPagina),
+                TotalRegistros = totalRegistros,
+                TamanioPagina = TamanioPagina,
+                Busqueda = busqueda
+            };
+
+            return View(empleados);
         }
 
         // GET: Empleados/Details/5
@@ -137,15 +161,16 @@ namespace HuellitasFelices.Controllers
         // POST: Empleados/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var empleado = await _context.Empleados.FindAsync(id);
             if (empleado != null)
             {
-                _context.Empleados.Remove(empleado);
+                empleado.Activo = false;
+                empleado.FechaEliminacion = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

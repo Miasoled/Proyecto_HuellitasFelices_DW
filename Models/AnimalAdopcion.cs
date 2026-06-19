@@ -31,10 +31,20 @@ namespace HuellitasFelices.Models
         [Display(Name = "Disponible para adopción")]
         public bool Disponible { get; set; } = true;
 
+        [StringLength(300)]
+        [Display(Name = "Foto")]
+        public string? FotoUrl { get; set; }
+
         public bool Activo { get; set; } = true;
+
+        [Display(Name = "Fecha de eliminación")]
+        public DateTime? FechaEliminacion { get; set; }
 
         [Display(Name = "Fecha de ingreso")]
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+
+        [Display(Name = "Fecha de actualización")]
+        public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
 
         // Navegación
         public ICollection<SolicitudAdopcion> Solicitudes { get; set; } = new List<SolicitudAdopcion>();

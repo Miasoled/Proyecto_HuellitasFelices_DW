@@ -1,0 +1,139 @@
+@{
+    ViewData["Title"] = "Mi panel";
+    var dueno    = ViewBag.Dueno    as HuellitasFelices.Models.Dueno;
+    var mascotas = ViewBag.Mascotas as List<HuellitasFelices.Models.Mascota>          ?? new();
+    var consultas= ViewBag.Consultas as List<HuellitasFelices.Models.Consulta>        ?? new();
+    var solicitudes= ViewBag.Solicitudes as List<HuellitasFelices.Models.SolicitudAdopcion> ?? new();
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-grid-1x2-fill me-2"></i>Mi panel</h1>
+                <small style="opacity:.8">Bienvenido, <strong>@dueno?.Nombre</strong></small>
+            </div>
+            <a asp-controller="Consultas" asp-action="Create" class="btn-hero-primary">
+                <i class="bi bi-calendar-plus-fill"></i> Agendar cita
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-4">
+            <div class="stat-item">
+                <div class="stat-icon" style="background:#dcfce7"><i class="bi bi-patch-heart-fill text-success fs-4"></i></div>
+                <h3 class="text-success">@mascotas.Count</h3>
+                <p>Mis mascotas</p>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-item">
+                <div class="stat-icon" style="background:#dbeafe"><i class="bi bi-clipboard2-pulse-fill text-primary fs-4"></i></div>
+                <h3 class="text-primary">@consultas.Count</h3>
+                <p>Consultas recientes</p>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-item">
+                <div class="stat-icon" style="background:#fef9c3"><i class="bi bi-file-earmark-check-fill text-warning fs-4"></i></div>
+                <h3 class="text-warning">@solicitudes.Count</h3>
+                <p>Solicitudes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Mascotas -->
+        <div class="col-lg-7">
+            <div class="hf-card">
+                <div class="hf-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-patch-heart-fill me-2"></i>Mis mascotas</span>
+                    <a asp-controller="Mascotas" asp-action="Create" class="btn-hero-primary" style="padding:6px 14px; font-size:.82rem">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </a>
+                </div>
+                @if (mascotas.Count == 0)
+                {
+                    <div style="padding:32px; text-align:center; color:var(--text-soft)">
+                        <i class="bi bi-patch-heart" style="font-size:2.5rem; opacity:.3; display:block; margin-bottom:12px"></i>
+                        No tienes mascotas registradas aún.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="hf-table">
+                            <thead><tr><th>Nombre</th><th>Especie</th><th>Raza</th><th>Edad</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var m in mascotas)
+                                {
+                                    <tr>
+                                        <td><strong>@m.Nombre</strong></td>
+                                        <td><span class="badge-@(m.Especie=="Perro"?"success":"info")-hf">@m.Especie</span></td>
+                                        <td style="font-size:.88rem">@m.Raza</td>
+                                        <td style="font-size:.88rem">@m.Edad años</td>
+                                        <td>
+                                            <a asp-controller="Mascotas" asp-action="Details" asp-route-id="@m.Id" class="btn-action btn-view">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="col-lg-5">
+            <div class="hf-card mb-4">
+                <div class="hf-card-header"><i class="bi bi-lightning-charge-fill me-2"></i>Acciones rápidas</div>
+                <div style="padding:16px; display:flex; flex-direction:column; gap:10px">
+                    <a asp-controller="Consultas" asp-action="Create" class="btn-primary-hf justify-content-start">
+                        <i class="bi bi-calendar-plus"></i> Agendar consulta veterinaria
+                    </a>
+                    <a asp-controller="AnimalesAdopcion" asp-action="Index" class="btn-outline-hf justify-content-start">
+                        <i class="bi bi-house-heart"></i> Ver animales en adopción
+                    </a>
+                    <a asp-controller="SolicitudesAdopcion" asp-action="Create" class="btn-outline-hf justify-content-start">
+                        <i class="bi bi-file-earmark-plus"></i> Solicitar adopción
+                    </a>
+                    <a asp-controller="Mascotas" asp-action="Create" class="btn-outline-hf justify-content-start">
+                        <i class="bi bi-plus-circle"></i> Registrar nueva mascota
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimas consultas -->
+    @if (consultas.Count > 0)
+    {
+        <div class="hf-card mt-4">
+            <div class="hf-card-header"><i class="bi bi-clipboard2-pulse-fill me-2"></i>Últimas consultas</div>
+            <div class="table-responsive">
+                <table class="hf-table">
+                    <thead><tr><th>Motivo</th><th>Diagnóstico</th><th>Costo</th><th>Fecha</th></tr></thead>
+                    <tbody>
+                        @foreach (var c in consultas)
+                        {
+                            <tr>
+                                <td><strong style="font-size:.9rem">@c.Motivo</strong></td>
+                                <td style="font-size:.88rem; color:var(--text-soft)">@c.Diagnostico</td>
+                                <td><span class="badge-success-hf">$@c.Costo.ToString("N2")</span></td>
+                                <td style="font-size:.85rem; color:var(--text-soft)">@c.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div></div>

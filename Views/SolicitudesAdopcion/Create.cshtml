@@ -1,67 +1,55 @@
 @model HuellitasFelices.Models.SolicitudAdopcion
-
-@{
-    ViewData["Title"] = "Create";
-}
-
-<h1>Create</h1>
-
-<h4>SolicitudAdopcion</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="NombreSolicitante" class="control-label"></label>
-                <input asp-for="NombreSolicitante" class="form-control" />
-                <span asp-validation-for="NombreSolicitante" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Telefono" class="control-label"></label>
-                <input asp-for="Telefono" class="form-control" />
-                <span asp-validation-for="Telefono" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Estado" class="control-label"></label>
-                <input asp-for="Estado" class="form-control" />
-                <span asp-validation-for="Estado" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FechaSolicitud" class="control-label"></label>
-                <input asp-for="FechaSolicitud" class="form-control" />
-                <span asp-validation-for="FechaSolicitud" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Activo" /> @Html.DisplayNameFor(model => model.Activo)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="FechaCreacion" class="control-label"></label>
-                <input asp-for="FechaCreacion" class="form-control" />
-                <span asp-validation-for="FechaCreacion" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="AnimalAdopcionId" class="control-label"></label>
-                <select asp-for="AnimalAdopcionId" class ="form-control" asp-items="ViewBag.AnimalAdopcionId"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+@{ ViewData["Title"] = "Nueva solicitud"; }
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Solicitudes</a></li>
+        <li class="breadcrumb-item active">Nueva</li>
+    </ol></nav>
+    <h1><i class="bi bi-file-earmark-plus-fill me-2"></i>Nueva solicitud de adopción</h1>
+</div></div>
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-7">
+    <div class="hf-card">
+        <div class="hf-card-header"><i class="bi bi-file-earmark-text me-2"></i>Datos del solicitante</div>
+        <div class="card-body p-4">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="AnimalAdopcionId" class="form-label"><i class="bi bi-house-heart me-1"></i>Animal</label>
+                        <select asp-for="AnimalAdopcionId" asp-items="ViewBag.AnimalAdopcionId" class="form-select">
+                            <option value="">-- Seleccione un animal --</option>
+                        </select>
+                        <span asp-validation-for="AnimalAdopcionId" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="NombreSolicitante" class="form-label"><i class="bi bi-person me-1"></i>Nombre del solicitante</label>
+                        <input asp-for="NombreSolicitante" class="form-control" placeholder="Juan Pérez" />
+                        <span asp-validation-for="NombreSolicitante" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Telefono" class="form-label"><i class="bi bi-phone me-1"></i>Teléfono</label>
+                        <input asp-for="Telefono" class="form-control" placeholder="0991234567" />
+                        <span asp-validation-for="Telefono" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label"><i class="bi bi-envelope me-1"></i>Email</label>
+                        <input asp-for="Email" class="form-control" placeholder="correo@ejemplo.com" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Estado" class="form-label"><i class="bi bi-flag me-1"></i>Estado</label>
+                        <select asp-for="Estado" class="form-select">
+                            <option>Pendiente</option><option>Aprobada</option><option>Rechazada</option>
+                        </select>
+                    </div>
+                    <div class="col-12 d-flex gap-3 pt-2">
+                        <button type="submit" class="btn-primary-hf"><i class="bi bi-check-lg"></i> Guardar</button>
+                        <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Cancelar</a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+</div></div></div></div>
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

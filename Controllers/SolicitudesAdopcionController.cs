@@ -1,18 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.ViewModels;
 
 namespace HuellitasFelices.Controllers
 {
+    [Authorize]
     public class SolicitudesAdopcionController : Controller
     {
         private readonly AppDbContext _context;
+        private const int TamanioPagina = 20;
 
         public SolicitudesAdopcionController(AppDbContext context)
         {
@@ -20,10 +20,34 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: SolicitudesAdopcion
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int pagina = 1, string? busqueda = null)
         {
-            var appDbContext = _context.SolicitudesAdopcion.Include(s => s.AnimalAdopcion);
-            return View(await appDbContext.ToListAsync());
+            var consulta = _context.SolicitudesAdopcion
+                .AsNoTracking()
+                .Include(s => s.AnimalAdopcion)
+                .Where(s => s.Activo)
+                .OrderByDescending(s => s.FechaSolicitud)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(busqueda))
+                consulta = consulta.Where(s => s.NombreSolicitante.Contains(busqueda) || s.Estado.Contains(busqueda));
+
+            var totalRegistros = await consulta.CountAsync();
+            var solicitudes = await consulta
+                .Skip((pagina - 1) * TamanioPagina)
+                .Take(TamanioPagina)
+                .ToListAsync();
+
+            ViewBag.Paginacion = new PaginacionViewModel
+            {
+                PaginaActual = pagina,
+                TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)TamanioPagina),
+                TotalRegistros = totalRegistros,
+                TamanioPagina = TamanioPagina,
+                Busqueda = busqueda
+            };
+
+            return View(solicitudes);
         }
 
         // GET: SolicitudesAdopcion/Details/5
@@ -144,15 +168,16 @@ namespace HuellitasFelices.Controllers
         // POST: SolicitudesAdopcion/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Supervisor")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var solicitudAdopcion = await _context.SolicitudesAdopcion.FindAsync(id);
             if (solicitudAdopcion != null)
             {
-                _context.SolicitudesAdopcion.Remove(solicitudAdopcion);
+                solicitudAdopcion.Activo = false;
+                solicitudAdopcion.FechaEliminacion = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

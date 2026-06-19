@@ -1,0 +1,47 @@
+@model HuellitasFelices.ViewModels.LoginViewModel
+@{ ViewData["Title"] = "Iniciar sesión"; }
+
+<div style="background:var(--gray-50); min-height:calc(100vh - 120px); display:flex; align-items:center; padding:40px 16px">
+    <div style="width:100%; max-width:420px; margin:0 auto">
+        <div class="login-card">
+            <div class="login-card-header">
+                <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+                    <i class="bi bi-heart-pulse-fill" style="font-size:1.6rem; color:white"></i>
+                </div>
+                <h4>Huellitas Felices</h4>
+                <p>Ingresa con tu cuenta</p>
+            </div>
+            <div class="card-body">
+                <form asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"><i class="bi bi-envelope me-1"></i>Correo electrónico</label>
+                        <input asp-for="Email" class="form-control" placeholder="correo@ejemplo.com" autofocus />
+                        <span asp-validation-for="Email" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"><i class="bi bi-lock me-1"></i>Contraseña</label>
+                        <input asp-for="Password" class="form-control" placeholder="••••••••" />
+                        <span asp-validation-for="Password" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="mb-4 form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label" style="font-size:.9rem">Recordarme</label>
+                    </div>
+                    <button type="submit" class="btn-primary-hf w-100 justify-content-center" style="padding:13px">
+                        <i class="bi bi-box-arrow-in-right"></i> Ingresar
+                    </button>
+                </form>
+            </div>
+            <div style="padding:16px 32px 24px; text-align:center; border-top:1px solid var(--border)">
+                <span style="color:var(--text-soft); font-size:.9rem">¿Eres cliente nuevo?</span>
+                <a asp-action="Register" class="btn-outline-hf ms-2" style="padding:7px 16px; font-size:.88rem">
+                    <i class="bi bi-person-plus"></i> Regístrate gratis
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }
