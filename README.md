@@ -171,6 +171,6 @@ El proyecto está diseñado para escalar en la siguiente fase:
 | **Reportes** | Estadísticas de consultas, adopciones y ventas |
 
 
-## 📄 Licencia
+## Diagrama de la base de datos 
+<img width="1380" height="1471" alt="huellitasFelices det pgerd" src="https://github.com/user-attachments/assets/b9eec9b0-996b-4a31-8c38-196250e23c22" />
 
-Proyecto académico — uso educativo.
