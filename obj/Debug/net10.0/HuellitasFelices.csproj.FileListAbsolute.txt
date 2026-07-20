@@ -406,3 +406,4 @@ C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\v0zgfp0y55-{
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\yfc7ypekbg-{0}-mlv21k5csn-mlv21k5csn.gz
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\nqdo4othwe-{0}-2e936btlgn-2e936btlgn.gz
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\appsettings.example.json
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Bogus.dll

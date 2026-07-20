@@ -18,7 +18,8 @@ namespace HuellitasFelices.Controllers
             _context = context;
         }
 
-        // GET: AnimalesAdopcion
+        // GET: AnimalesAdopcion — público, cualquiera puede ver los animales
+        [AllowAnonymous]
         public async Task<IActionResult> Index(int pagina = 1, string? busqueda = null)
         {
             var consulta = _context.AnimalesAdopcion
@@ -48,7 +49,8 @@ namespace HuellitasFelices.Controllers
             return View(animales);
         }
 
-        // GET: AnimalesAdopcion/Details/5
+        // GET: AnimalesAdopcion/Details/5 — público
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
