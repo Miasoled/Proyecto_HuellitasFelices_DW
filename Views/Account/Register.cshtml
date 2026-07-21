@@ -46,6 +46,19 @@
                         <i class="bi bi-person-check-fill"></i> Crear mi cuenta
                     </button>
                 </form>
+
+                <div style="display:flex; align-items:center; gap:10px; margin:20px 0">
+                    <hr style="flex:1; border-color:var(--border)" />
+                    <span style="color:var(--text-soft); font-size:.82rem">o</span>
+                    <hr style="flex:1; border-color:var(--border)" />
+                </div>
+
+                <form asp-action="ExternalLogin" method="post">
+                    <input type="hidden" name="provider" value="Google" />
+                    <button type="submit" class="btn-outline-hf w-100 justify-content-center" style="padding:11px">
+                        <i class="bi bi-google"></i> Registrarse con Google
+                    </button>
+                </form>
             </div>
             <div style="padding:16px 32px 24px; text-align:center; border-top:1px solid var(--border)">
                 <span style="color:var(--text-soft); font-size:.9rem">¿Ya tienes cuenta?</span>

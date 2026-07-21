@@ -24,6 +24,17 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
+// Autenticación externa con Google
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]
+            ?? throw new InvalidOperationException("Falta configurar Authentication:Google:ClientId");
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
+            ?? throw new InvalidOperationException("Falta configurar Authentication:Google:ClientSecret");
+        options.CallbackPath = "/signin-google"; // debe coincidir con el URI autorizado en Google Cloud Console
+    });
+
 // Configurar rutas de login
 builder.Services.ConfigureApplicationCookie(options =>
 {

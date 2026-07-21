@@ -12,6 +12,13 @@
                 <p>Ingresa con tu cuenta</p>
             </div>
             <div class="card-body">
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger py-2 mb-3" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                    </div>
+                }
+
                 <form asp-action="Login" method="post">
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
 
@@ -31,6 +38,20 @@
                     </div>
                     <button type="submit" class="btn-primary-hf w-100 justify-content-center" style="padding:13px">
                         <i class="bi bi-box-arrow-in-right"></i> Ingresar
+                    </button>
+                </form>
+
+                <div style="display:flex; align-items:center; gap:10px; margin:20px 0">
+                    <hr style="flex:1; border-color:var(--border)" />
+                    <span style="color:var(--text-soft); font-size:.82rem">o</span>
+                    <hr style="flex:1; border-color:var(--border)" />
+                </div>
+
+                <form asp-action="ExternalLogin" method="post">
+                    <input type="hidden" name="provider" value="Google" />
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                    <button type="submit" class="btn-outline-hf w-100 justify-content-center" style="padding:11px">
+                        <i class="bi bi-google"></i> Continuar con Google
                     </button>
                 </form>
             </div>

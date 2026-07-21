@@ -11,10 +11,11 @@ using System;
 using System.Reflection;
 
 [assembly: Microsoft.AspNetCore.Identity.UI.UIFrameworkAttribute("Bootstrap5")]
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("cc13cc46-7d06-456e-a380-596b44077854")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("HuellitasFelices")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f3467795e2a74b8267b43bcd59142b271855338c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bf70d37b0b421b6a402bf91ad655463609756f42")]
 [assembly: System.Reflection.AssemblyProductAttribute("HuellitasFelices")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HuellitasFelices")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

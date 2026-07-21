@@ -1,10 +1,12 @@
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
 using HuellitasFelices.ViewModels;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 
 namespace HuellitasFelices.Controllers
 {
@@ -56,6 +58,103 @@ namespace HuellitasFelices.Controllers
 
             ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos.");
             return View(model);
+        }
+
+        // ── LOGIN EXTERNO (Google) ───────────────────────────────────────────
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public IActionResult ExternalLogin(string provider, string? returnUrl = null)
+        {
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return new ChallengeResult(provider, properties);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ExternalLoginCallback(string? returnUrl = null, string? remoteError = null)
+        {
+            returnUrl ??= "/";
+
+            if (remoteError != null)
+            {
+                TempData["Error"] = $"Error del proveedor externo: {remoteError}";
+                return RedirectToAction(nameof(Login));
+            }
+
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                TempData["Error"] = "No se pudo obtener la información de inicio de sesión externo.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            // 1) ¿Ya existe un login externo vinculado a un usuario? -> iniciar sesión directo
+            var result = await _signInManager.ExternalLoginSignInAsync(
+                info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+
+            if (result.Succeeded)
+                return LocalRedirect(returnUrl);
+
+            // 2) No existe el login externo todavía -> buscar/crear el usuario por email
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var nombre = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email ?? "Usuario Google";
+
+            if (string.IsNullOrEmpty(email))
+            {
+                TempData["Error"] = "Tu cuenta de Google no tiene un correo asociado.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                // Usuario nuevo: se registra automáticamente como Cliente
+                user = new IdentityUser
+                {
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true
+                };
+
+                var createResult = await _userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                {
+                    TempData["Error"] = string.Join(" ", createResult.Errors.Select(e => e.Description));
+                    return RedirectToAction(nameof(Login));
+                }
+
+                await _userManager.AddToRoleAsync(user, "Cliente");
+
+                var duenoExistente = _context.Duenos.FirstOrDefault(d => d.Email == email);
+                if (duenoExistente == null)
+                {
+                    _context.Duenos.Add(new Dueno
+                    {
+                        Nombre = nombre,
+                        Email = email,
+                        Telefono = string.Empty,
+                        Activo = true,
+                        FechaCreacion = DateTime.UtcNow,
+                        FechaActualizacion = DateTime.UtcNow
+                    });
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            // Vincular el login de Google a este usuario para la próxima vez
+            var addLoginResult = await _userManager.AddLoginAsync(user, info);
+            if (!addLoginResult.Succeeded)
+            {
+                TempData["Error"] = "No se pudo vincular la cuenta de Google.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            return LocalRedirect(returnUrl);
         }
 
         // ── REGISTRO PÚBLICO (Clientes) ───────────────────────────────────────
