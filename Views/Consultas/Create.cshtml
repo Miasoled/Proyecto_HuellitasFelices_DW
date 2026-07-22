@@ -6,7 +6,7 @@
         <li class="breadcrumb-item"><a asp-action="Index">Consultas</a></li>
         <li class="breadcrumb-item active">Nueva</li>
     </ol></nav>
-    <h1><i class="bi bi-calendar-plus-fill me-2"></i>Nueva consulta</h1>
+    <h1><i class="bi bi-calendar-plus-fill me-2"></i>Agendar Consulta Médica</h1>
 </div></div>
 <div class="content-wrapper"><div class="container">
 <div class="row justify-content-center"><div class="col-lg-7">
@@ -17,30 +17,47 @@
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label"><i class="bi bi-patch-heart me-1"></i>Mascota (Nombre)</label>
-                        <input type="text" name="NombreMascota" class="form-control" placeholder="Ingrese el nombre de la mascota (Ej: Max, Luna)..." required />
+                        <label asp-for="MascotaId" class="form-label"><i class="bi bi-patch-heart me-1"></i>Mascota</label>
+                        <select asp-for="MascotaId" asp-items="ViewBag.MascotaId" class="form-select" required>
+                            <option value="">-- Seleccione una mascota --</option>
+                        </select>
                         <span asp-validation-for="MascotaId" class="text-danger" style="font-size:.82rem"></span>
                     </div>
                     <div class="col-12">
-                        <label asp-for="Motivo" class="form-label"><i class="bi bi-chat-left-text me-1"></i>Motivo</label>
-                        <input asp-for="Motivo" class="form-control" placeholder="Ej: Vacunación anual" />
+                        <label asp-for="Motivo" class="form-label"><i class="bi bi-chat-left-text me-1"></i>Motivo de la consulta</label>
+                        <input asp-for="Motivo" class="form-control" placeholder="Ej: Control de rutina, Vacunación, Dolor de estómago..." required />
                         <span asp-validation-for="Motivo" class="text-danger" style="font-size:.82rem"></span>
                     </div>
+                    
                     <div class="col-12">
-                        <label asp-for="Diagnostico" class="form-label"><i class="bi bi-clipboard2-check me-1"></i>Diagnóstico</label>
-                        <textarea asp-for="Diagnostico" class="form-control" rows="3" placeholder="Descripción del diagnóstico…"></textarea>
+                        <label asp-for="Sintomas" class="form-label"><i class="bi bi-activity me-1"></i>Síntomas observados</label>
+                        <textarea asp-for="Sintomas" class="form-control" rows="3" placeholder="Describa los síntomas de la mascota (Ej: no quiere comer, tiene decaimiento, bota saliva, etc.)..."></textarea>
+                        <span asp-validation-for="Sintomas" class="text-danger" style="font-size:.82rem"></span>
                     </div>
+
+                    @if (!User.IsInRole("Cliente"))
+                    {
+                        <!-- Solo visible para personal de la clínica -->
+                        <div class="col-12">
+                            <label asp-for="Diagnostico" class="form-label"><i class="bi bi-clipboard2-check me-1"></i>Diagnóstico médico</label>
+                            <textarea asp-for="Diagnostico" class="form-control" rows="3" placeholder="Resultados de la revisión y diagnóstico…"></textarea>
+                            <span asp-validation-for="Diagnostico" class="text-danger" style="font-size:.82rem"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Costo" class="form-label"><i class="bi bi-cash me-1"></i>Costo ($)</label>
+                            <input asp-for="Costo" class="form-control" type="number" step="0.01" placeholder="0.00" />
+                            <span asp-validation-for="Costo" class="text-danger" style="font-size:.82rem"></span>
+                        </div>
+                    }
+
                     <div class="col-md-6">
-                        <label asp-for="Costo" class="form-label"><i class="bi bi-cash me-1"></i>Costo ($)</label>
-                        <input asp-for="Costo" class="form-control" type="number" step="0.01" />
-                        <span asp-validation-for="Costo" class="text-danger" style="font-size:.82rem"></span>
+                        <label asp-for="FechaConsulta" class="form-label"><i class="bi bi-calendar3 me-1"></i>Fecha y hora</label>
+                        <input asp-for="FechaConsulta" class="form-control" type="datetime-local" required />
+                        <span asp-validation-for="FechaConsulta" class="text-danger" style="font-size:.82rem"></span>
                     </div>
-                    <div class="col-md-6">
-                        <label asp-for="FechaConsulta" class="form-label"><i class="bi bi-calendar3 me-1"></i>Fecha de consulta</label>
-                        <input asp-for="FechaConsulta" class="form-control" type="datetime-local" />
-                    </div>
-                    <div class="col-12 d-flex gap-3 pt-2">
-                        <button type="submit" class="btn-primary-hf"><i class="bi bi-check-lg"></i> Guardar</button>
+
+                    <div class="col-12 d-flex gap-3 pt-3 border-top" style="border-color: var(--border) !important;">
+                        <button type="submit" class="btn-primary-hf"><i class="bi bi-check-lg"></i> Confirmar Cita</button>
                         <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Cancelar</a>
                     </div>
                 </div>

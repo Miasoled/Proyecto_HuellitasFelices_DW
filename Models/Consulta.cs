@@ -11,6 +11,10 @@ namespace HuellitasFelices.Models
         [Display(Name = "Motivo")]
         public string Motivo { get; set; } = string.Empty;
 
+        [StringLength(500, ErrorMessage = "Los síntomas no pueden superar los 500 caracteres")]
+        [Display(Name = "Síntomas")]
+        public string? Sintomas { get; set; }
+
         [StringLength(500)]
         [Display(Name = "Diagnóstico")]
         public string? Diagnostico { get; set; }

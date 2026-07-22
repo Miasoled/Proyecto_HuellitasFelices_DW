@@ -198,16 +198,69 @@ namespace HuellitasFelices.Controllers
                     _context.Update(solicitudAdopcion);
                     await _context.SaveChangesAsync();
 
-                    // Si se aprueba la solicitud, marcar al animal como adoptado (no disponible)
-                    if (solicitudAdopcion.Estado == "Aprobada")
+                     if (solicitudAdopcion.Estado == "Aprobada")
                     {
                         var animal = await _context.AnimalesAdopcion.FindAsync(solicitudAdopcion.AnimalAdopcionId);
-                        if (animal != null && animal.Disponible)
+                        if (animal != null)
                         {
-                            animal.Disponible = false;
-                            animal.FechaActualizacion = DateTime.UtcNow;
-                            _context.Update(animal);
-                            await _context.SaveChangesAsync();
+                            if (animal.Disponible)
+                            {
+                                animal.Disponible = false;
+                                animal.FechaActualizacion = DateTime.UtcNow;
+                                _context.Update(animal);
+                                await _context.SaveChangesAsync();
+                            }
+
+                            var dueno = await _context.Duenos.FirstOrDefaultAsync(d =>
+                                d.Email != null &&
+                                d.Email.ToLower() == solicitudAdopcion.Email!.ToLower() &&
+                                d.Activo);
+
+                            if (dueno == null && !string.IsNullOrEmpty(solicitudAdopcion.Email))
+                            {
+                                dueno = await _context.Duenos.FirstOrDefaultAsync(d =>
+                                    d.Email != null &&
+                                    d.Email.ToLower() == solicitudAdopcion.Email.ToLower());
+                            }
+
+                            if (dueno != null)
+                            {
+                                var yaExiste = await _context.Mascotas.AnyAsync(m =>
+                                    m.Nombre.ToLower() == animal.Nombre.ToLower() &&
+                                    m.DuenoId == dueno.Id &&
+                                    m.Activo);
+
+                                if (!yaExiste)
+                                {
+                                    var nuevaMascota = new Mascota
+                                    {
+                                        Nombre = animal.Nombre,
+                                        Especie = animal.Especie,
+                                        Raza = animal.Raza ?? "Mestizo",
+                                        Edad = animal.EdadAproximada,
+                                        Peso = 5.0m,
+                                        DuenoId = dueno.Id,
+                                        Activo = true,
+                                        FechaCreacion = DateTime.UtcNow,
+                                        FechaActualizacion = DateTime.UtcNow
+                                    };
+                                    _context.Mascotas.Add(nuevaMascota);
+                                    await _context.SaveChangesAsync();
+                                    TempData["Mensaje"] = $"Mascota '{animal.Nombre}' registrada exitosamente para el dueño {dueno.Nombre}.";
+                                }
+                                else
+                                {
+                                    TempData["Error"] = $"La mascota '{animal.Nombre}' ya esta registrada para este dueño.";
+                                }
+                            }
+                            else
+                            {
+                                TempData["Error"] = $"No se encontro un dueño registrado con el email '{solicitudAdopcion.Email}'. La mascota no fue creada.";
+                            }
+                        }
+                        else
+                        {
+                            TempData["Error"] = "No se encontro el animal asociado a esta solicitud.";
                         }
                     }
                 }

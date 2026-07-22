@@ -19,6 +19,20 @@
 </div>
 
 <div class="content-wrapper"><div class="container">
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <form method="get" class="search-bar">
             <input type="text" name="busqueda" value="@p?.Busqueda" class="form-control" placeholder="Solicitante o estado…" />

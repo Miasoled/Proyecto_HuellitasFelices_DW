@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,13 @@ namespace HuellitasFelices.Controllers
     public class MascotasController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
         private const int TamanioPagina = 20;
 
-        public MascotasController(AppDbContext context)
+        public MascotasController(AppDbContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Mascotas
@@ -70,26 +73,50 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: Mascotas/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["DuenoId"] = new SelectList(_context.Duenos, "Id", "Nombre");
+            var user = await _userManager.GetUserAsync(User);
+            var dueno = _context.Duenos.FirstOrDefault(d => d.Email == user!.Email && d.Activo);
+
+            if (dueno == null)
+            {
+                TempData["Error"] = "No se encontro tu perfil de dueño. Contacta al administrador.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            ViewBag.Dueno = dueno;
             return View();
         }
 
         // POST: Mascotas/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Especie,Raza,Edad,Peso,Activo,FechaCreacion,DuenoId")] Mascota mascota)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Especie,Raza,Edad,Peso")] Mascota mascota)
         {
+            var user = await _userManager.GetUserAsync(User);
+            var dueno = _context.Duenos.FirstOrDefault(d => d.Email == user!.Email && d.Activo);
+
+            if (dueno == null)
+            {
+                TempData["Error"] = "No se encontro tu perfil de dueño.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            mascota.DuenoId = dueno.Id;
+            mascota.Activo = true;
+            mascota.FechaCreacion = DateTime.UtcNow;
+            mascota.FechaActualizacion = DateTime.UtcNow;
+
+            ModelState.Remove("DuenoId");
+
             if (ModelState.IsValid)
             {
                 _context.Add(mascota);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                TempData["Mensaje"] = $"Mascota '{mascota.Nombre}' registrada exitosamente.";
+                return RedirectToAction("MiPanel", "Account");
             }
-            ViewData["DuenoId"] = new SelectList(_context.Duenos, "Id", "Nombre", mascota.DuenoId);
+            ViewBag.Dueno = dueno;
             return View(mascota);
         }
 

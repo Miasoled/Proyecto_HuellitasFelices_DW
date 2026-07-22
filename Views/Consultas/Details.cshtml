@@ -14,11 +14,21 @@
         <div class="hf-card-header"><i class="bi bi-clipboard2-pulse me-2"></i>@Model.Motivo</div>
         <div class="card-body p-4">
             <div class="row g-3">
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-patch-heart me-1"></i>Mascota</small><strong>@(Model.Mascota?.Nombre ?? "—") (@(Model.Mascota?.Especie ?? "—"))</strong></div>
+                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>Fecha de la cita</small><strong>@Model.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy hh:mm tt")</strong></div>
+                
                 <div class="col-12"><small class="text-muted d-block"><i class="bi bi-chat-left-text me-1"></i>Motivo</small><strong>@Model.Motivo</strong></div>
-                <div class="col-12"><small class="text-muted d-block"><i class="bi bi-clipboard2-check me-1"></i>Diagnóstico</small><p style="margin:0">@(Model.Diagnostico ?? "—")</p></div>
-                <div class="col-md-4"><small class="text-muted d-block"><i class="bi bi-cash me-1"></i>Costo</small><span class="badge-success-hf">$@Model.Costo.ToString("N2")</span></div>
-                <div class="col-md-4"><small class="text-muted d-block"><i class="bi bi-patch-heart me-1"></i>Mascota</small><strong>@(Model.Mascota?.Especie ?? "—")</strong></div>
-                <div class="col-md-4"><small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>Fecha</small><strong>@Model.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy")</strong></div>
+                
+                @if (!string.IsNullOrEmpty(Model.Sintomas))
+                {
+                    <div class="col-12"><small class="text-muted d-block"><i class="bi bi-activity me-1"></i>Síntomas reportados</small><p style="margin:0; background:var(--gray-50); padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-style:italic">@Model.Sintomas</p></div>
+                }
+
+                @if (!User.IsInRole("Cliente") || (!string.IsNullOrEmpty(Model.Diagnostico) || Model.Costo > 0))
+                {
+                    <div class="col-12"><small class="text-muted d-block"><i class="bi bi-clipboard2-check me-1"></i>Diagnóstico</small><p style="margin:0; background:var(--primary-bg); padding:12px; border-radius:10px; border:1.5px solid var(--primary-soft)">@(Model.Diagnostico ?? "Pendiente de revisión médica.")</p></div>
+                    <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-cash me-1"></i>Costo de consulta</small><span class="badge-success-hf">$@Model.Costo.ToString("N2")</span></div>
+                }
             </div>
         </div>
         <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px">

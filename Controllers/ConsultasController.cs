@@ -22,18 +22,33 @@ namespace HuellitasFelices.Controllers
         // GET: Consultas
         public async Task<IActionResult> Index(int pagina = 1, string? busqueda = null)
         {
-            var consulta = _context.Consultas
+            var consultaQuery = _context.Consultas
                 .AsNoTracking()
                 .Include(c => c.Mascota)
                 .Where(c => c.Activo)
                 .OrderByDescending(c => c.FechaConsulta)
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(busqueda))
-                consulta = consulta.Where(c => c.Motivo.Contains(busqueda));
+            // Filtrado por seguridad: si es cliente, sólo puede ver consultas de sus mascotas
+            if (User.IsInRole("Cliente"))
+            {
+                string userEmail = User.Identity?.Name ?? string.Empty;
+                var dueno = await _context.Duenos.FirstOrDefaultAsync(d => d.Email == userEmail && d.Activo);
+                if (dueno != null)
+                {
+                    consultaQuery = consultaQuery.Where(c => c.Mascota!.DuenoId == dueno.Id);
+                }
+                else
+                {
+                    consultaQuery = consultaQuery.Where(c => false);
+                }
+            }
 
-            var totalRegistros = await consulta.CountAsync();
-            var consultas = await consulta
+            if (!string.IsNullOrEmpty(busqueda))
+                consultaQuery = consultaQuery.Where(c => c.Motivo.Contains(busqueda));
+
+            var totalRegistros = await consultaQuery.CountAsync();
+            var consultas = await consultaQuery
                 .Skip((pagina - 1) * TamanioPagina)
                 .Take(TamanioPagina)
                 .ToListAsync();
@@ -60,63 +75,108 @@ namespace HuellitasFelices.Controllers
 
             var consulta = await _context.Consultas
                 .Include(c => c.Mascota)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.Activo);
+
             if (consulta == null)
             {
                 return NotFound();
+            }
+
+            // Restricción de seguridad para clientes
+            if (User.IsInRole("Cliente"))
+            {
+                string userEmail = User.Identity?.Name ?? string.Empty;
+                var dueno = await _context.Duenos.FirstOrDefaultAsync(d => d.Email == userEmail && d.Activo);
+                if (dueno == null || consulta.Mascota!.DuenoId != dueno.Id)
+                {
+                    return Forbid();
+                }
             }
 
             return View(consulta);
         }
 
         // GET: Consultas/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View();
+            List<Mascota> mascotas;
+            if (User.IsInRole("Cliente"))
+            {
+                string userEmail = User.Identity?.Name ?? string.Empty;
+                var dueno = await _context.Duenos.FirstOrDefaultAsync(d => d.Email == userEmail && d.Activo);
+                mascotas = dueno != null 
+                    ? await _context.Mascotas.Where(m => m.DuenoId == dueno.Id && m.Activo).ToListAsync()
+                    : new List<Mascota>();
+            }
+            else
+            {
+                mascotas = await _context.Mascotas.Where(m => m.Activo).ToListAsync();
+            }
+
+            ViewData["MascotaId"] = new SelectList(mascotas, "Id", "Nombre");
+            return View(new Consulta { FechaConsulta = DateTime.Now });
         }
 
         // POST: Consultas/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Motivo,Diagnostico,Costo,FechaConsulta,Activo,FechaCreacion")] Consulta consulta, string nombreMascota)
+        public async Task<IActionResult> Create([Bind("Id,Motivo,Sintomas,Diagnostico,Costo,FechaConsulta,Activo,MascotaId")] Consulta consulta)
         {
-            ModelState.Remove("MascotaId");
             ModelState.Remove("Mascota");
 
-            if (string.IsNullOrWhiteSpace(nombreMascota))
+            // Validar que la mascota pertenezca al dueño si es cliente
+            if (User.IsInRole("Cliente"))
             {
-                ModelState.AddModelError("MascotaId", "El nombre de la mascota es obligatorio.");
+                // Forzar campos médicos a vacíos
+                consulta.Costo = 0;
+                consulta.Diagnostico = null;
+                ModelState.Remove("Costo");
+                ModelState.Remove("Diagnostico");
+
+                string userEmail = User.Identity?.Name ?? string.Empty;
+                var dueno = await _context.Duenos.FirstOrDefaultAsync(d => d.Email == userEmail && d.Activo);
+                var mascota = await _context.Mascotas.FindAsync(consulta.MascotaId);
+                if (dueno == null || mascota == null || mascota.DuenoId != dueno.Id || !mascota.Activo)
+                {
+                    ModelState.AddModelError("MascotaId", "La mascota seleccionada es inválida.");
+                }
+            }
+            else
+            {
+                var mascota = await _context.Mascotas.FindAsync(consulta.MascotaId);
+                if (mascota == null || !mascota.Activo)
+                {
+                    ModelState.AddModelError("MascotaId", "La mascota seleccionada es inválida.");
+                }
             }
 
             if (ModelState.IsValid)
             {
-                var mascota = await _context.Mascotas
-                    .FirstOrDefaultAsync(m => m.Nombre.ToLower() == nombreMascota.Trim().ToLower() && m.Activo);
+                consulta.FechaCreacion = DateTime.UtcNow;
+                consulta.FechaActualizacion = DateTime.UtcNow;
+                consulta.Activo = true;
 
-                if (mascota == null)
-                {
-                    mascota = new Mascota
-                    {
-                        Nombre = nombreMascota.Trim(),
-                        Especie = "Perro",
-                        Raza = "Mestizo",
-                        Edad = 1,
-                        Peso = 5.0m,
-                        Activo = true,
-                        FechaCreacion = DateTime.UtcNow,
-                        FechaActualizacion = DateTime.UtcNow
-                    };
-                    _context.Mascotas.Add(mascota);
-                    await _context.SaveChangesAsync();
-                }
-
-                consulta.MascotaId = mascota.Id;
                 _context.Add(consulta);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            // Recargar el dropdown de mascotas si falla la validación
+            List<Mascota> mascotas;
+            if (User.IsInRole("Cliente"))
+            {
+                string userEmail = User.Identity?.Name ?? string.Empty;
+                var dueno = await _context.Duenos.FirstOrDefaultAsync(d => d.Email == userEmail && d.Activo);
+                mascotas = dueno != null 
+                    ? await _context.Mascotas.Where(m => m.DuenoId == dueno.Id && m.Activo).ToListAsync()
+                    : new List<Mascota>();
+            }
+            else
+            {
+                mascotas = await _context.Mascotas.Where(m => m.Activo).ToListAsync();
+            }
+
+            ViewData["MascotaId"] = new SelectList(mascotas, "Id", "Nombre", consulta.MascotaId);
             return View(consulta);
         }
 
@@ -130,60 +190,93 @@ namespace HuellitasFelices.Controllers
 
             var consulta = await _context.Consultas
                 .Include(c => c.Mascota)
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .FirstOrDefaultAsync(c => c.Id == id && c.Activo);
+
             if (consulta == null)
             {
                 return NotFound();
             }
+
+            // Restricción de seguridad para clientes
+            if (User.IsInRole("Cliente"))
+            {
+                string userEmail = User.Identity?.Name ?? string.Empty;
+                var dueno = await _context.Duenos.FirstOrDefaultAsync(d => d.Email == userEmail && d.Activo);
+                if (dueno == null || consulta.Mascota!.DuenoId != dueno.Id)
+                {
+                    return Forbid();
+                }
+
+                var clientPets = await _context.Mascotas.Where(m => m.DuenoId == dueno.Id && m.Activo).ToListAsync();
+                ViewData["MascotaId"] = new SelectList(clientPets, "Id", "Nombre", consulta.MascotaId);
+            }
+            else
+            {
+                var allPets = await _context.Mascotas.Where(m => m.Activo).ToListAsync();
+                ViewData["MascotaId"] = new SelectList(allPets, "Id", "Nombre", consulta.MascotaId);
+            }
+
             return View(consulta);
         }
 
         // POST: Consultas/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Motivo,Diagnostico,Costo,FechaConsulta,Activo,FechaCreacion")] Consulta consulta, string nombreMascota)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Motivo,Sintomas,Diagnostico,Costo,FechaConsulta,Activo,FechaCreacion,MascotaId")] Consulta consulta)
         {
             if (id != consulta.Id)
             {
                 return NotFound();
             }
 
-            ModelState.Remove("MascotaId");
             ModelState.Remove("Mascota");
 
-            if (string.IsNullOrWhiteSpace(nombreMascota))
+            // Buscar consulta existente para verificar seguridad y preservar campos
+            var consultaExistente = await _context.Consultas
+                .AsNoTracking()
+                .Include(c => c.Mascota)
+                .FirstOrDefaultAsync(c => c.Id == id && c.Activo);
+
+            if (consultaExistente == null)
             {
-                ModelState.AddModelError("MascotaId", "El nombre de la mascota es obligatorio.");
+                return NotFound();
+            }
+
+            if (User.IsInRole("Cliente"))
+            {
+                string userEmail = User.Identity?.Name ?? string.Empty;
+                var dueno = await _context.Duenos.FirstOrDefaultAsync(d => d.Email == userEmail && d.Activo);
+                if (dueno == null || consultaExistente.Mascota!.DuenoId != dueno.Id)
+                {
+                    return Forbid();
+                }
+
+                // Preservar datos médicos originales que el cliente no puede tocar
+                consulta.Costo = consultaExistente.Costo;
+                consulta.Diagnostico = consultaExistente.Diagnostico;
+                ModelState.Remove("Costo");
+                ModelState.Remove("Diagnostico");
+
+                var mascota = await _context.Mascotas.FindAsync(consulta.MascotaId);
+                if (mascota == null || mascota.DuenoId != dueno.Id || !mascota.Activo)
+                {
+                    ModelState.AddModelError("MascotaId", "La mascota seleccionada es inválida.");
+                }
+            }
+            else
+            {
+                var mascota = await _context.Mascotas.FindAsync(consulta.MascotaId);
+                if (mascota == null || !mascota.Activo)
+                {
+                    ModelState.AddModelError("MascotaId", "La mascota seleccionada es inválida.");
+                }
             }
 
             if (ModelState.IsValid)
             {
-                var mascota = await _context.Mascotas
-                    .FirstOrDefaultAsync(m => m.Nombre.ToLower() == nombreMascota.Trim().ToLower() && m.Activo);
-
-                if (mascota == null)
-                {
-                    mascota = new Mascota
-                    {
-                        Nombre = nombreMascota.Trim(),
-                        Especie = "Perro",
-                        Raza = "Mestizo",
-                        Edad = 1,
-                        Peso = 5.0m,
-                        Activo = true,
-                        FechaCreacion = DateTime.UtcNow,
-                        FechaActualizacion = DateTime.UtcNow
-                    };
-                    _context.Mascotas.Add(mascota);
-                    await _context.SaveChangesAsync();
-                }
-
-                consulta.MascotaId = mascota.Id;
-
                 try
                 {
+                    consulta.FechaActualizacion = DateTime.UtcNow;
                     _context.Update(consulta);
                     await _context.SaveChangesAsync();
                 }
@@ -200,10 +293,28 @@ namespace HuellitasFelices.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
+            // Recargar select lists
+            List<Mascota> mascotas;
+            if (User.IsInRole("Cliente"))
+            {
+                string userEmail = User.Identity?.Name ?? string.Empty;
+                var dueno = await _context.Duenos.FirstOrDefaultAsync(d => d.Email == userEmail && d.Activo);
+                mascotas = dueno != null 
+                    ? await _context.Mascotas.Where(m => m.DuenoId == dueno.Id && m.Activo).ToListAsync()
+                    : new List<Mascota>();
+            }
+            else
+            {
+                mascotas = await _context.Mascotas.Where(m => m.Activo).ToListAsync();
+            }
+
+            ViewData["MascotaId"] = new SelectList(mascotas, "Id", "Nombre", consulta.MascotaId);
             return View(consulta);
         }
 
         // GET: Consultas/Delete/5
+        [Authorize(Roles = "Administrador,Supervisor")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -213,7 +324,8 @@ namespace HuellitasFelices.Controllers
 
             var consulta = await _context.Consultas
                 .Include(c => c.Mascota)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.Id == id && m.Activo);
+
             if (consulta == null)
             {
                 return NotFound();
