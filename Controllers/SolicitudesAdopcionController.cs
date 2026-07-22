@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
 using HuellitasFelices.ViewModels;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
@@ -12,11 +14,13 @@ namespace HuellitasFelices.Controllers
     public class SolicitudesAdopcionController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IEmailSender _emailSender;
         private const int TamanioPagina = 20;
 
-        public SolicitudesAdopcionController(AppDbContext context)
+        public SolicitudesAdopcionController(AppDbContext context, IEmailSender emailSender)
         {
             _context = context;
+            _emailSender = emailSender;
         }
 
         // GET: SolicitudesAdopcion
@@ -87,6 +91,32 @@ namespace HuellitasFelices.Controllers
             {
                 _context.Add(solicitudAdopcion);
                 await _context.SaveChangesAsync();
+
+                try
+                {
+                    if (!string.IsNullOrEmpty(solicitudAdopcion.Email))
+                    {
+                        var animal = await _context.AnimalesAdopcion.FindAsync(solicitudAdopcion.AnimalAdopcionId);
+                        string animalNombre = animal?.Nombre ?? "Nuestra Mascota";
+                        string animalEspecie = animal?.Especie ?? "Mascota";
+
+                        await _emailSender.SendEmailAsync(
+                            solicitudAdopcion.Email,
+                            $"Solicitud de adopción recibida - Huellitas Felices",
+                            EmailTemplates.AdoptionTemplate(
+                                solicitudAdopcion.NombreSolicitante,
+                                animalNombre,
+                                animalEspecie,
+                                solicitudAdopcion.Id.ToString()
+                            )
+                        );
+                    }
+                }
+                catch (Exception)
+                {
+                    // Prevenir caída del flujo si falla el servicio SMTP
+                }
+
                 return RedirectToAction(nameof(Index));
             }
             ViewData["AnimalAdopcionId"] = new SelectList(_context.AnimalesAdopcion, "Id", "Especie", solicitudAdopcion.AnimalAdopcionId);

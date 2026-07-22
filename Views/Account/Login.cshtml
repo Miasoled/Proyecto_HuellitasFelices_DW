@@ -32,9 +32,12 @@
                         <input asp-for="Password" class="form-control" placeholder="••••••••" />
                         <span asp-validation-for="Password" class="text-danger" style="font-size:.82rem"></span>
                     </div>
-                    <div class="mb-4 form-check">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label" style="font-size:.9rem">Recordarme</label>
+                    <div class="mb-4 d-flex justify-content-between align-items-center">
+                        <div class="form-check" style="margin-bottom:0">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label" style="font-size:.9rem">Recordarme</label>
+                        </div>
+                        <a asp-action="ForgotPassword" style="font-size:.85rem; color:var(--primary); text-decoration:none; font-weight:500">¿Olvidaste tu contraseña?</a>
                     </div>
                     <button type="submit" class="btn-primary-hf w-100 justify-content-center" style="padding:13px">
                         <i class="bi bi-box-arrow-in-right"></i> Ingresar

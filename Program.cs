@@ -2,6 +2,8 @@ using HuellitasFelices.Data;
 using HuellitasFelices.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using HuellitasFelices.Settings;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 // Permite enviar DateTime con Kind=Unspecified a PostgreSQL (legacy behavior)
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -19,7 +21,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.Password.RequiredLength = 8;
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = false;
-    options.SignIn.RequireConfirmedAccount = false;
+    options.SignIn.RequireConfirmedAccount = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
@@ -34,6 +36,9 @@ builder.Services.AddAuthentication()
             ?? throw new InvalidOperationException("Falta configurar Authentication:Google:ClientSecret");
         options.CallbackPath = "/signin-google"; // debe coincidir con el URI autorizado en Google Cloud Console
     });
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
 
 // Configurar rutas de login
 builder.Services.ConfigureApplicationCookie(options =>

@@ -408,3 +408,6 @@ C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\refint\HuellitasFelices
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\HuellitasFelices.pdb
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\HuellitasFelices.genruntimeconfig.cache
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\ref\HuellitasFelices.dll
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\BouncyCastle.Cryptography.dll
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\MailKit.dll
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\MimeKit.dll

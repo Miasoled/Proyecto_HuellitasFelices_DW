@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HuellitasFelices")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bf70d37b0b421b6a402bf91ad655463609756f42")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1c02c18ba09a91d4d461e9e8faf2d72808048f8b")]
 [assembly: System.Reflection.AssemblyProductAttribute("HuellitasFelices")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HuellitasFelices")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

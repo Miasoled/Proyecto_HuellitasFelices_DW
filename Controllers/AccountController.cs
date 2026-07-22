@@ -1,9 +1,11 @@
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
 using HuellitasFelices.ViewModels;
+using HuellitasFelices.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
@@ -16,17 +18,20 @@ namespace HuellitasFelices.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly AppDbContext _context;
+        private readonly IEmailSender _emailSender;
 
         public AccountController(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             RoleManager<IdentityRole> roleManager,
-            AppDbContext context)
+            AppDbContext context,
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
             _context = context;
+            _emailSender = emailSender;
         }
 
         // ── LOGIN ─────────────────────────────────────────────────────────────
@@ -55,6 +60,12 @@ namespace HuellitasFelices.Controllers
 
             if (result.Succeeded)
                 return LocalRedirect(returnUrl ?? "/");
+
+            if (result.IsNotAllowed)
+            {
+                ModelState.AddModelError(string.Empty, "Debes confirmar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.");
+                return View(model);
+            }
 
             ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos.");
             return View(model);
@@ -179,7 +190,6 @@ namespace HuellitasFelices.Controllers
             {
                 UserName = model.Email,
                 Email = model.Email,
-                EmailConfirmed = true,
                 PhoneNumber = model.Telefono
             };
 
@@ -203,14 +213,71 @@ namespace HuellitasFelices.Controllers
                 _context.Duenos.Add(dueno);
                 await _context.SaveChangesAsync();
 
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToAction("MiPanel", "Account");
+                // Generar token de confirmación de email
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                // Generar enlace de confirmación
+                var confirmationLink = Url.Action("ConfirmEmail", "Account", 
+                    new { userId = user.Id, token = token }, Request.Scheme);
+
+                // Enviar el correo de confirmación utilizando plantilla centralizada
+                await _emailSender.SendEmailAsync(
+                    model.Email,
+                    "Confirma tu correo electrónico - Huellitas Felices",
+                    EmailTemplates.WelcomeTemplate(model.Email, confirmationLink!));
+
+                return RedirectToAction("RegisterConfirmation", new { email = model.Email });
             }
 
             foreach (var error in result.Errors)
                 ModelState.AddModelError(string.Empty, error.Description);
 
             return View(model);
+        }
+
+        // ── CONFIRMACIÓN DE REGISTRO / EMAIL ──────────────────────────────────
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult RegisterConfirmation(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            ViewBag.Email = email;
+            return View();
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
+            {
+                ViewBag.Succeeded = false;
+                ViewBag.Message = "El enlace de confirmación es inválido.";
+                return View();
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                ViewBag.Succeeded = false;
+                ViewBag.Message = "El usuario no existe.";
+                return View();
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
+            {
+                ViewBag.Succeeded = true;
+                return View();
+            }
+
+            ViewBag.Succeeded = false;
+            ViewBag.Message = "El enlace ha expirado o el token de confirmación es inválido.";
+            return View();
         }
 
         // ── REGISTRO INTERNO (solo Administrador) ─────────────────────────────
@@ -334,6 +401,97 @@ namespace HuellitasFelices.Controllers
             }
 
             return View(modelo);
+        }
+
+        // ── RECUPERACIÓN DE CONTRASEÑA ────────────────────────────────────────
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+            {
+                // Por seguridad, no revelamos si el usuario existe o no
+                return RedirectToAction(nameof(ForgotPasswordConfirmation));
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var callbackUrl = Url.Action("ResetPassword", "Account", new { token, email = model.Email }, Request.Scheme);
+
+            await _emailSender.SendEmailAsync(
+                model.Email,
+                "Restablecer contraseña - Huellitas Felices",
+                EmailTemplates.ForgotPasswordTemplate(callbackUrl!));
+
+            return RedirectToAction(nameof(ForgotPasswordConfirmation));
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string? token = null, string? email = null)
+        {
+            if (token == null || email == null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            var model = new ResetPasswordViewModel { Token = token, Email = email };
+            return View(model);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Por seguridad, redirigir sin dar pistas
+                return RedirectToAction(nameof(ResetPasswordConfirmation));
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+            if (result.Succeeded)
+            {
+                return RedirectToAction(nameof(ResetPasswordConfirmation));
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
         }
     }
 }
