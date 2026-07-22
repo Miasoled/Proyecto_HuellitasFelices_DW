@@ -36,6 +36,10 @@
                         <label asp-for="Email" class="form-label"><i class="bi bi-envelope me-1"></i>Email</label>
                         <input asp-for="Email" class="form-control" />
                     </div>
+                    <div class="col-12">
+                        <label asp-for="Motivo" class="form-label"><i class="bi bi-chat-heart me-1"></i>Motivo de adopción</label>
+                        <textarea asp-for="Motivo" class="form-control" rows="4" readonly style="background-color: var(--gray-50); cursor: not-allowed; resize: none;"></textarea>
+                    </div>
                     <div class="col-md-6">
                         <label asp-for="Estado" class="form-label"><i class="bi bi-flag me-1"></i>Estado</label>
                         <select asp-for="Estado" class="form-select">

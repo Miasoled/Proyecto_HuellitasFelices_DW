@@ -23,7 +23,12 @@ namespace HuellitasFelices.Models
 
         [StringLength(50)]
         [Display(Name = "Estado")]
-        public string Estado { get; set; } = "Pendiente"; // Pendiente, Aprobada, Rechazada
+        public string Estado { get; set; } = "Pendiente"; // ...
+
+        [Required(ErrorMessage = "El motivo de adopción es obligatorio")]
+        [StringLength(500, ErrorMessage = "El motivo no puede superar los 500 caracteres")]
+        [Display(Name = "Motivo de adopción")]
+        public string Motivo { get; set; } = string.Empty;
 
         public bool Activo { get; set; } = true;
 

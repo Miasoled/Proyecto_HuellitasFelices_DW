@@ -1,55 +1,105 @@
 @model HuellitasFelices.Models.SolicitudAdopcion
-@{ ViewData["Title"] = "Nueva solicitud"; }
+@{
+    ViewData["Title"] = "Nueva solicitud";
+    var animal = ViewBag.Animal as HuellitasFelices.Models.AnimalAdopcion;
+}
+
 <div class="page-header"><div class="container">
     <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
-        <li class="breadcrumb-item"><a asp-action="Index">Solicitudes</a></li>
-        <li class="breadcrumb-item active">Nueva</li>
+        <li class="breadcrumb-item"><a asp-controller="AnimalesAdopcion" asp-action="Index">Adopciones</a></li>
+        <li class="breadcrumb-item active">Nueva Solicitud</li>
     </ol></nav>
-    <h1><i class="bi bi-file-earmark-plus-fill me-2"></i>Nueva solicitud de adopción</h1>
+    <h1><i class="bi bi-heart-fill me-2" style="color: #ef4444;"></i>Nueva solicitud de adopción</h1>
 </div></div>
+
 <div class="content-wrapper"><div class="container">
-<div class="row justify-content-center"><div class="col-lg-7">
-    <div class="hf-card">
-        <div class="hf-card-header"><i class="bi bi-file-earmark-text me-2"></i>Datos del solicitante</div>
-        <div class="card-body p-4">
-            <form asp-action="Create">
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label asp-for="AnimalAdopcionId" class="form-label"><i class="bi bi-house-heart me-1"></i>Animal</label>
-                        <select asp-for="AnimalAdopcionId" asp-items="ViewBag.AnimalAdopcionId" class="form-select">
-                            <option value="">-- Seleccione un animal --</option>
-                        </select>
-                        <span asp-validation-for="AnimalAdopcionId" class="text-danger" style="font-size:.82rem"></span>
-                    </div>
-                    <div class="col-12">
-                        <label asp-for="NombreSolicitante" class="form-label"><i class="bi bi-person me-1"></i>Nombre del solicitante</label>
-                        <input asp-for="NombreSolicitante" class="form-control" placeholder="Juan Pérez" />
-                        <span asp-validation-for="NombreSolicitante" class="text-danger" style="font-size:.82rem"></span>
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="Telefono" class="form-label"><i class="bi bi-phone me-1"></i>Teléfono</label>
-                        <input asp-for="Telefono" class="form-control" placeholder="0991234567" />
-                        <span asp-validation-for="Telefono" class="text-danger" style="font-size:.82rem"></span>
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="Email" class="form-label"><i class="bi bi-envelope me-1"></i>Email</label>
-                        <input asp-for="Email" class="form-control" placeholder="correo@ejemplo.com" />
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="Estado" class="form-label"><i class="bi bi-flag me-1"></i>Estado</label>
-                        <select asp-for="Estado" class="form-select">
-                            <option>Pendiente</option><option>Aprobada</option><option>Rechazada</option>
-                        </select>
-                    </div>
-                    <div class="col-12 d-flex gap-3 pt-2">
-                        <button type="submit" class="btn-primary-hf"><i class="bi bi-check-lg"></i> Guardar</button>
-                        <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Cancelar</a>
+<div class="row justify-content-center">
+    @if (animal != null)
+    {
+        <!-- Panel Lateral: Información de la Mascota -->
+        <div class="col-lg-4 mb-4">
+            <div class="hf-card text-center" style="position: sticky; top: 120px;">
+                <div class="hf-card-header">
+                    <i class="bi bi-patch-check-fill me-2"></i>Mascota seleccionada
+                </div>
+                <div class="card-body p-4">
+                    @if (!string.IsNullOrEmpty(animal.FotoUrl))
+                    {
+                        <img src="@animal.FotoUrl" alt="@animal.Nombre" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow);" />
+                    }
+                    else
+                    {
+                        <div style="background:var(--primary-bg); height: 150px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                            <i class="bi bi-house-heart-fill" style="font-size: 4rem; color: var(--primary); opacity: 0.3;"></i>
+                        </div>
+                    }
+                    <h4 style="font-weight: 800; color: var(--primary-dark); margin-bottom: 4px;">@animal.Nombre</h4>
+                    <span class="badge-success-hf" style="font-size: 0.85rem; padding: 5px 12px;">@animal.Especie</span>
+                    
+                    <hr style="border-color: var(--border); margin: 16px 0;" />
+                    
+                    <div class="text-start" style="font-size: 0.9rem;">
+                        <p class="mb-2"><strong style="color:var(--text-mid)">Raza:</strong> @(animal.Raza ?? "—")</p>
+                        <p class="mb-2"><strong style="color:var(--text-mid)">Edad:</strong> @animal.EdadAproximada años</p>
+                        @if (!string.IsNullOrEmpty(animal.Descripcion))
+                        {
+                            <p class="mb-0 text-muted" style="font-style: italic; line-height: 1.5;">"@animal.Descripcion"</p>
+                        }
                     </div>
                 </div>
-            </form>
+            </div>
+        </div>
+    }
+
+    <!-- Formulario de Solicitud -->
+    <div class="col-lg-8">
+        <div class="hf-card">
+            <div class="hf-card-header"><i class="bi bi-file-earmark-text me-2"></i>Datos del solicitante y motivación</div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+                    <input type="hidden" asp-for="AnimalAdopcionId" />
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="NombreSolicitante" class="form-label"><i class="bi bi-person me-1"></i>Nombre del solicitante</label>
+                            <input asp-for="NombreSolicitante" class="form-control" readonly style="background-color: var(--gray-50); cursor: not-allowed;" />
+                            <span asp-validation-for="NombreSolicitante" class="text-danger" style="font-size:.82rem"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Telefono" class="form-label"><i class="bi bi-phone me-1"></i>Teléfono</label>
+                            <input asp-for="Telefono" class="form-control" readonly style="background-color: var(--gray-50); cursor: not-allowed;" />
+                            <span asp-validation-for="Telefono" class="text-danger" style="font-size:.82rem"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label"><i class="bi bi-envelope me-1"></i>Email de contacto</label>
+                            <input asp-for="Email" class="form-control" readonly style="background-color: var(--gray-50); cursor: not-allowed;" />
+                            <span asp-validation-for="Email" class="text-danger" style="font-size:.82rem"></span>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label asp-for="Motivo" class="form-label"><i class="bi bi-chat-heart me-1"></i>¿Por qué deseas adoptar a esta mascota?</label>
+                            <textarea asp-for="Motivo" class="form-control" rows="5" placeholder="Cuéntanos un poco sobre ti, tu hogar, si tienes experiencia previa con mascotas y tus razones para brindarle una nueva vida a esta mascotita..." style="resize: none;"></textarea>
+                            <span asp-validation-for="Motivo" class="text-danger" style="font-size:.82rem"></span>
+                        </div>
+
+                        <div class="col-12 d-flex gap-3 pt-3 border-top" style="border-color: var(--border) !important;">
+                            <button type="submit" class="btn-primary-hf" style="padding: 12px 24px; font-size: 0.95rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="bi bi-heart-fill"></i> Enviar solicitud
+                            </button>
+                            <a asp-controller="AnimalesAdopcion" asp-action="Index" class="btn-outline-hf" style="padding: 12px 24px; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="bi bi-x-lg"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div></div></div></div>
-@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }
+</div>
+</div></div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

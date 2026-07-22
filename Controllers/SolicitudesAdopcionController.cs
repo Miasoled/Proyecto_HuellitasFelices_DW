@@ -74,19 +74,55 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: SolicitudesAdopcion/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create(int? animalId)
         {
-            ViewData["AnimalAdopcionId"] = new SelectList(_context.AnimalesAdopcion, "Id", "Especie");
-            return View();
+            if (animalId == null)
+            {
+                TempData["Error"] = "Debe seleccionar un animal para iniciar la solicitud de adopción.";
+                return RedirectToAction("Index", "AnimalesAdopcion");
+            }
+
+            var animal = await _context.AnimalesAdopcion.FindAsync(animalId);
+            if (animal == null || !animal.Disponible || !animal.Activo)
+            {
+                TempData["Error"] = "El animal seleccionado no está disponible para adopción.";
+                return RedirectToAction("Index", "AnimalesAdopcion");
+            }
+
+            // Obtener datos del cliente logueado para pre-rellenar
+            string userEmail = User.Identity?.Name ?? string.Empty;
+            var dueno = await _context.Duenos.FirstOrDefaultAsync(d => d.Email == userEmail && d.Activo);
+
+            var model = new SolicitudAdopcion
+            {
+                AnimalAdopcionId = animal.Id,
+                AnimalAdopcion = animal,
+                NombreSolicitante = dueno?.Nombre ?? string.Empty,
+                Telefono = dueno?.Telefono ?? string.Empty,
+                Email = dueno?.Email ?? userEmail,
+                Estado = "Pendiente",
+                FechaSolicitud = DateTime.UtcNow
+            };
+
+            ViewBag.Animal = animal;
+            ViewData["AnimalAdopcionId"] = new SelectList(new List<AnimalAdopcion> { animal }, "Id", "Nombre", animal.Id);
+            return View(model);
         }
 
         // POST: SolicitudesAdopcion/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,NombreSolicitante,Telefono,Email,Estado,FechaSolicitud,Activo,FechaCreacion,AnimalAdopcionId")] SolicitudAdopcion solicitudAdopcion)
+        public async Task<IActionResult> Create([Bind("Id,NombreSolicitante,Telefono,Email,AnimalAdopcionId,Motivo")] SolicitudAdopcion solicitudAdopcion)
         {
+            // Forzar el estado a Pendiente y auditorías
+            solicitudAdopcion.Estado = "Pendiente";
+            solicitudAdopcion.FechaSolicitud = DateTime.UtcNow;
+            solicitudAdopcion.FechaCreacion = DateTime.UtcNow;
+            solicitudAdopcion.FechaActualizacion = DateTime.UtcNow;
+            solicitudAdopcion.Activo = true;
+
+            ModelState.Remove("Estado");
+
             if (ModelState.IsValid)
             {
                 _context.Add(solicitudAdopcion);
@@ -119,7 +155,11 @@ namespace HuellitasFelices.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AnimalAdopcionId"] = new SelectList(_context.AnimalesAdopcion, "Id", "Especie", solicitudAdopcion.AnimalAdopcionId);
+
+            // Si hay algún error, volver a buscar el animal para volver a renderizar la vista correctamente
+            var animalErr = await _context.AnimalesAdopcion.FindAsync(solicitudAdopcion.AnimalAdopcionId);
+            ViewBag.Animal = animalErr;
+            ViewData["AnimalAdopcionId"] = new SelectList(new List<AnimalAdopcion> { animalErr! }, "Id", "Nombre", solicitudAdopcion.AnimalAdopcionId);
             return View(solicitudAdopcion);
         }
 
@@ -141,11 +181,9 @@ namespace HuellitasFelices.Controllers
         }
 
         // POST: SolicitudesAdopcion/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,NombreSolicitante,Telefono,Email,Estado,FechaSolicitud,Activo,FechaCreacion,AnimalAdopcionId")] SolicitudAdopcion solicitudAdopcion)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,NombreSolicitante,Telefono,Email,Estado,FechaSolicitud,Activo,FechaCreacion,AnimalAdopcionId,Motivo")] SolicitudAdopcion solicitudAdopcion)
         {
             if (id != solicitudAdopcion.Id)
             {
@@ -156,8 +194,22 @@ namespace HuellitasFelices.Controllers
             {
                 try
                 {
+                    solicitudAdopcion.FechaActualizacion = DateTime.UtcNow;
                     _context.Update(solicitudAdopcion);
                     await _context.SaveChangesAsync();
+
+                    // Si se aprueba la solicitud, marcar al animal como adoptado (no disponible)
+                    if (solicitudAdopcion.Estado == "Aprobada")
+                    {
+                        var animal = await _context.AnimalesAdopcion.FindAsync(solicitudAdopcion.AnimalAdopcionId);
+                        if (animal != null && animal.Disponible)
+                        {
+                            animal.Disponible = false;
+                            animal.FechaActualizacion = DateTime.UtcNow;
+                            _context.Update(animal);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {

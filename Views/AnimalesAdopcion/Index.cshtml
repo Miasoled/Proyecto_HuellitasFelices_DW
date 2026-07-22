@@ -110,7 +110,7 @@
                             <div class="d-flex gap-2 mt-auto">
                                 @if (item.Disponible)
                                 {
-                                    <a asp-controller="SolicitudesAdopcion" asp-action="Create" class="btn-primary-hf flex-grow-1 justify-content-center" style="padding:7px;font-size:.8rem">
+                                    <a asp-controller="SolicitudesAdopcion" asp-action="Create" asp-route-animalId="@item.Id" class="btn-primary-hf flex-grow-1 justify-content-center" style="padding:7px;font-size:.8rem">
                                         <i class="bi bi-heart-fill"></i> Adoptar
                                     </a>
                                 }
