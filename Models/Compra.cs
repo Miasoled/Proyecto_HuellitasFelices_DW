@@ -31,10 +31,6 @@ namespace HuellitasFelices.Models
         public int ProveedorId { get; set; }
         public Proveedor? Proveedor { get; set; }
         
-        [Display(Name = "Sucursal")]
-        public int SucursalId { get; set; }
-        public Sucursal? Sucursal { get; set; }
-        
         // Navegación
         public ICollection<DetalleCompra> Detalles { get; set; } = new List<DetalleCompra>();
     }

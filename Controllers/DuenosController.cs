@@ -157,10 +157,10 @@ namespace HuellitasFelices.Controllers
             return View(dueno);
         }
 
-        // POST: Duenos/Delete/5 — Solo Administrador y Supervisor
+        // POST: Duenos/Delete/5 — Solo Administrador
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador,Supervisor")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var dueno = await _context.Duenos.FindAsync(id);

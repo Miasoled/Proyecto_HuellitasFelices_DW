@@ -52,6 +52,11 @@
                                 <i class="bi bi-calendar-plus"></i> Agendar cita
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Tienda" asp-action="Index">
+                                <i class="bi bi-bag-heart"></i> Tienda
+                            </a>
+                        </li>
                     }
                     else
                     {
@@ -69,7 +74,7 @@
                                 <li><a class="dropdown-item" asp-controller="Consultas" asp-action="Index">
                                     <i class="bi bi-stethoscope text-info"></i> Consultas
                                 </a></li>
-                                @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor") || User.IsInRole("Operador") || User.IsInRole("Doctor"))
+                                @if (User.IsInRole("Administrador") || User.IsInRole("Doctor"))
                                 {
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" asp-controller="Tratamientos" asp-action="Index">
@@ -93,7 +98,7 @@
                             </ul>
                         </li>
 
-                        @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor") || User.IsInRole("Operador"))
+                        @if (User.IsInRole("Administrador"))
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
@@ -112,18 +117,11 @@
                                     <li><a class="dropdown-item" asp-controller="Compras" asp-action="Index">
                                         <i class="bi bi-cart-check text-info"></i> Compras
                                     </a></li>
-                                    @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor"))
-                                    {
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" asp-controller="Sucursales" asp-action="Index">
-                                            <i class="bi bi-building text-danger"></i> Sucursales
-                                        </a></li>
-                                    }
                                 </ul>
                             </li>
                         }
 
-                        @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor"))
+                        @if (User.IsInRole("Administrador"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Empleados" asp-action="Index">
@@ -180,10 +178,6 @@
                                 <br>
                                 @if (User.IsInRole("Administrador"))
                                     { <span class="badge-success-hf" style="font-size:.75rem">Administrador</span> }
-                                else if (User.IsInRole("Supervisor"))
-                                    { <span class="badge-info-hf" style="font-size:.75rem">Supervisor</span> }
-                                else if (User.IsInRole("Operador"))
-                                    { <span class="badge-warning-hf" style="font-size:.75rem">Operador</span> }
                                 else if (User.IsInRole("Doctor"))
                                     { <span class="badge-info-hf" style="font-size:.75rem">Doctor</span> }
                                 else if (User.IsInRole("Cliente"))

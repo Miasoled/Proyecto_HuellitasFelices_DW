@@ -16,7 +16,7 @@
                 <h1><i class="bi bi-house-heart-fill me-2"></i>Animales en adopción</h1>
                 <small style="opacity:.8">@(p?.TotalRegistros.ToString("N0") ?? "–") animales registrados</small>
             </div>
-            @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor") || User.IsInRole("Operador"))
+            @if (User.IsInRole("Administrador") || User.IsInRole("Doctor"))
             {
                 <a asp-action="Create" class="btn-hero-primary">
                     <i class="bi bi-plus-lg"></i> Nuevo animal
@@ -44,7 +44,7 @@
                     <small class="text-muted">Página @p.PaginaActual de @p.TotalPaginas — @p.TotalRegistros.ToString("N0") animales</small>
                 }
 
-                @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor") || User.IsInRole("Operador"))
+                @if (User.IsInRole("Administrador") || User.IsInRole("Doctor"))
                 {
                     <a asp-action="Create"
                        style="background:white; color:var(--primary-dark); border:none;
@@ -115,7 +115,7 @@
                                     </a>
                                 }
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-view" style="padding:7px 10px"><i class="bi bi-eye"></i></a>
-                                @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor") || User.IsInRole("Operador"))
+                                @if (User.IsInRole("Administrador") || User.IsInRole("Doctor"))
                                 {
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-edit" style="padding:7px 10px"><i class="bi bi-pencil"></i></a>
                                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-delete" style="padding:7px 10px"><i class="bi bi-trash"></i></a>

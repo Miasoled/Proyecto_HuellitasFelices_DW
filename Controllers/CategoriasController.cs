@@ -6,7 +6,7 @@ using HuellitasFelices.Models;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador,Supervisor,Operador")]
+    [Authorize(Roles = "Administrador")]
     public class CategoriasController : Controller
     {
         private readonly AppDbContext _context;

@@ -9,7 +9,7 @@ namespace HuellitasFelices.Models
         [Required]
         [StringLength(50)]
         public string TipoMovimiento { get; set; } = string.Empty;
-        // Compra, Venta, TransferenciaSalida, TransferenciaEntrada, Ajuste, Devolucion
+        // Compra, Venta, Ajuste, Devolucion
         
         [Range(1, 99999)]
         public int Cantidad { get; set; }
@@ -32,14 +32,6 @@ namespace HuellitasFelices.Models
         [Display(Name = "Producto")]
         public int ProductoId { get; set; }
         public Producto? Producto { get; set; }
-        
-        [Display(Name = "Sucursal Origen")]
-        public int SucursalOrigenId { get; set; }
-        public Sucursal? SucursalOrigen { get; set; }
-        
-        [Display(Name = "Sucursal Destino")]
-        public int? SucursalDestinoId { get; set; }
-        public Sucursal? SucursalDestino { get; set; }
         
         [Display(Name = "Compra")]
         public int? CompraId { get; set; }

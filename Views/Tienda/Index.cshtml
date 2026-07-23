@@ -1,0 +1,143 @@
+@model IEnumerable<HuellitasFelices.Models.Producto>
+@using HuellitasFelices.Models
+@{
+    ViewData["Title"] = "Tienda";
+    var p = ViewBag.Paginacion as PaginacionViewModel;
+    var categorias = ViewBag.Categorias as List<Categoria> ?? new();
+    var categoriaSel = ViewBag.CategoriaSeleccionada as int?;
+}
+
+<div class="page-header" style="background:linear-gradient(135deg,#14532d 0%,#166534 50%,#16a34a 100%)">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" style="color:rgba(255,255,255,.7)">Inicio</a></li>
+            <li class="breadcrumb-item active" style="color:rgba(255,255,255,.9)">Tienda</li>
+        </ol></nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 style="color:white"><i class="bi bi-bag-heart-fill me-2"></i>Tienda Huellitas</h1>
+                <small style="color:rgba(255,255,255,.75)">Productos para el cuidado de tu mascota</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <div class="container">
+
+        <!-- Filtros -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <form method="get" class="search-bar" style="flex:1;max-width:420px">
+                <input type="hidden" name="categoriaId" value="@categoriaSel" />
+                <input type="text" name="busqueda" value="@p?.Busqueda" class="form-control" placeholder="Buscar productos..." />
+                <button type="submit" class="btn-search"><i class="bi bi-search"></i></button>
+                @if (!string.IsNullOrEmpty(p?.Busqueda) || categoriaSel.HasValue)
+                {
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-3"><i class="bi bi-x-lg"></i></a>
+                }
+            </form>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a asp-action="Index" class="btn @(categoriaSel == null ? "btn-success" : "btn-outline-secondary") btn-sm rounded-3" style="font-size:.82rem">
+                    Todos
+                </a>
+                @foreach (var cat in categorias)
+                {
+                    <a asp-action="Index" asp-route-categoriaId="@cat.Id" asp-route-busqueda="@p?.Busqueda"
+                       class="btn @(categoriaSel == cat.Id ? "btn-success" : "btn-outline-secondary") btn-sm rounded-3" style="font-size:.82rem">
+                        @cat.Nombre
+                    </a>
+                }
+            </div>
+        </div>
+
+        <!-- Catálogo -->
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                var stock = item.Inventarios?.Sum(i => i.StockActual) ?? 0;
+                var disponible = stock > 0;
+                var catColor = item.Categoria?.Nombre?.ToLower() switch {
+                    "alimento" => "#16a34a",
+                    "medicamento" => "#2563eb",
+                    "accesorio" => "#d97706",
+                    "higiene" => "#7c3aed",
+                    _ => "#6b7280"
+                };
+                var catIcon = item.Categoria?.Nombre?.ToLower() switch {
+                    "alimento" => "bi-cup-hot-fill",
+                    "medicamento" => "bi-capsule",
+                    "accesorio" => "bi-handbag-fill",
+                    "higiene" => "bi-droplet-fill",
+                    _ => "bi-box-seam"
+                };
+
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div style="background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);transition:transform .3s,box-shadow .3s;height:100%;display:flex;flex-direction:column">
+                        <!-- Header con icono de categoría -->
+                        <div style="background:@(catColor)15;height:140px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0">
+                            <i class="bi @catIcon" style="font-size:3.5rem;color:@catColor;opacity:.3"></i>
+                            @if (!disponible)
+                            {
+                                <div style="position:absolute;top:10px;left:10px">
+                                    <span class="badge-danger-hf" style="font-size:.73rem">Sin stock</span>
+                                </div>
+                            }
+                            else if (stock <= 5)
+                            {
+                                <div style="position:absolute;top:10px;left:10px">
+                                    <span class="badge-warning-hf" style="font-size:.73rem">Últimas @stock u.</span>
+                                </div>
+                            }
+                            <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);color:white;padding:3px 10px;border-radius:20px;font-size:.73rem;font-weight:600">
+                                @(item.Categoria?.Nombre ?? "General")
+                            </div>
+                        </div>
+                        <!-- Info -->
+                        <div style="padding:14px;flex-grow:1;display:flex;flex-direction:column">
+                            <h6 style="font-weight:800;font-size:.95rem;margin:0 0 4px;line-height:1.3">@item.Nombre</h6>
+                            @if (!string.IsNullOrEmpty(item.Descripcion))
+                            {
+                                <p style="color:var(--text-soft);font-size:.8rem;margin:0 0 10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex-grow:1">@item.Descripcion</p>
+                            }
+                            else
+                            {
+                                <div style="flex-grow:1"></div>
+                            }
+                            <div class="d-flex justify-content-between align-items-end mt-auto">
+                                <div>
+                                    <div style="font-size:1.25rem;font-weight:800;color:var(--primary)">$@item.PrecioVenta.ToString("F2")</div>
+                                    <small style="color:var(--text-soft);font-size:.75rem">@item.UnidadMedida</small>
+                                </div>
+                                <a asp-action="Detalle" asp-route-id="@item.Id" class="btn-primary-hf" style="padding:7px 14px;font-size:.8rem;border-radius:8px">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-bag-x" style="font-size:4rem;color:var(--border);display:block;margin-bottom:16px"></i>
+                    <h5 style="color:var(--text-soft)">No se encontraron productos</h5>
+                    @if (!string.IsNullOrEmpty(p?.Busqueda) || categoriaSel.HasValue)
+                    {
+                        <p style="color:var(--text-soft);font-size:.9rem">
+                            Sin resultados para "<strong>@(p?.Busqueda ?? "")</strong>".
+                            <a asp-action="Index">Ver todos</a>
+                        </p>
+                    }
+                    else
+                    {
+                        <p style="color:var(--text-soft);font-size:.9rem">Próximamente agregaremos productos a la tienda.</p>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (p != null) { @await Html.PartialAsync("_Paginacion", p) }
+    </div>
+</div>

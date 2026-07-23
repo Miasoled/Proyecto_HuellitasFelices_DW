@@ -8,7 +8,7 @@ using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador,Supervisor,Operador")]
+    [Authorize(Roles = "Administrador")]
     public class InventarioController : Controller
     {
         private readonly AppDbContext _context;
@@ -78,6 +78,16 @@ namespace HuellitasFelices.Controllers
                 producto.FechaActualizacion = DateTime.UtcNow;
                 _context.Productos.Add(producto);
                 await _context.SaveChangesAsync();
+
+                _context.Inventarios.Add(new Inventario
+                {
+                    ProductoId = producto.Id,
+                    StockActual = 0,
+                    FechaActualizacion = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+
+                TempData["Mensaje"] = $"Producto \"{producto.Nombre}\" registrado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
             ViewBag.CategoriaId = new SelectList(await _context.Categorias.Where(c => c.Activo).ToListAsync(), "Id", "Nombre", producto.CategoriaId);
@@ -117,11 +127,41 @@ namespace HuellitasFelices.Controllers
                 existing.ProveedorId = producto.ProveedorId;
                 existing.FechaActualizacion = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
+                TempData["Mensaje"] = $"Producto \"{existing.Nombre}\" actualizado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
             ViewBag.CategoriaId = new SelectList(await _context.Categorias.Where(c => c.Activo).ToListAsync(), "Id", "Nombre", producto.CategoriaId);
             ViewBag.ProveedorId = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "Nombre", producto.ProveedorId);
             return View(producto);
+        }
+
+        // GET: Inventario/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+            var producto = await _context.Productos
+                .Include(p => p.Categoria)
+                .Include(p => p.Proveedor)
+                .FirstOrDefaultAsync(p => p.Id == id && p.Activo);
+            if (producto == null) return NotFound();
+            return View(producto);
+        }
+
+        // POST: Inventario/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var producto = await _context.Productos.FindAsync(id);
+            if (producto != null)
+            {
+                producto.Activo = false;
+                producto.FechaEliminacion = DateTime.UtcNow;
+                producto.EliminadoPor = User.Identity?.Name;
+                await _context.SaveChangesAsync();
+                TempData["Mensaje"] = $"Producto \"{producto.Nombre}\" eliminado correctamente.";
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Inventario/Details/5
@@ -135,7 +175,6 @@ namespace HuellitasFelices.Controllers
             if (producto == null) return NotFound();
 
             var inventarios = await _context.Inventarios
-                .Include(i => i.Sucursal)
                 .Where(i => i.ProductoId == id)
                 .ToListAsync();
 
@@ -146,10 +185,10 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: Inventario/Movimientos
-        public async Task<IActionResult> Movimientos(int pagina = 1, int? productoId = null, int? sucursalId = null, DateTime? desde = null, DateTime? hasta = null)
+        public async Task<IActionResult> Movimientos(int pagina = 1, int? productoId = null, DateTime? desde = null, DateTime? hasta = null)
         {
-            var movimientos = await _inventoryService.GetMovimientosAsync(productoId, sucursalId, desde, hasta, pagina);
-            var total = await _inventoryService.GetTotalMovimientosAsync(productoId, sucursalId, desde, hasta);
+            var movimientos = await _inventoryService.GetMovimientosAsync(productoId, desde, hasta, pagina);
+            var total = await _inventoryService.GetTotalMovimientosAsync(productoId, desde, hasta);
 
             ViewBag.Paginacion = new PaginacionViewModel
             {
@@ -161,7 +200,6 @@ namespace HuellitasFelices.Controllers
             };
 
             ViewBag.Productos = new SelectList(await _context.Productos.Where(p => p.Activo).ToListAsync(), "Id", "Nombre", productoId);
-            ViewBag.Sucursales = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", sucursalId);
             ViewBag.FechaDesde = desde?.ToString("yyyy-MM-dd");
             ViewBag.FechaHasta = hasta?.ToString("yyyy-MM-dd");
 

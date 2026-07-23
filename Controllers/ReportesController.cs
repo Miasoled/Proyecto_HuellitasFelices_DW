@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador,Supervisor")]
+    [Authorize(Roles = "Administrador")]
     public class ReportesController : Controller
     {
         private readonly AppDbContext _context;

@@ -303,7 +303,7 @@ namespace HuellitasFelices.Controllers
         // POST: SolicitudesAdopcion/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador,Supervisor")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var solicitudAdopcion = await _context.SolicitudesAdopcion.FindAsync(id);

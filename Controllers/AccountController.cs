@@ -97,10 +97,19 @@ namespace HuellitasFelices.Controllers
                 .Take(5)
                 .ToList();
 
+            var productosDestacados = _context.Productos
+                .Include(p => p.Categoria)
+                .Include(p => p.Inventarios)
+                .Where(p => p.Activo && p.Inventarios.Any(i => i.StockActual > 0))
+                .OrderByDescending(p => p.FechaCreacion)
+                .Take(6)
+                .ToList();
+
             ViewBag.Dueno = dueno;
             ViewBag.Mascotas = mascotas;
             ViewBag.Consultas = consultas;
             ViewBag.Solicitudes = solicitudes;
+            ViewBag.ProductosDestacados = productosDestacados;
 
             return View();
         }

@@ -146,7 +146,7 @@ namespace HuellitasFelices.Controllers
         // POST: AnimalesAdopcion/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador,Supervisor")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var animal = await _context.AnimalesAdopcion.FindAsync(id);

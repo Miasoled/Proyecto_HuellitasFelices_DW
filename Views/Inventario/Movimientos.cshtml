@@ -28,9 +28,7 @@
             <select name="productoId" class="form-select" style="width:auto" asp-items="@(ViewBag.Productos as List<SelectListItem> ?? new())">
                 <option value="">Todos los productos</option>
             </select>
-            <select name="sucursalId" class="form-select" style="width:auto" asp-items="@(ViewBag.Sucursales as List<SelectListItem> ?? new())">
-                <option value="">Todas las sucursales</option>
-            </select>
+
             <input type="date" name="desde" value="@ViewBag.FechaDesde" class="form-control" style="width:auto" />
             <input type="date" name="hasta" value="@ViewBag.FechaHasta" class="form-control" style="width:auto" />
             <button type="submit" class="btn-search"><i class="bi bi-funnel"></i> Filtrar</button>

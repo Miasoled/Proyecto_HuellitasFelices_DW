@@ -382,7 +382,7 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: Consultas/Delete/5
-        [Authorize(Roles = "Administrador,Supervisor")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -405,7 +405,7 @@ namespace HuellitasFelices.Controllers
         // POST: Consultas/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador,Supervisor")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var consulta = await _context.Consultas.FindAsync(id);

@@ -1,0 +1,133 @@
+@model HuellitasFelices.Models.Producto
+@{
+    ViewData["Title"] = Model.Nombre;
+    var stock = ViewBag.StockTotal as int? ?? 0;
+    var relacionados = ViewBag.ProductosRelacionados as List<HuellitasFelices.Models.Producto> ?? new();
+    var disponible = stock > 0;
+    var catColor = Model.Categoria?.Nombre?.ToLower() switch {
+        "alimento" => "#16a34a",
+        "medicamento" => "#2563eb",
+        "accesorio" => "#d97706",
+        "higiene" => "#7c3aed",
+        _ => "#6b7280"
+    };
+    var catIcon = Model.Categoria?.Nombre?.ToLower() switch {
+        "alimento" => "bi-cup-hot-fill",
+        "medicamento" => "bi-capsule",
+        "accesorio" => "bi-handbag-fill",
+        "higiene" => "bi-droplet-fill",
+        _ => "bi-box-seam"
+    };
+}
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Tienda</a></li>
+            <li class="breadcrumb-item active">@Model.Nombre</li>
+        </ol></nav>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <div class="container">
+
+        <div class="row g-5">
+            <!-- Imagen / Icono -->
+            <div class="col-md-5">
+                <div style="background:@(catColor)10;border:1px solid var(--border);border-radius:var(--radius-lg);height:360px;display:flex;align-items:center;justify-content:center;position:relative">
+                    <i class="bi @catIcon" style="font-size:7rem;color:@catColor;opacity:.25"></i>
+                    <div style="position:absolute;top:16px;right:16px;background:@catColor;color:white;padding:5px 14px;border-radius:20px;font-size:.78rem;font-weight:600">
+                        @(Model.Categoria?.Nombre ?? "General")
+                    </div>
+                    @if (!disponible)
+                    {
+                        <div style="position:absolute;top:16px;left:16px">
+                            <span class="badge-danger-hf">Sin stock</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Detalles -->
+            <div class="col-md-7">
+                <h1 style="font-weight:800;font-size:1.8rem;margin-bottom:8px">@Model.Nombre</h1>
+
+                @if (!string.IsNullOrEmpty(Model.CodigoBarras))
+                {
+                    <small style="color:var(--text-soft);font-size:.82rem">Código: @Model.CodigoBarras</small>
+                }
+
+                <div style="font-size:2.2rem;font-weight:800;color:var(--primary);margin:16px 0 4px">$@Model.PrecioVenta.ToString("F2")</div>
+                <small style="color:var(--text-soft);font-size:.85rem">Unidad: @Model.UnidadMedida</small>
+
+                <hr style="margin:20px 0;border-color:var(--border)" />
+
+                @if (!string.IsNullOrEmpty(Model.Descripcion))
+                {
+                    <p style="color:var(--text-mid);font-size:.95rem;line-height:1.7">@Model.Descripcion</p>
+                }
+
+                <div class="d-flex gap-3 flex-wrap" style="margin-top:20px">
+                    <div style="background:var(--gray-50);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1;min-width:140px;text-align:center">
+                        <small style="color:var(--text-soft);font-size:.78rem;display:block">Stock disponible</small>
+                        <strong style="font-size:1.2rem;color:@(disponible ? "var(--primary)" : "#dc2626")">
+                            @stock @Model.UnidadMedida
+                        </strong>
+                    </div>
+                    <div style="background:var(--gray-50);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1;min-width:140px;text-align:center">
+                        <small style="color:var(--text-soft);font-size:.78rem;display:block">Stock mínimo</small>
+                        <strong style="font-size:1.2rem">@Model.StockMinimo</strong>
+                    </div>
+                </div>
+
+                <div style="margin-top:24px">
+                    @if (disponible)
+                    {
+                        <span class="badge-success-hf" style="font-size:.88rem;padding:8px 16px">
+                            <i class="bi bi-check-circle me-1"></i>Disponible
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge-danger-hf" style="font-size:.88rem;padding:8px 16px">
+                            <i class="bi bi-x-circle me-1"></i>Sin stock
+                        </span>
+                    }
+                </div>
+
+                <div style="margin-top:24px">
+                    <a asp-action="Index" class="btn-outline-hf" style="padding:10px 24px">
+                        <i class="bi bi-arrow-left"></i> Volver a la tienda
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos relacionados -->
+        @if (relacionados.Count > 0)
+        {
+            <div class="mt-5">
+                <h4 style="font-weight:700"><i class="bi bi-grid-3x3-gap me-2"></i>Otros productos de @(Model.Categoria?.Nombre ?? "esta categoría")</h4>
+                <hr style="margin-bottom:20px" />
+                <div class="row g-3">
+                    @foreach (var r in relacionados)
+                    {
+                        var rStock = r.Inventarios?.Sum(i => i.StockActual) ?? 0;
+                        <div class="col-6 col-md-3">
+                            <div style="background:white;border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;transition:transform .3s,box-shadow .3s;height:100%;display:flex;flex-direction:column;align-items:center">
+                                <i class="bi @catIcon" style="font-size:2.2rem;color:@catColor;opacity:.3;margin-bottom:10px"></i>
+                                <h6 style="font-weight:700;font-size:.88rem;margin:0 0 6px">@r.Nombre</h6>
+                                <div style="font-weight:800;color:var(--primary);font-size:1.05rem;margin-top:auto">$@r.PrecioVenta.ToString("F2")</div>
+                                <a asp-action="Detalle" asp-route-id="@r.Id" class="btn-outline-hf mt-2" style="padding:5px 12px;font-size:.78rem">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

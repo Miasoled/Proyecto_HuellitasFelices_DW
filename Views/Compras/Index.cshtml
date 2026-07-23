@@ -40,7 +40,7 @@
     <div class="hf-card"><div class="table-responsive">
         <table class="hf-table">
             <thead><tr>
-                <th>N° Compra</th><th>Proveedor</th><th>Sucursal</th><th>Total</th><th>Estado</th><th>Fecha</th><th style="width:130px">Acciones</th>
+                <th>N° Compra</th><th>Proveedor</th><th>Total</th><th>Estado</th><th>Fecha</th><th style="width:130px">Acciones</th>
             </tr></thead>
             <tbody>
                 @foreach (var item in Model)
@@ -55,7 +55,6 @@
                     <tr>
                         <td><code>@item.NumeroCompra</code></td>
                         <td>@item.Proveedor?.Nombre</td>
-                        <td>@item.Sucursal?.Nombre</td>
                         <td>$@item.Total.ToString("N2")</td>
                         <td><span class="badge @badgeClass">@item.Estado</span></td>
                         <td>@item.FechaCompra.ToString("dd/MM/yyyy")</td>

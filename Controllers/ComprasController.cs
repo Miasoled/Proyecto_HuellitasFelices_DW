@@ -7,7 +7,7 @@ using HuellitasFelices.Models;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador,Supervisor,Operador")]
+    [Authorize(Roles = "Administrador")]
     public class ComprasController : Controller
     {
         private readonly AppDbContext _context;
@@ -24,7 +24,6 @@ namespace HuellitasFelices.Controllers
             var query = _context.Compras
                 .AsNoTracking()
                 .Include(c => c.Proveedor)
-                .Include(c => c.Sucursal)
                 .Where(c => c.Activo)
                 .OrderByDescending(c => c.FechaCompra)
                 .AsQueryable();
@@ -70,7 +69,6 @@ namespace HuellitasFelices.Controllers
             if (id == null) return NotFound();
             var compra = await _context.Compras
                 .Include(c => c.Proveedor)
-                .Include(c => c.Sucursal)
                 .Include(c => c.Detalles)
                     .ThenInclude(d => d.Producto)
                 .FirstOrDefaultAsync(c => c.Id == id && c.Activo);
@@ -82,14 +80,13 @@ namespace HuellitasFelices.Controllers
         public async Task<IActionResult> Create()
         {
             ViewBag.ProveedorId = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "Nombre");
-            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre");
             return View();
         }
 
         // POST: Compras/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("NumeroCompra,Total,Estado,FechaCompra,Observacion,ProveedorId,SucursalId")] Compra compra)
+        public async Task<IActionResult> Create([Bind("NumeroCompra,Total,Estado,FechaCompra,Observacion,ProveedorId")] Compra compra)
         {
             if (ModelState.IsValid)
             {
@@ -101,7 +98,6 @@ namespace HuellitasFelices.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewBag.ProveedorId = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "Nombre", compra.ProveedorId);
-            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", compra.SucursalId);
             return View(compra);
         }
 
@@ -112,14 +108,13 @@ namespace HuellitasFelices.Controllers
             var compra = await _context.Compras.FindAsync(id);
             if (compra == null || !compra.Activo) return NotFound();
             ViewBag.ProveedorId = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "Nombre", compra.ProveedorId);
-            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", compra.SucursalId);
             return View(compra);
         }
 
         // POST: Compras/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,NumeroCompra,Total,Estado,FechaCompra,Observacion,ProveedorId,SucursalId")] Compra compra)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,NumeroCompra,Total,Estado,FechaCompra,Observacion,ProveedorId")] Compra compra)
         {
             if (id != compra.Id) return NotFound();
             if (ModelState.IsValid)
@@ -132,13 +127,11 @@ namespace HuellitasFelices.Controllers
                 existing.FechaCompra = compra.FechaCompra;
                 existing.Observacion = compra.Observacion;
                 existing.ProveedorId = compra.ProveedorId;
-                existing.SucursalId = compra.SucursalId;
                 existing.FechaActualizacion = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             ViewBag.ProveedorId = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "Nombre", compra.ProveedorId);
-            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", compra.SucursalId);
             return View(compra);
         }
 
@@ -148,7 +141,6 @@ namespace HuellitasFelices.Controllers
             if (id == null) return NotFound();
             var compra = await _context.Compras
                 .Include(c => c.Proveedor)
-                .Include(c => c.Sucursal)
                 .FirstOrDefaultAsync(c => c.Id == id && c.Activo);
             if (compra == null) return NotFound();
             return View(compra);

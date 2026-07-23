@@ -11,7 +11,7 @@ namespace HuellitasFelices.Data
             RoleManager<IdentityRole> roleManager)
         {
             // ===== ROLES =====
-            string[] roles = { "Administrador", "Supervisor", "Operador", "Doctor", "Consulta", "Cliente", "Auditor" };
+            string[] roles = { "Administrador", "Doctor", "Cliente" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
@@ -34,57 +34,6 @@ namespace HuellitasFelices.Data
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(admin, "Administrador");
-                }
-            }
-
-            // ===== USUARIO SUPERVISOR =====
-            var supervisorEmail = "supervisor@huellitasfelices.com";
-            if (await userManager.FindByEmailAsync(supervisorEmail) == null)
-            {
-                var supervisor = new IdentityUser
-                {
-                    UserName = supervisorEmail,
-                    Email = supervisorEmail,
-                    EmailConfirmed = true
-                };
-                var result = await userManager.CreateAsync(supervisor, "Super1234*");
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(supervisor, "Supervisor");
-                }
-            }
-
-            // ===== USUARIO OPERADOR =====
-            var operadorEmail = "operador@huellitasfelices.com";
-            if (await userManager.FindByEmailAsync(operadorEmail) == null)
-            {
-                var operador = new IdentityUser
-                {
-                    UserName = operadorEmail,
-                    Email = operadorEmail,
-                    EmailConfirmed = true
-                };
-                var result = await userManager.CreateAsync(operador, "Oper1234*");
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(operador, "Operador");
-                }
-            }
-
-            // ===== USUARIO CONSULTA =====
-            var consultaEmail = "consulta@huellitasfelices.com";
-            if (await userManager.FindByEmailAsync(consultaEmail) == null)
-            {
-                var consulta = new IdentityUser
-                {
-                    UserName = consultaEmail,
-                    Email = consultaEmail,
-                    EmailConfirmed = true
-                };
-                var result = await userManager.CreateAsync(consulta, "Cons1234*");
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(consulta, "Consulta");
                 }
             }
 

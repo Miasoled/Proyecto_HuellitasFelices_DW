@@ -7,7 +7,7 @@ using HuellitasFelices.Models;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador,Supervisor,Operador,Doctor")]
+    [Authorize(Roles = "Administrador,Doctor")]
     public class TratamientosController : Controller
     {
         private readonly AppDbContext _context;
@@ -156,7 +156,7 @@ namespace HuellitasFelices.Controllers
         // POST: Tratamientos/Delete/5 — Eliminación lógica
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador,Supervisor")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var tratamiento = await _context.Tratamientos.FindAsync(id);
