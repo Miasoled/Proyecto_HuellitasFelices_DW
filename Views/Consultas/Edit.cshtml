@@ -1,5 +1,9 @@
 @model HuellitasFelices.Models.Consulta
-@{ ViewData["Title"] = "Editar consulta"; }
+@{
+    ViewData["Title"] = "Editar consulta";
+    var productos = ViewBag.ProductosDisponibles as List<HuellitasFelices.Models.Producto>;
+    var esDoctor = User.IsInRole("Doctor");
+}
 <div class="page-header"><div class="container">
     <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
@@ -9,11 +13,11 @@
     <h1><i class="bi bi-pencil-square me-2"></i>Editar consulta</h1>
 </div></div>
 <div class="content-wrapper"><div class="container">
-<div class="row justify-content-center"><div class="col-lg-7">
+<div class="row justify-content-center"><div class="col-lg-8">
     <div class="hf-card">
-        <div class="hf-card-header"><i class="bi bi-clipboard2-pulse me-2"></i>Editar datos de la consulta</div>
+        <div class="hf-card-header"><i class="bi bi-clipboard2-pulse me-2"></i>Datos de la consulta</div>
         <div class="card-body p-4">
-            <form asp-action="Edit">
+            <form asp-action="Edit" id="consultaForm">
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
                 <input type="hidden" asp-for="Id" />
                 <input type="hidden" asp-for="FechaCreacion" />
@@ -28,9 +32,9 @@
                         <input asp-for="Motivo" class="form-control" />
                         <span asp-validation-for="Motivo" class="text-danger" style="font-size:.82rem"></span>
                     </div>
-                    
+
                     <div class="col-12">
-                        <label asp-for="Sintomas" class="form-label"><i class="bi bi-activity me-1"></i>Síntomas observados</label>
+                        <label asp-for="Sintomas" class="form-label"><i class="bi bi-activity me-1"></i>Sintomas observados</label>
                         <textarea asp-for="Sintomas" class="form-control" rows="3"></textarea>
                         <span asp-validation-for="Sintomas" class="text-danger" style="font-size:.82rem"></span>
                     </div>
@@ -44,14 +48,22 @@
                             </select>
                         </div>
 
-                        <!-- Solo visible para personal de la clínica -->
+                        <div class="col-md-6">
+                            <label asp-for="Estado" class="form-label"><i class="bi bi-flag me-1"></i>Estado</label>
+                            <select asp-for="Estado" class="form-select">
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="EnRevision">En revision</option>
+                                <option value="Completada">Completada (pagada)</option>
+                            </select>
+                        </div>
+
                         <div class="col-12">
-                            <label asp-for="Diagnostico" class="form-label"><i class="bi bi-clipboard2-check me-1"></i>Diagnóstico médico</label>
+                            <label asp-for="Diagnostico" class="form-label"><i class="bi bi-clipboard2-check me-1"></i>Diagnostico medico</label>
                             <textarea asp-for="Diagnostico" class="form-control" rows="3"></textarea>
                             <span asp-validation-for="Diagnostico" class="text-danger" style="font-size:.82rem"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="Costo" class="form-label"><i class="bi bi-cash me-1"></i>Costo ($)</label>
+                            <label asp-for="Costo" class="form-label"><i class="bi bi-cash me-1"></i>Costo de consulta ($)</label>
                             <input asp-for="Costo" class="form-control" type="number" step="0.01" />
                             <span asp-validation-for="Costo" class="text-danger" style="font-size:.82rem"></span>
                         </div>
@@ -62,14 +74,119 @@
                         <input asp-for="FechaConsulta" class="form-control" type="datetime-local" required />
                         <span asp-validation-for="FechaConsulta" class="text-danger" style="font-size:.82rem"></span>
                     </div>
+                </div>
 
-                    <div class="col-12 d-flex gap-3 pt-3 border-top" style="border-color: var(--border) !important;">
-                        <button type="submit" class="btn-primary-hf"><i class="bi bi-check-lg"></i> Guardar cambios</button>
-                        <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Cancelar</a>
+                @if (esDoctor && productos != null)
+                {
+                    <hr class="my-4" style="border-color: var(--border);" />
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-capsule me-2"></i>Medicamentos recetados</h5>
+                        <button type="button" class="btn-sm btn-primary-hf" onclick="agregarMedicamento()">
+                            <i class="bi bi-plus-lg"></i> Agregar
+                        </button>
                     </div>
+
+                    <div id="medicamentos-container">
+                        @if (Model.Medicamentos != null && Model.Medicamentos.Any())
+                        {
+                            @foreach (var med in Model.Medicamentos)
+                            {
+                                <div class="med-card mb-3 p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border);">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col-md-4">
+                                            <label class="form-label" style="font-size:.82rem">Producto</label>
+                                            <select name="medProductoId" class="form-select form-select-sm" required>
+                                                <option value="">-- Seleccionar --</option>
+                                                @foreach (var p in productos)
+                                                {
+                                                    <option value="@p.Id" data-precio="@p.PrecioVenta" data-stock="@(p.Inventarios?.Sum(i => i.StockActual) ?? 0)"
+                                                        selected="@(p.Id == med.ProductoId)">@p.Nombre ($@p.PrecioVenta) [Stock: @(p.Inventarios?.Sum(i => i.StockActual) ?? 0)]</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label" style="font-size:.82rem">Cantidad</label>
+                                            <input type="number" name="medCantidad" class="form-control form-control-sm" value="@med.Cantidad" min="1" required />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label" style="font-size:.82rem">Dosis</label>
+                                            <input type="text" name="medDosis" class="form-control form-control-sm" value="@med.Dosis" placeholder="Ej: 1 tableta cada 8h" />
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label" style="font-size:.82rem">Indicaciones</label>
+                                            <input type="text" name="medIndicaciones" class="form-control form-control-sm" value="@med.Indicaciones" placeholder="Tomar con comida" />
+                                        </div>
+                                        <div class="col-md-1">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarMedicamento(this)" title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <div id="template-med" style="display:none;">
+                        <div class="med-card mb-3 p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border);">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label" style="font-size:.82rem">Producto</label>
+                                    <select name="medProductoId" class="form-select form-select-sm" required>
+                                        <option value="">-- Seleccionar --</option>
+                                        @foreach (var p in productos)
+                                        {
+                                            <option value="@p.Id" data-precio="@p.PrecioVenta" data-stock="@(p.Inventarios?.Sum(i => i.StockActual) ?? 0)">@p.Nombre ($@p.PrecioVenta) [Stock: @(p.Inventarios?.Sum(i => i.StockActual) ?? 0)]</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label" style="font-size:.82rem">Cantidad</label>
+                                    <input type="number" name="medCantidad" class="form-control form-control-sm" value="1" min="1" required />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label" style="font-size:.82rem">Dosis</label>
+                                    <input type="text" name="medDosis" class="form-control form-control-sm" placeholder="Ej: 1 tableta cada 8h" />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label" style="font-size:.82rem">Indicaciones</label>
+                                    <input type="text" name="medIndicaciones" class="form-control form-control-sm" placeholder="Tomar con comida" />
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarMedicamento(this)" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="col-12 d-flex gap-3 pt-3 border-top mt-3" style="border-color: var(--border) !important;">
+                    <button type="submit" class="btn-primary-hf"><i class="bi bi-check-lg"></i> Guardar cambios</button>
+                    <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Cancelar</a>
                 </div>
             </form>
         </div>
     </div>
 </div></div></div></div>
-@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        function agregarMedicamento() {
+            var template = document.getElementById('template-med');
+            var container = document.getElementById('medicamentos-container');
+            var clone = template.cloneNode(true);
+            clone.style.display = 'block';
+            clone.removeAttribute('id');
+            container.appendChild(clone);
+        }
+        function eliminarMedicamento(btn) {
+            var card = btn.closest('.med-card');
+            if (document.querySelectorAll('#medicamentos-container .med-card').length > 0) {
+                card.remove();
+            }
+        }
+    </script>
+}

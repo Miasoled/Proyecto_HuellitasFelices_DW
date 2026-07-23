@@ -59,5 +59,7 @@ namespace HuellitasFelices.Models
 
         // Navegación
         public ICollection<Tratamiento> Tratamientos { get; set; } = new List<Tratamiento>();
+        public ICollection<ConsultaMedicamento> Medicamentos { get; set; } = new List<ConsultaMedicamento>();
+        public Venta? Venta { get; set; }
     }
 }

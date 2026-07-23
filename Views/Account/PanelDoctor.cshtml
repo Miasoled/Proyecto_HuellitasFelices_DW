@@ -1,0 +1,175 @@
+@{
+    ViewData["Title"] = "Panel del Doctor";
+    var doctor      = ViewBag.Doctor as HuellitasFelices.Models.Empleado;
+    var pendientes   = ViewBag.Pendientes  as List<HuellitasFelices.Models.Consulta> ?? new();
+    var enRevision   = ViewBag.EnRevision  as List<HuellitasFelices.Models.Consulta> ?? new();
+    var completadas  = ViewBag.Completadas as List<HuellitasFelices.Models.Consulta> ?? new();
+}
+
+<div class="page-header" style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%)">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 style="color:white"><i class="bi bi-stethoscope me-2"></i>Panel del Doctor</h1>
+                <small style="color:rgba(255,255,255,.75)">Bienvenido, <strong>Dr. @(doctor?.Nombre ?? "")</strong></small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-4">
+            <div class="stat-item">
+                <div class="stat-icon" style="background:#fef2f2"><i class="bi bi-clock-fill fs-4" style="color:#dc2626"></i></div>
+                <h3 style="color:#dc2626">@pendientes.Count</h3>
+                <p>Pendientes</p>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-item">
+                <div class="stat-icon" style="background:#fef9c3"><i class="bi bi-clipboard2-pulse-fill fs-4" style="color:#d97706"></i></div>
+                <h3 style="color:#d97706">@enRevision.Count</h3>
+                <p>En revisión</p>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-item">
+                <div class="stat-icon" style="background:#dcfce7"><i class="bi bi-check-circle-fill fs-4" style="color:#16a34a"></i></div>
+                <h3 style="color:#16a34a">@completadas.Count</h3>
+                <p>Completadas</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consultas pendientes — Atender -->
+    <div class="hf-card mb-4">
+        <div class="hf-card-header" style="background:linear-gradient(135deg,#dc2626,#ef4444);color:white">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>Consultas pendientes — Atender
+        </div>
+        @if (pendientes.Count == 0)
+        {
+            <div style="padding:32px;text-align:center;color:var(--text-soft)">
+                <i class="bi bi-check-circle" style="font-size:2.5rem;opacity:.3;display:block;margin-bottom:12px;color:#16a34a"></i>
+                No hay consultas pendientes. ¡Todo al día!
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="hf-table">
+                    <thead>
+                        <tr>
+                            <th>Mascota</th>
+                            <th>Dueño</th>
+                            <th>Motivo</th>
+                            <th>Fecha</th>
+                            <th style="width:120px">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in pendientes)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@c.Mascota?.Nombre</strong>
+                                    <br /><small style="color:var(--text-soft);font-size:.78rem">@c.Mascota?.Especie · @c.Mascota?.Raza</small>
+                                </td>
+                                <td style="font-size:.88rem">@c.Mascota?.Dueno?.Nombre</td>
+                                <td style="font-size:.88rem">@c.Motivo</td>
+                                <td style="font-size:.85rem;color:var(--text-soft)">@c.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <a asp-controller="Consultas" asp-action="Edit" asp-route-id="@c.Id"
+                                       class="btn-primary-hf" style="padding:6px 14px;font-size:.8rem;border-radius:8px">
+                                        <i class="bi bi-pencil-square"></i> Atender
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <!-- Consultas en revisión -->
+    @if (enRevision.Count > 0)
+    {
+        <div class="hf-card mb-4">
+            <div class="hf-card-header" style="background:linear-gradient(135deg,#d97706,#f59e0b);color:white">
+                <i class="bi bi-clipboard2-pulse me-2"></i>En revisión
+            </div>
+            <div class="table-responsive">
+                <table class="hf-table">
+                    <thead>
+                        <tr>
+                            <th>Mascota</th>
+                            <th>Dueño</th>
+                            <th>Motivo</th>
+                            <th>Fecha</th>
+                            <th style="width:120px">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in enRevision)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@c.Mascota?.Nombre</strong>
+                                    <br /><small style="color:var(--text-soft);font-size:.78rem">@c.Mascota?.Especie · @c.Mascota?.Raza</small>
+                                </td>
+                                <td style="font-size:.88rem">@c.Mascota?.Dueno?.Nombre</td>
+                                <td style="font-size:.88rem">@c.Motivo</td>
+                                <td style="font-size:.85rem;color:var(--text-soft)">@c.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <a asp-controller="Consultas" asp-action="Edit" asp-route-id="@c.Id"
+                                       class="btn" style="background:#d97706;color:white;padding:6px 14px;font-size:.8rem;border-radius:8px">
+                                        <i class="bi bi-pencil-square"></i> Continuar
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- Últimas completadas -->
+    @if (completadas.Count > 0)
+    {
+        <div class="hf-card">
+            <div class="hf-card-header">
+                <i class="bi bi-check-circle me-2"></i>Últimas consultas completadas
+            </div>
+            <div class="table-responsive">
+                <table class="hf-table">
+                    <thead>
+                        <tr>
+                            <th>Mascota</th>
+                            <th>Dueño</th>
+                            <th>Motivo</th>
+                            <th>Diagnóstico</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in completadas)
+                        {
+                            <tr>
+                                <td><strong>@c.Mascota?.Nombre</strong></td>
+                                <td style="font-size:.88rem">@c.Mascota?.Dueno?.Nombre</td>
+                                <td style="font-size:.88rem">@c.Motivo</td>
+                                <td style="font-size:.85rem">@(c.Diagnostico ?? "—")</td>
+                                <td style="font-size:.85rem;color:var(--text-soft)">@c.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+</div></div>

@@ -1,0 +1,97 @@
+@model HuellitasFelices.Models.Venta
+@{
+    ViewData["Title"] = "Factura";
+}
+
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Account" asp-action="MiPanel">Mi panel</a></li>
+        <li class="breadcrumb-item active">Factura</li>
+    </ol></nav>
+    <h1><i class="bi bi-receipt me-2"></i>Factura de pago</h1>
+</div></div>
+
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-7">
+
+    <div class="hf-card" style="border: 2px solid #16a34a;">
+        <div class="hf-card-header" style="background: linear-gradient(135deg, #16a34a, #15803d); color: white;">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-check-circle-fill me-2"></i>Pago confirmado</span>
+                <span style="font-size:.82rem; opacity:.9;">@Model.NumeroVenta</span>
+            </div>
+        </div>
+        <div class="card-body p-4">
+
+            <!-- Datos de la factura -->
+            <div class="row mb-3" style="font-size:.88rem;">
+                <div class="col-md-6">
+                    <strong>Cliente:</strong> @Model.Dueno?.Nombre<br />
+                    <strong>Email:</strong> @Model.Dueno?.Email<br />
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <strong>Fecha de pago:</strong> @Model.FechaPago?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")<br />
+                    <strong>Metodo:</strong> @Model.MetodoPago<br />
+                </div>
+            </div>
+
+            <hr style="border-color: var(--border);" />
+
+            <!-- Datos de la consulta -->
+            <div class="mb-3" style="font-size:.88rem;">
+                <h6><i class="bi bi-clipboard2-pulse me-1"></i>Consulta veterinaria</h6>
+                <div class="ms-3">
+                    <div><strong>Mascota:</strong> @Model.Consulta?.Mascota?.Nombre</div>
+                    <div><strong>Veterinario:</strong> @Model.Consulta?.Veterinario?.Nombre</div>
+                    <div><strong>Motivo:</strong> @Model.Consulta?.Motivo</div>
+                    <div><strong>Diagnostico:</strong> @(Model.Consulta?.Diagnostico ?? "Sin diagnostico")</div>
+                    <div><strong>Costo:</strong> <span class="fw-bold">$@Model.TotalConsulta.ToString("F2")</span></div>
+                </div>
+            </div>
+
+            <!-- Medicamentos -->
+            @if (Model.Detalles != null && Model.Detalles.Any())
+            {
+                <div class="mb-3">
+                    <h6><i class="bi bi-capsule me-1"></i>Medicamentos</h6>
+                    <div class="table-responsive">
+                        <table class="hf-table">
+                            <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
+                            <tbody>
+                                @foreach (var det in Model.Detalles)
+                                {
+                                    <tr>
+                                        <td><strong>@det.Producto?.Nombre</strong></td>
+                                        <td>@det.Cantidad</td>
+                                        <td>$@det.PrecioUnitario.ToString("F2")</td>
+                                        <td><strong>$@det.Subtotal.ToString("F2")</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2" style="font-size:.9rem;">
+                        <span>Subtotal medicamentos</span>
+                        <strong>$@Model.TotalMedicamentos.ToString("F2")</strong>
+                    </div>
+                </div>
+            }
+
+            <hr style="border-color: var(--border);" />
+
+            <!-- Total -->
+            <div class="d-flex justify-content-between" style="font-size:1.2rem;">
+                <span class="fw-bold">Total pagado</span>
+                <span class="fw-bold" style="color: #16a34a;">$@Model.Total.ToString("F2")</span>
+            </div>
+
+            <div class="text-center mt-4">
+                <a asp-controller="Account" asp-action="MiPanel" class="btn-primary-hf" style="padding:12px 28px;">
+                    <i class="bi bi-arrow-left"></i> Volver a mi panel
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div></div></div></div>

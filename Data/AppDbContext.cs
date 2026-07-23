@@ -27,6 +27,9 @@ namespace HuellitasFelices.Data
         public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
         public DbSet<Compra> Compras { get; set; }
         public DbSet<DetalleCompra> DetallesCompra { get; set; }
+        public DbSet<ConsultaMedicamento> ConsultaMedicamentos { get; set; }
+        public DbSet<Venta> Ventas { get; set; }
+        public DbSet<DetalleVenta> DetallesVenta { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,6 +45,7 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<SolicitudAdopcion>().HasQueryFilter(e => e.Activo);
             modelBuilder.Entity<Categoria>().HasQueryFilter(e => e.Activo);
             modelBuilder.Entity<Proveedor>().HasQueryFilter(e => e.Activo);
+            modelBuilder.Entity<Venta>().HasQueryFilter(e => e.Activo);
             // Producto and Compra intentionally lack query filters — they are
             // required ends of relationships (Inventario, Movimiento, DetalleCompra)
             // and EF warns when the principal is filtered but the dependent is not.
@@ -70,6 +74,13 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<MovimientoInventario>().HasIndex(m => m.FechaMovimiento);
             modelBuilder.Entity<MovimientoInventario>().HasIndex(m => m.ProductoId);
             modelBuilder.Entity<MovimientoInventario>().HasIndex(m => m.TipoMovimiento);
+            modelBuilder.Entity<ConsultaMedicamento>().HasIndex(cm => cm.ConsultaId);
+            modelBuilder.Entity<ConsultaMedicamento>().HasIndex(cm => cm.ProductoId);
+            modelBuilder.Entity<Venta>().HasIndex(v => v.ConsultaId);
+            modelBuilder.Entity<Venta>().HasIndex(v => v.DuenoId);
+            modelBuilder.Entity<Venta>().HasIndex(v => v.Estado);
+            modelBuilder.Entity<DetalleVenta>().HasIndex(dv => dv.VentaId);
+            modelBuilder.Entity<DetalleVenta>().HasIndex(dv => dv.ProductoId);
 
             // ── Mapeo de tablas ────────────────────────────────────────────
             modelBuilder.Entity<Tratamiento>().ToTable("Tratamientos");
@@ -81,6 +92,9 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<MovimientoInventario>().ToTable("MovimientosInventario");
             modelBuilder.Entity<Compra>().ToTable("Compras");
             modelBuilder.Entity<DetalleCompra>().ToTable("DetallesCompra");
+            modelBuilder.Entity<ConsultaMedicamento>().ToTable("ConsultaMedicamentos");
+            modelBuilder.Entity<Venta>().ToTable("Ventas");
+            modelBuilder.Entity<DetalleVenta>().ToTable("DetallesVenta");
 
             // ── Relaciones ─────────────────────────────────────────────────
 
@@ -167,6 +181,47 @@ namespace HuellitasFelices.Data
                 .HasOne(d => d.Producto)
                 .WithMany(p => p.DetallesCompra)
                 .HasForeignKey(d => d.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ConsultaMedicamento -> Consulta + Producto
+            modelBuilder.Entity<ConsultaMedicamento>()
+                .HasOne(cm => cm.Consulta)
+                .WithMany(c => c.Medicamentos)
+                .HasForeignKey(cm => cm.ConsultaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ConsultaMedicamento>()
+                .HasOne(cm => cm.Producto)
+                .WithMany()
+                .HasForeignKey(cm => cm.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Venta -> Consulta (1:1)
+            modelBuilder.Entity<Venta>()
+                .HasOne(v => v.Consulta)
+                .WithOne(c => c.Venta)
+                .HasForeignKey<Venta>(v => v.ConsultaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Venta -> Dueno
+            modelBuilder.Entity<Venta>()
+                .HasOne(v => v.Dueno)
+                .WithMany()
+                .HasForeignKey(v => v.DuenoId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            // DetalleVenta -> Venta + Producto
+            modelBuilder.Entity<DetalleVenta>()
+                .HasOne(dv => dv.Venta)
+                .WithMany(v => v.Detalles)
+                .HasForeignKey(dv => dv.VentaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DetalleVenta>()
+                .HasOne(dv => dv.Producto)
+                .WithMany()
+                .HasForeignKey(dv => dv.ProductoId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

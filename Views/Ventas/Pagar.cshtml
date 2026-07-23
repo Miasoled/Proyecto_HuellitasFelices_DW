@@ -1,0 +1,142 @@
+@model HuellitasFelices.Models.Consulta
+@{
+    ViewData["Title"] = "Proceder al pago";
+    var totalMed = Model.Medicamentos?.Sum(m => m.Subtotal) ?? 0;
+    var totalGeneral = Model.Costo + totalMed;
+}
+
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Account" asp-action="MiPanel">Mi panel</a></li>
+        <li class="breadcrumb-item active">Pago</li>
+    </ol></nav>
+    <h1><i class="bi bi-credit-card me-2"></i>Proceder al pago</h1>
+</div></div>
+
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-7">
+
+    <!-- Factura resumen -->
+    <div class="hf-card mb-4">
+        <div class="hf-card-header"><i class="bi bi-receipt me-2"></i>Resumen de la consulta</div>
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between mb-2">
+                <span><i class="bi bi-patch-heart me-1"></i>Mascota</span>
+                <strong>@Model.Mascota?.Nombre</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span><i class="bi bi-person-badge me-1"></i>Veterinario</span>
+                <span>@Model.Veterinario?.Nombre</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span><i class="bi bi-chat-left-text me-1"></i>Motivo</span>
+                <span>@Model.Motivo</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span><i class="bi bi-clipboard2-check me-1"></i>Diagnostico</span>
+                <span>@(Model.Diagnostico ?? "Sin diagnostico")</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span><i class="bi bi-calendar3 me-1"></i>Fecha</span>
+                <span>@Model.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+
+            <hr style="border-color: var(--border);" />
+
+            <div class="d-flex justify-content-between mb-2">
+                <span>Costo de consulta</span>
+                <strong>$@Model.Costo.ToString("F2")</strong>
+            </div>
+
+            @if (Model.Medicamentos != null && Model.Medicamentos.Any())
+            {
+                <div class="mt-3">
+                    <strong><i class="bi bi-capsule me-1"></i>Medicamentos recetados:</strong>
+                    <div class="table-responsive mt-2">
+                        <table class="hf-table">
+                            <thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
+                            <tbody>
+                                @foreach (var med in Model.Medicamentos)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@med.Producto?.Nombre</strong>
+                                            @if (!string.IsNullOrEmpty(med.Dosis))
+                                            {
+                                                <br /><small class="text-muted">Dosis: @med.Dosis</small>
+                                            }
+                                            @if (!string.IsNullOrEmpty(med.Indicaciones))
+                                            {
+                                                <br /><small class="text-muted">@med.Indicaciones</small>
+                                            }
+                                        </td>
+                                        <td>@med.Cantidad</td>
+                                        <td>$@med.PrecioUnitario.ToString("F2")</td>
+                                        <td><strong>$@med.Subtotal.ToString("F2")</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 mt-2">
+                        <span>Subtotal medicamentos</span>
+                        <strong>$@totalMed.ToString("F2")</strong>
+                    </div>
+                </div>
+            }
+
+            <hr style="border-color: var(--border);" />
+
+            <div class="d-flex justify-content-between" style="font-size:1.15rem;">
+                <span class="fw-bold">Total a pagar</span>
+                <span class="fw-bold" style="color: var(--primary);">$@totalGeneral.ToString("F2")</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de pago -->
+    <div class="hf-card">
+        <div class="hf-card-header"><i class="bi bi-wallet2 me-2"></i>Metodo de pago</div>
+        <div class="card-body p-4">
+            <form asp-action="PagarConfirm" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="consultaId" value="@Model.Id" />
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="bi bi-cash me-1"></i>Efectivo</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodoPago" value="Efectivo" id="pagoEfectivo" checked />
+                            <label class="form-check-label" for="pagoEfectivo">Pagar en efectivo</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="bi bi-credit-card me-1"></i>Tarjeta</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodoPago" value="Tarjeta" id="pagoTarjeta" />
+                            <label class="form-check-label" for="pagoTarjeta">Tarjeta de credito/debito</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label"><i class="bi bi-phone me-1"></i>Transferencia</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodoPago" value="Transferencia" id="pagoTransferencia" />
+                            <label class="form-check-label" for="pagoTransferencia">Transferencia bancaria</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn-primary-hf" style="padding:12px 28px;">
+                        <i class="bi bi-check-circle me-1"></i>Confirmar pago — $@totalGeneral.ToString("F2")
+                    </button>
+                    <a asp-controller="Account" asp-action="MiPanel" class="btn-outline-hf" style="padding:12px 28px;">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div></div></div></div>

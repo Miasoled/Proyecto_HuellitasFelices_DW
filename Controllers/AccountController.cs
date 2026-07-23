@@ -86,9 +86,15 @@ namespace HuellitasFelices.Controllers
                 .ToList();
 
             var consultas = _context.Consultas
+                .Include(c => c.Medicamentos).ThenInclude(cm => cm.Producto)
+                .Include(c => c.Venta)
                 .Where(c => mascotas.Select(m => m.Id).Contains(c.MascotaId) && c.Activo)
                 .OrderByDescending(c => c.FechaConsulta)
-                .Take(5)
+                .Take(10)
+                .ToList();
+
+            var consultasPendientesPago = consultas
+                .Where(c => c.Estado == "EnRevision" && c.Medicamentos.Any() && c.Venta == null)
                 .ToList();
 
             var solicitudes = _context.SolicitudesAdopcion
@@ -108,8 +114,55 @@ namespace HuellitasFelices.Controllers
             ViewBag.Dueno = dueno;
             ViewBag.Mascotas = mascotas;
             ViewBag.Consultas = consultas;
+            ViewBag.ConsultasPendientesPago = consultasPendientesPago;
             ViewBag.Solicitudes = solicitudes;
             ViewBag.ProductosDestacados = productosDestacados;
+
+            return View();
+        }
+
+        // ── PANEL DEL DOCTOR ────────────────────────────────────────────────
+
+        [HttpGet]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> PanelDoctor()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("Index", "Home");
+
+            var doctorUser = await _context.Empleados
+                .FirstOrDefaultAsync(e => e.Email != null && user.Email != null && e.Email.ToLower() == user.Email.ToLower() && e.Activo);
+
+            if (doctorUser == null)
+                return RedirectToAction("Index", "Home");
+
+            var consultasPendientes = await _context.Consultas
+                .Include(c => c.Mascota)
+                    .ThenInclude(m => m!.Dueno)
+                .Where(c => c.Activo && c.VeterinarioId == doctorUser.Id && c.Estado == "Pendiente")
+                .OrderByDescending(c => c.FechaConsulta)
+                .ToListAsync();
+
+            var consultasEnRevision = await _context.Consultas
+                .Include(c => c.Mascota)
+                    .ThenInclude(m => m!.Dueno)
+                .Where(c => c.Activo && c.VeterinarioId == doctorUser.Id && c.Estado == "EnRevision")
+                .OrderByDescending(c => c.FechaConsulta)
+                .ToListAsync();
+
+            var consultasCompletadas = await _context.Consultas
+                .Include(c => c.Mascota)
+                    .ThenInclude(m => m!.Dueno)
+                .Where(c => c.Activo && c.VeterinarioId == doctorUser.Id && c.Estado == "Completada")
+                .OrderByDescending(c => c.FechaConsulta)
+                .Take(10)
+                .ToListAsync();
+
+            ViewBag.Doctor = doctorUser;
+            ViewBag.Pendientes = consultasPendientes;
+            ViewBag.EnRevision = consultasEnRevision;
+            ViewBag.Completadas = consultasCompletadas;
 
             return View();
         }
@@ -155,6 +208,19 @@ namespace HuellitasFelices.Controllers
                 var roles = _roleManager.Roles.Where(r => r.Name != "Cliente").ToList();
                 ViewBag.Roles = new SelectList(roles, "Name", "Name");
                 return View(model);
+            }
+
+            // Limitar doctores a máximo 3
+            if (model.Rol == "Doctor")
+            {
+                var totalDoctores = await _context.Empleados.CountAsync(e => e.Cargo == "Veterinario" && e.Activo);
+                if (totalDoctores >= 3)
+                {
+                    ModelState.AddModelError("Rol", "Solo se permiten 3 doctores veterinarios en el sistema.");
+                    var rolesLimit = _roleManager.Roles.Where(r => r.Name != "Cliente").ToList();
+                    ViewBag.Roles = new SelectList(rolesLimit, "Name", "Name");
+                    return View(model);
+                }
             }
 
             var user = new IdentityUser

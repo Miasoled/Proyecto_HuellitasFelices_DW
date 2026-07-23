@@ -411,3 +411,4 @@ C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\refint\HuellitasFelices
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\HuellitasFelices.pdb
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\HuellitasFelices.genruntimeconfig.cache
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\ref\HuellitasFelices.dll
+C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\ww6nvqhcnk-{0}-26f9b7qkas-26f9b7qkas.gz

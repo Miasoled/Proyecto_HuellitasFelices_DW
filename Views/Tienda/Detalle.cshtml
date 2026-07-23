@@ -97,7 +97,7 @@
                     }
                 </div>
 
-                @if (disponible)
+                @if (disponible && User.IsInRole("Cliente"))
                 {
                     <form asp-controller="Carrito" asp-action="Agregar" method="post" class="d-flex align-items-center gap-3 flex-wrap" style="margin-top:24px">
                         @Html.AntiForgeryToken()

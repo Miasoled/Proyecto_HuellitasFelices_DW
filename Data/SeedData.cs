@@ -37,20 +37,29 @@ namespace HuellitasFelices.Data
                 }
             }
 
-            // ===== USUARIO DOCTOR =====
-            var doctorEmail = "doctor@huellitasfelices.com";
-            if (await userManager.FindByEmailAsync(doctorEmail) == null)
+            // ===== USUARIOS DOCTORES =====
+            var doctorAccounts = new (string Email, string Password)[]
             {
-                var doctor = new IdentityUser
+                ("doctor@huellitasfelices.com", "Doctor1234*"),
+                ("doctora.ana@huellitasfelices.com", "Doctor1234*"),
+                ("doctor.luis@huellitasfelices.com", "Doctor1234*")
+            };
+
+            foreach (var (email, password) in doctorAccounts)
+            {
+                if (await userManager.FindByEmailAsync(email) == null)
                 {
-                    UserName = doctorEmail,
-                    Email = doctorEmail,
-                    EmailConfirmed = true
-                };
-                var result = await userManager.CreateAsync(doctor, "Doctor1234*");
-                if (result.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(doctor, "Doctor");
+                    var user = new IdentityUser
+                    {
+                        UserName = email,
+                        Email = email,
+                        EmailConfirmed = true
+                    };
+                    var result = await userManager.CreateAsync(user, password);
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(user, "Doctor");
+                    }
                 }
             }
 
@@ -62,7 +71,7 @@ namespace HuellitasFelices.Data
                 context.Empleados.AddRange(
                     new Empleado { Nombre = "Dr. Carlos Ramírez", Cargo = "Veterinario", Email = "doctor@huellitasfelices.com", Telefono = "0991234567", Salario = 1800, Activo = true },
                     new Empleado { Nombre = "Dra. Ana Torres", Cargo = "Veterinario", Email = "doctora.ana@huellitasfelices.com", Telefono = "0987654321", Salario = 1800, Activo = true },
-                    new Empleado { Nombre = "Luis Mendoza", Cargo = "Asistente", Email = "luis.mendoza@huellitasfelices.com", Telefono = "0976543210", Salario = 900, Activo = true },
+                    new Empleado { Nombre = "Dr. Luis Mendoza", Cargo = "Veterinario", Email = "doctor.luis@huellitasfelices.com", Telefono = "0976543210", Salario = 1800, Activo = true },
                     new Empleado { Nombre = "María Suárez", Cargo = "Recepcionista", Email = "maria.suarez@huellitasfelices.com", Telefono = "0965432109", Salario = 800, Activo = true },
                     new Empleado { Nombre = "Pedro Gómez", Cargo = "Asistente", Email = "pedro.gomez@huellitasfelices.com", Telefono = "0954321098", Salario = 900, Activo = true }
                 );

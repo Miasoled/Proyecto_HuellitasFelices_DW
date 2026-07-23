@@ -73,14 +73,24 @@ namespace HuellitasFelices.Controllers
         }
 
         // POST: Empleados/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Nombre,Cargo,Email,Telefono,Salario,Activo,FechaCreacion")] Empleado empleado)
         {
+            if (empleado.Cargo == "Veterinario")
+            {
+                var totalVets = await _context.Empleados.CountAsync(e => e.Cargo == "Veterinario" && e.Activo);
+                if (totalVets >= 3)
+                {
+                    ModelState.AddModelError("Cargo", "Solo se permiten 3 doctores veterinarios en el sistema.");
+                    return View(empleado);
+                }
+            }
+
             if (ModelState.IsValid)
             {
+                empleado.FechaCreacion = DateTime.UtcNow;
+                empleado.Activo = true;
                 _context.Add(empleado);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));

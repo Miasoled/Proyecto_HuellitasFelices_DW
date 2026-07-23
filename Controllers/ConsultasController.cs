@@ -25,6 +25,7 @@ namespace HuellitasFelices.Controllers
                 .AsNoTracking()
                 .Include(c => c.Mascota)
                 .Include(c => c.Veterinario)
+                .Include(c => c.Venta)
                 .Where(c => c.Activo)
                 .OrderByDescending(c => c.FechaConsulta)
                 .AsQueryable();
@@ -44,19 +45,25 @@ namespace HuellitasFelices.Controllers
                 }
             }
 
-            // Filtrado para doctor: sólo ve sus consultas asignadas
+            // Filtrado para doctor: ve pendientes y en revisión, NO completadas
             if (User.IsInRole("Doctor"))
             {
                 string userEmail = User.Identity?.Name ?? string.Empty;
                 var doctorUser = await _context.Empleados.FirstOrDefaultAsync(e => e.Email == userEmail && e.Activo);
                 if (doctorUser != null)
                 {
-                    consultaQuery = consultaQuery.Where(c => c.VeterinarioId == doctorUser.Id);
+                    consultaQuery = consultaQuery.Where(c => c.VeterinarioId == doctorUser.Id && c.Estado != "Completada");
                 }
                 else
                 {
                     consultaQuery = consultaQuery.Where(c => false);
                 }
+            }
+
+            // Filtrado para admin: ve solo completadas (las pendientes las ve el doctor)
+            if (User.IsInRole("Administrador"))
+            {
+                consultaQuery = consultaQuery.Where(c => c.Estado == "Completada");
             }
 
             if (!string.IsNullOrEmpty(busqueda))
@@ -162,6 +169,20 @@ namespace HuellitasFelices.Controllers
                 {
                     ModelState.AddModelError("MascotaId", "La mascota seleccionada es inválida.");
                 }
+
+                // Validar que el cliente seleccione un veterinario
+                if (consulta.VeterinarioId == null || consulta.VeterinarioId == 0)
+                {
+                    ModelState.AddModelError("VeterinarioId", "Debe seleccionar un veterinario.");
+                }
+                else
+                {
+                    var vet = await _context.Empleados.FindAsync(consulta.VeterinarioId);
+                    if (vet == null || !vet.Activo || vet.Cargo != "Veterinario")
+                    {
+                        ModelState.AddModelError("VeterinarioId", "El veterinario seleccionado es inválido.");
+                    }
+                }
             }
             else
             {
@@ -213,6 +234,7 @@ namespace HuellitasFelices.Controllers
 
             var consulta = await _context.Consultas
                 .Include(c => c.Mascota)
+                .Include(c => c.Medicamentos).ThenInclude(cm => cm.Producto)
                 .FirstOrDefaultAsync(c => c.Id == id && c.Activo);
 
             if (consulta == null)
@@ -235,6 +257,11 @@ namespace HuellitasFelices.Controllers
                 ViewData["VeterinarioId"] = new SelectList(
                     await _context.Empleados.Where(e => e.Cargo == "Veterinario" && e.Activo).ToListAsync(),
                     "Id", "Nombre", consulta.VeterinarioId);
+                ViewData["ProductosDisponibles"] = await _context.Productos
+                    .Where(p => p.Activo)
+                    .Include(p => p.Categoria)
+                    .Include(p => p.Inventarios)
+                    .ToListAsync();
                 return View(consulta);
             }
 
@@ -263,7 +290,8 @@ namespace HuellitasFelices.Controllers
         // POST: Consultas/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Motivo,Sintomas,Diagnostico,Costo,FechaConsulta,Activo,FechaCreacion,MascotaId,Estado,VeterinarioId")] Consulta consulta)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Motivo,Sintomas,Diagnostico,Costo,FechaConsulta,Activo,FechaCreacion,MascotaId,Estado,VeterinarioId")] Consulta consulta,
+            string[]? medProductoId, int[]? medCantidad, string[]? medDosis, string[]? medIndicaciones)
         {
             if (id != consulta.Id)
             {
@@ -293,7 +321,6 @@ namespace HuellitasFelices.Controllers
                     return Forbid();
                 }
 
-                // El doctor puede editar Diagnostico, Costo, Sintomas, Estado
                 consulta.Motivo = consultaExistente.Motivo;
                 consulta.MascotaId = consultaExistente.MascotaId;
                 ModelState.Remove("Motivo");
@@ -309,7 +336,6 @@ namespace HuellitasFelices.Controllers
                     return Forbid();
                 }
 
-                // Preservar datos médicos originales que el cliente no puede tocar
                 consulta.Costo = consultaExistente.Costo;
                 consulta.Diagnostico = consultaExistente.Diagnostico;
                 ModelState.Remove("Costo");
@@ -336,13 +362,44 @@ namespace HuellitasFelices.Controllers
                 {
                     consulta.FechaActualizacion = DateTime.UtcNow;
 
-                    // Auto-gestionar Estado según los datos
-                    if (!string.IsNullOrEmpty(consulta.Diagnostico) && consulta.Costo > 0)
-                        consulta.Estado = "Completada";
-                    else if (consulta.Costo > 0)
+                    // El doctor pone EnRevision al guardar. Solo se marca Completada al pagar.
+                    if (consulta.Costo > 0 && consulta.Estado != "Completada")
                         consulta.Estado = "EnRevision";
 
                     _context.Update(consulta);
+
+                    // Guardar medicamentos solo si el doctor los envió
+                    if (User.IsInRole("Doctor") && medProductoId != null)
+                    {
+                        // Eliminar medicamentos anteriores
+                        var medsExistentes = await _context.ConsultaMedicamentos
+                            .Where(cm => cm.ConsultaId == id).ToListAsync();
+                        _context.ConsultaMedicamentos.RemoveRange(medsExistentes);
+
+                        for (int i = 0; i < medProductoId.Length; i++)
+                        {
+                            if (int.TryParse(medProductoId[i], out int prodId) && prodId > 0)
+                            {
+                                var producto = await _context.Productos.FindAsync(prodId);
+                                if (producto == null || !producto.Activo) continue;
+
+                                var cantidad = (medCantidad != null && i < medCantidad.Length && medCantidad[i] > 0) ? medCantidad[i] : 1;
+                                var dosis = (medDosis != null && i < medDosis.Length) ? medDosis[i] : null;
+                                var indicaciones = (medIndicaciones != null && i < medIndicaciones.Length) ? medIndicaciones[i] : null;
+
+                                _context.ConsultaMedicamentos.Add(new ConsultaMedicamento
+                                {
+                                    ConsultaId = id,
+                                    ProductoId = prodId,
+                                    Cantidad = cantidad,
+                                    PrecioUnitario = producto.PrecioVenta,
+                                    Dosis = dosis,
+                                    Indicaciones = indicaciones
+                                });
+                            }
+                        }
+                    }
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -378,6 +435,14 @@ namespace HuellitasFelices.Controllers
             ViewData["VeterinarioId"] = new SelectList(
                 await _context.Empleados.Where(e => e.Cargo == "Veterinario" && e.Activo).ToListAsync(),
                 "Id", "Nombre", consulta.VeterinarioId);
+            if (User.IsInRole("Doctor"))
+            {
+                ViewData["ProductosDisponibles"] = await _context.Productos
+                    .Where(p => p.Activo)
+                    .Include(p => p.Categoria)
+                    .Include(p => p.Inventarios)
+                    .ToListAsync();
+            }
             return View(consulta);
         }
 
