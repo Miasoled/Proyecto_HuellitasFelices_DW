@@ -1,0 +1,66 @@
+@model IEnumerable<HuellitasFelices.Models.MovimientoInventario>
+@using HuellitasFelices.Models
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Movimientos de Inventario";
+    var p = ViewBag.Paginacion as PaginacionViewModel;
+}
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Inventario</a></li>
+            <li class="breadcrumb-item active">Movimientos</li>
+        </ol></nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-arrow-left-right me-2"></i>Movimientos de Inventario</h1>
+                <small style="opacity:.8">@(p?.TotalRegistros.ToString("N0") ?? "–") movimientos</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <form method="get" class="search-bar d-flex gap-2 flex-wrap">
+            <select name="productoId" class="form-select" style="width:auto" asp-items="@(ViewBag.Productos as List<SelectListItem> ?? new())">
+                <option value="">Todos los productos</option>
+            </select>
+            <select name="sucursalId" class="form-select" style="width:auto" asp-items="@(ViewBag.Sucursales as List<SelectListItem> ?? new())">
+                <option value="">Todas las sucursales</option>
+            </select>
+            <input type="date" name="desde" value="@ViewBag.FechaDesde" class="form-control" style="width:auto" />
+            <input type="date" name="hasta" value="@ViewBag.FechaHasta" class="form-control" style="width:auto" />
+            <button type="submit" class="btn-search"><i class="bi bi-funnel"></i> Filtrar</button>
+        </form>
+    </div>
+
+    <div class="hf-card"><div class="table-responsive">
+        <table class="hf-table">
+            <thead><tr>
+                <th>Fecha</th><th>Tipo</th><th>Producto</th><th>Cantidad</th><th>Stock Ant.</th><th>Stock Post.</th><th>Referencia</th>
+            </tr></thead>
+            <tbody>
+                @foreach (var m in Model)
+                {
+                    <tr>
+                        <td>@m.FechaMovimiento.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <span class="badge @(m.TipoMovimiento == "Entrada" ? "bg-success" : m.TipoMovimiento == "Salida" ? "bg-danger" : "bg-info")">
+                                @m.TipoMovimiento
+                            </span>
+                        </td>
+                        <td>@m.Producto?.Nombre</td>
+                        <td>@m.Cantidad</td>
+                        <td>@m.StockAnterior</td>
+                        <td>@m.StockPosterior</td>
+                        <td>@(m.Referencia ?? "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+    @if (p != null) { @await Html.PartialAsync("_Paginacion", p) }
+</div></div>

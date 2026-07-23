@@ -32,9 +32,17 @@
                         <input asp-for="Raza" class="form-control" placeholder="Labrador, Persa…" />
                     </div>
                     <div class="col-md-3">
-                        <label asp-for="Edad" class="form-label"><i class="bi bi-calendar me-1"></i>Edad (años)</label>
-                        <input asp-for="Edad" class="form-control" type="number" min="0" max="30" />
-                        <span asp-validation-for="Edad" class="text-danger" style="font-size:.82rem"></span>
+                        <label asp-for="Sexo" class="form-label"><i class="bi bi-gender-ambiguous me-1"></i>Sexo</label>
+                        <select asp-for="Sexo" class="form-select">
+                            <option value="Macho">Macho</option>
+                            <option value="Hembra">Hembra</option>
+                        </select>
+                        <span asp-validation-for="Sexo" class="text-danger" style="font-size:.82rem"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="FechaNacimiento" class="form-label"><i class="bi bi-calendar me-1"></i>Fecha nacimiento</label>
+                        <input asp-for="FechaNacimiento" class="form-control" type="date" />
+                        <span asp-validation-for="FechaNacimiento" class="text-danger" style="font-size:.82rem"></span>
                     </div>
                     <div class="col-md-3">
                         <label asp-for="Peso" class="form-label"><i class="bi bi-speedometer me-1"></i>Peso (kg)</label>

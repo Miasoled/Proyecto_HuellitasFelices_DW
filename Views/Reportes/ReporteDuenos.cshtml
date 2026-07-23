@@ -1,0 +1,44 @@
+@model IEnumerable<HuellitasFelices.Models.ResumenDueno>
+@{ ViewData["Title"] = "Reporte de Dueños"; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Reportes</a></li>
+            <li class="breadcrumb-item active">Dueños</li>
+        </ol></nav>
+        <h1><i class="bi bi-people me-2"></i>Reporte de dueños</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="hf-card text-center p-3">
+                <i class="bi bi-people text-primary fs-3"></i>
+                <p class="fw-bold fs-4 mb-0">@ViewBag.Total</p>
+                <small class="text-muted">Total dueños</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="hf-card"><div class="table-responsive">
+        <table class="hf-table">
+            <thead><tr>
+                <th>Nombre</th><th>Email</th><th>Total Mascotas</th>
+            </tr></thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><strong>@item.Nombre</strong></td>
+                        <td style="font-size:.88rem; color:var(--text-soft)">@(item.Email ?? "—")</td>
+                        <td><span class="badge-info-hf">@item.TotalMascotas</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+</div></div>

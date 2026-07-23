@@ -1,5 +1,5 @@
 using HuellitasFelices.Data;
-using HuellitasFelices.ViewModels;
+using HuellitasFelices.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,44 +21,22 @@ namespace HuellitasFelices.Controllers
         {
             var vm = new ReporteViewModel();
 
-            // ── TOTALES ───────────────────────────────────────────────────────
-
-            // Sum: total de ingresos por pagos realizados
-            vm.TotalIngresosPagos = await _context.Pagos
-                .AsNoTracking()
-                .Where(p => p.Activo && p.Estado == "Pagado")
-                .SumAsync(p => p.Monto);
-
-            // Sum: total de ingresos por consultas
             vm.TotalIngresosConsultas = await _context.Consultas
                 .AsNoTracking()
                 .Where(c => c.Activo)
                 .SumAsync(c => c.Costo);
 
-            // Average: promedio de monto por pago
-            vm.PromedioMontoPago = await _context.Pagos
-                .AsNoTracking()
-                .Where(p => p.Activo)
-                .AverageAsync(p => p.Monto);
-
-            // Average: promedio de costo por consulta
             vm.PromedioCostoConsulta = await _context.Consultas
                 .AsNoTracking()
                 .Where(c => c.Activo)
                 .AverageAsync(c => c.Costo);
 
-            // ── COUNT ─────────────────────────────────────────────────────────
-
             vm.TotalMascotas    = await _context.Mascotas.CountAsync();
             vm.TotalDuenos      = await _context.Duenos.CountAsync();
             vm.TotalConsultas   = await _context.Consultas.CountAsync();
-            vm.TotalPagos       = await _context.Pagos.CountAsync();
-            vm.PagosActivos     = await _context.Pagos.CountAsync(p => p.Activo);
-            vm.PagosInactivos   = await _context.Pagos.CountAsync(p => !p.Activo);
             vm.MascotasActivas  = await _context.Mascotas.CountAsync(m => m.Activo);
             vm.MascotasInactivas = await _context.Mascotas.CountAsync(m => !m.Activo);
 
-            // ── GROUPBY: Consultas por mes (últimos 12 meses) ─────────────────
             vm.ConsultasPorMes = await _context.Consultas
                 .AsNoTracking()
                 .Where(c => c.Activo && c.FechaConsulta >= DateTime.UtcNow.AddMonths(-12))
@@ -73,7 +51,6 @@ namespace HuellitasFelices.Controllers
                 .OrderBy(r => r.Anio).ThenBy(r => r.Mes)
                 .ToListAsync();
 
-            // ── GROUPBY + OrderByDescending: Top 10 motivos de consulta ───────
             vm.Top10Motivos = await _context.Consultas
                 .AsNoTracking()
                 .Where(c => c.Activo)
@@ -88,7 +65,6 @@ namespace HuellitasFelices.Controllers
                 .Take(10)
                 .ToListAsync();
 
-            // ── Top 10 dueños con más mascotas ────────────────────────────────
             vm.Top10DuenosConMascotas = await _context.Duenos
                 .AsNoTracking()
                 .Where(d => d.Activo)
@@ -103,7 +79,6 @@ namespace HuellitasFelices.Controllers
                 .Take(10)
                 .ToListAsync();
 
-            // ── GROUPBY: Empleados por cargo con salario promedio ─────────────
             vm.EmpleadosPorCargo = await _context.Empleados
                 .AsNoTracking()
                 .Where(e => e.Activo)
@@ -117,21 +92,147 @@ namespace HuellitasFelices.Controllers
                 .OrderByDescending(r => r.Cantidad)
                 .ToListAsync();
 
-            // ── GROUPBY: Pagos por método de pago ────────────────────────────
-            vm.PagosPorMetodo = await _context.Pagos
+            return View(vm);
+        }
+
+        // ── Reportes separados ──────────────────────────────────────────────
+
+        public async Task<IActionResult> ReporteConsultas(DateTime? desde, DateTime? hasta)
+        {
+            var d = desde ?? DateTime.UtcNow.AddMonths(-6);
+            var h = hasta ?? DateTime.UtcNow;
+            ViewBag.Desde = d.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = h.ToString("yyyy-MM-dd");
+
+            var consultas = await _context.Consultas
                 .AsNoTracking()
-                .Where(p => p.Activo)
-                .GroupBy(p => p.MetodoPago)
-                .Select(g => new ResumenMetodoPago
-                {
-                    MetodoPago = g.Key,
-                    Cantidad = g.Count(),
-                    Total = g.Sum(p => p.Monto)
-                })
-                .OrderByDescending(r => r.Total)
+                .Include(c => c.Mascota).ThenInclude(m => m!.Dueno)
+                .Where(c => c.Activo && c.FechaConsulta >= d && c.FechaConsulta <= h)
+                .OrderByDescending(c => c.FechaConsulta)
                 .ToListAsync();
 
-            return View(vm);
+            ViewBag.TotalCosto = consultas.Sum(c => c.Costo);
+            ViewBag.TotalConsultas = consultas.Count;
+            return View(consultas);
+        }
+
+        public async Task<IActionResult> ReporteMascotas()
+        {
+            var mascotas = await _context.Mascotas
+                .AsNoTracking()
+                .Include(m => m.Dueno)
+                .Where(m => m.Activo)
+                .OrderBy(m => m.Nombre)
+                .ToListAsync();
+
+            ViewBag.Total = mascotas.Count;
+            return View(mascotas);
+        }
+
+        public async Task<IActionResult> ReporteDuenos()
+        {
+            var duenos = await _context.Duenos
+                .AsNoTracking()
+                .Where(d => d.Activo)
+                .Select(d => new ResumenDueno
+                {
+                    Nombre = d.Nombre,
+                    Email = d.Email,
+                    TotalMascotas = d.Mascotas.Count(m => m.Activo)
+                })
+                .OrderByDescending(r => r.TotalMascotas)
+                .ToListAsync();
+
+            ViewBag.Total = duenos.Count;
+            return View(duenos);
+        }
+
+        public async Task<IActionResult> ReporteEmpleados()
+        {
+            var empleados = await _context.Empleados
+                .AsNoTracking()
+                .Where(e => e.Activo)
+                .OrderBy(e => e.Cargo).ThenBy(e => e.Nombre)
+                .ToListAsync();
+
+            ViewBag.Total = empleados.Count;
+            ViewBag.SalarioTotal = empleados.Sum(e => e.Salario);
+            return View(empleados);
+        }
+
+        public async Task<IActionResult> ReporteAdopciones()
+        {
+            var solicitudes = await _context.SolicitudesAdopcion
+                .AsNoTracking()
+                .Include(s => s.AnimalAdopcion)
+                .OrderByDescending(s => s.FechaSolicitud)
+                .ToListAsync();
+
+            ViewBag.Total = solicitudes.Count;
+            ViewBag.Aprobadas = solicitudes.Count(s => s.Estado == "Aprobada");
+            ViewBag.Pendientes = solicitudes.Count(s => s.Estado == "Pendiente");
+            return View(solicitudes);
+        }
+
+        public async Task<IActionResult> ReporteServicios()
+        {
+            var motivos = await _context.Consultas
+                .AsNoTracking()
+                .Where(c => c.Activo)
+                .GroupBy(c => c.Motivo)
+                .Select(g => new ResumenMotivo
+                {
+                    Motivo = g.Key,
+                    Cantidad = g.Count(),
+                    TotalIngresos = g.Sum(c => c.Costo)
+                })
+                .OrderByDescending(r => r.Cantidad)
+                .ToListAsync();
+
+            return View(motivos);
+        }
+
+        public async Task<IActionResult> ReporteInventario()
+        {
+            var productos = await _context.Productos
+                .AsNoTracking()
+                .Include(p => p.Categoria)
+                .Include(p => p.Inventarios)
+                .Where(p => p.Activo)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            ViewBag.TotalProductos = productos.Count;
+            ViewBag.StockTotal = productos.SelectMany(p => p.Inventarios).Sum(i => i.StockActual);
+            return View(productos);
+        }
+
+        public async Task<IActionResult> ReporteAuditoria(int pagina = 1, string? accion = null, string? entidad = null)
+        {
+            const int tamPagina = 50;
+            var query = _context.AuditLogs.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrEmpty(accion))
+                query = query.Where(a => a.Accion == accion);
+            if (!string.IsNullOrEmpty(entidad))
+                query = query.Where(a => a.Entidad == entidad);
+
+            var total = await query.CountAsync();
+            var logs = await query
+                .OrderByDescending(a => a.FechaCreacion)
+                .Skip((pagina - 1) * tamPagina)
+                .Take(tamPagina)
+                .ToListAsync();
+
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)tamPagina);
+            ViewBag.TotalRegistros = total;
+            ViewBag.Accion = accion;
+            ViewBag.Entidad = entidad;
+            ViewBag.Acciones = await _context.AuditLogs.Select(a => a.Accion).Distinct().ToListAsync();
+            ViewBag.Entidades = await _context.AuditLogs.Select(a => a.Entidad).Distinct().ToListAsync();
+
+            return View(logs);
         }
     }
 }

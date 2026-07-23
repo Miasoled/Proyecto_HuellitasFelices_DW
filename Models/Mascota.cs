@@ -20,9 +20,19 @@ namespace HuellitasFelices.Models
         [Display(Name = "Raza")]
         public string? Raza { get; set; }
 
-        [Range(0, 30)]
-        [Display(Name = "Edad (años)")]
-        public int Edad { get; set; }
+        [Required(ErrorMessage = "El sexo es obligatorio")]
+        [StringLength(20)]
+        [Display(Name = "Sexo")]
+        public string Sexo { get; set; } = string.Empty;  // Macho, Hembra
+
+        [Display(Name = "Fecha de nacimiento")]
+        [DataType(DataType.Date)]
+        public DateTime? FechaNacimiento { get; set; }
+
+        [Display(Name = "Edad")]
+        public int Edad => FechaNacimiento.HasValue
+            ? (int)((DateTime.UtcNow - FechaNacimiento.Value).TotalDays / 365.25)
+            : 0;
 
         [Display(Name = "Peso (kg)")]
         [Range(0.1, 200)]
@@ -32,6 +42,10 @@ namespace HuellitasFelices.Models
 
         [Display(Name = "Fecha de eliminación")]
         public DateTime? FechaEliminacion { get; set; }
+
+        [StringLength(100)]
+        [Display(Name = "Eliminado por")]
+        public string? EliminadoPor { get; set; }
 
         [Display(Name = "Fecha de registro")]
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;

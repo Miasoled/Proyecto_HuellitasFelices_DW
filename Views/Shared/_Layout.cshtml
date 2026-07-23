@@ -69,14 +69,11 @@
                                 <li><a class="dropdown-item" asp-controller="Consultas" asp-action="Index">
                                     <i class="bi bi-stethoscope text-info"></i> Consultas
                                 </a></li>
-                                @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor") || User.IsInRole("Operador"))
+                                @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor") || User.IsInRole("Operador") || User.IsInRole("Doctor"))
                                 {
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" asp-controller="Tratamientos" asp-action="Index">
                                         <i class="bi bi-capsule text-warning"></i> Tratamientos
-                                    </a></li>
-                                    <li><a class="dropdown-item" asp-controller="Pagos" asp-action="Index">
-                                        <i class="bi bi-credit-card text-success"></i> Pagos
                                     </a></li>
                                 }
                             </ul>
@@ -95,6 +92,36 @@
                                 </a></li>
                             </ul>
                         </li>
+
+                        @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor") || User.IsInRole("Operador"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                    <i class="bi bi-box-seam"></i> Inventario
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="Inventario" asp-action="Index">
+                                        <i class="bi bi-box text-primary"></i> Productos
+                                    </a></li>
+                                    <li><a class="dropdown-item" asp-controller="Categorias" asp-action="Index">
+                                        <i class="bi bi-tags text-success"></i> Categorías
+                                    </a></li>
+                                    <li><a class="dropdown-item" asp-controller="Proveedores" asp-action="Index">
+                                        <i class="bi bi-truck text-warning"></i> Proveedores
+                                    </a></li>
+                                    <li><a class="dropdown-item" asp-controller="Compras" asp-action="Index">
+                                        <i class="bi bi-cart-check text-info"></i> Compras
+                                    </a></li>
+                                    @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor"))
+                                    {
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-controller="Sucursales" asp-action="Index">
+                                            <i class="bi bi-building text-danger"></i> Sucursales
+                                        </a></li>
+                                    }
+                                </ul>
+                            </li>
+                        }
 
                         @if (User.IsInRole("Administrador") || User.IsInRole("Supervisor"))
                         {
@@ -157,12 +184,14 @@
                                     { <span class="badge-info-hf" style="font-size:.75rem">Supervisor</span> }
                                 else if (User.IsInRole("Operador"))
                                     { <span class="badge-warning-hf" style="font-size:.75rem">Operador</span> }
+                                else if (User.IsInRole("Doctor"))
+                                    { <span class="badge-info-hf" style="font-size:.75rem">Doctor</span> }
                                 else if (User.IsInRole("Cliente"))
                                     { <span class="badge-success-hf" style="font-size:.75rem">Cliente</span> }
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="px-1">
+                                <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="px-1">
                                     <button type="submit" class="dropdown-item text-danger rounded-2">
                                         <i class="bi bi-box-arrow-right"></i> Cerrar sesión
                                     </button>
@@ -174,12 +203,12 @@
                 else
                 {
                     <li class="nav-item">
-                        <a class="nav-link btn-nav-outline" asp-controller="Account" asp-action="Login">
+                        <a class="nav-link btn-nav-outline" asp-area="Identity" asp-page="/Account/Login">
                             <i class="bi bi-box-arrow-in-right"></i> Ingresar
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="btn-nav-cta nav-link" asp-controller="Account" asp-action="Register">
+                        <a class="btn-nav-cta nav-link" asp-area="Identity" asp-page="/Account/Register">
                             <i class="bi bi-person-plus"></i> Regístrate
                         </a>
                     </li>
@@ -221,10 +250,10 @@
             </div>
             <div class="col-lg-2 col-md-6">
                 <h6>Acceso</h6>
-                <a asp-controller="Account" asp-action="Login">
+                <a asp-area="Identity" asp-page="/Account/Login">
                     <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
                 </a>
-                <a asp-controller="Account" asp-action="Register">
+                <a asp-area="Identity" asp-page="/Account/Register">
                     <i class="bi bi-person-plus"></i> Registrarse
                 </a>
                 <a asp-controller="AnimalesAdopcion" asp-action="Index">

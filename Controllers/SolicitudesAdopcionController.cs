@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
-using HuellitasFelices.ViewModels;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using HuellitasFelices.Services;
 
@@ -237,7 +236,8 @@ namespace HuellitasFelices.Controllers
                                         Nombre = animal.Nombre,
                                         Especie = animal.Especie,
                                         Raza = animal.Raza ?? "Mestizo",
-                                        Edad = animal.EdadAproximada,
+                                        Sexo = "Macho",
+                                        FechaNacimiento = DateTime.UtcNow.AddYears(-animal.EdadAproximada),
                                         Peso = 5.0m,
                                         DuenoId = dueno.Id,
                                         Activo = true,

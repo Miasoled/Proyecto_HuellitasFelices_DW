@@ -19,6 +19,11 @@ namespace HuellitasFelices.Models
         [Display(Name = "Diagnóstico")]
         public string? Diagnostico { get; set; }
 
+        [Required]
+        [StringLength(30)]
+        [Display(Name = "Estado")]
+        public string Estado { get; set; } = "Pendiente";  // Pendiente, EnRevision, Completada
+
         [Range(0, 99999)]
         [Display(Name = "Costo")]
         public decimal Costo { get; set; }
@@ -28,6 +33,10 @@ namespace HuellitasFelices.Models
         [Display(Name = "Fecha de eliminación")]
         public DateTime? FechaEliminacion { get; set; }
 
+        [StringLength(100)]
+        [Display(Name = "Eliminado por")]
+        public string? EliminadoPor { get; set; }
+
         [Display(Name = "Fecha de consulta")]
         public DateTime FechaConsulta { get; set; } = DateTime.UtcNow;
 
@@ -36,6 +45,11 @@ namespace HuellitasFelices.Models
 
         [Display(Name = "Fecha de actualización")]
         public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
+
+        // Veterinario asignado
+        [Display(Name = "Veterinario")]
+        public int? VeterinarioId { get; set; }
+        public Empleado? Veterinario { get; set; }
 
         // Llave foránea
         [Required]

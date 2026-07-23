@@ -1,0 +1,86 @@
+@model HuellitasFelices.Models.Compra
+@{
+    ViewData["Title"] = "Detalle Compra";
+    var detalles = ViewBag.Detalles as List<HuellitasFelices.Models.DetalleCompra> ?? new();
+}
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Inventario" asp-action="Index">Inventario</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Compras</a></li>
+            <li class="breadcrumb-item active">Detalle</li>
+        </ol></nav>
+        <h1><i class="bi bi-eye me-2"></i>Detalle Compra</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="hf-card h-100">
+                <h5 class="mb-3">Información General</h5>
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">N° Compra</dt>
+                    <dd class="col-sm-7"><code>@Model.NumeroCompra</code></dd>
+                    <dt class="col-sm-5">Proveedor</dt>
+                    <dd class="col-sm-7">@Model.Proveedor?.Nombre</dd>
+                    <dt class="col-sm-5">Sucursal</dt>
+                    <dd class="col-sm-7">@Model.Sucursal?.Nombre</dd>
+                    <dt class="col-sm-5">Total</dt>
+                    <dd class="col-sm-7">$@Model.Total.ToString("N2")</dd>
+                    <dt class="col-sm-5">Estado</dt>
+                    <dd class="col-sm-7">
+                        @{
+                            var badgeClass = Model.Estado switch
+                            {
+                                "Pendiente" => "badge-warning-hf",
+                                "Recibida" => "badge-success-hf",
+                                "Cancelada" => "badge-danger-hf",
+                                _ => ""
+                            };
+                        }
+                        <span class="badge @badgeClass">@Model.Estado</span>
+                    </dd>
+                    <dt class="col-sm-5">Fecha</dt>
+                    <dd class="col-sm-7">@Model.FechaCompra.ToString("dd/MM/yyyy")</dd>
+                    <dt class="col-sm-5">Observación</dt>
+                    <dd class="col-sm-7">@(Model.Observacion ?? "—")</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="hf-card h-100">
+                <h5 class="mb-3">Detalles de Compra</h5>
+                @if (detalles.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="hf-table">
+                            <thead><tr><th>Producto</th><th class="text-end">Cantidad</th><th class="text-end">P. Unitario</th><th class="text-end">Subtotal</th></tr></thead>
+                            <tbody>
+                                @foreach (var det in detalles)
+                                {
+                                    <tr>
+                                        <td>@det.Producto?.Nombre</td>
+                                        <td class="text-end">@det.Cantidad</td>
+                                        <td class="text-end">$@det.PrecioUnitario.ToString("N2")</td>
+                                        <td class="text-end">$@((det.Cantidad * det.PrecioUnitario).ToString("N2"))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Sin detalles registrados.</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-search"><i class="bi bi-pencil"></i> Editar</a>
+        <a asp-action="Index" class="btn-back">Volver</a>
+    </div>
+</div></div>

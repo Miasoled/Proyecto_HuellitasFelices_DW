@@ -24,11 +24,27 @@ namespace HuellitasFelices.Models
         [Display(Name = "Medicamento utilizado")]
         public string? Medicamento { get; set; }
 
+        [StringLength(50)]
+        [Display(Name = "Dosis")]
+        public string? Dosis { get; set; }   // Ej: "5ml", "1 comprimido"
+
+        [StringLength(100)]
+        [Display(Name = "Frecuencia")]
+        public string? Frecuencia { get; set; }  // Ej: "Cada 8 horas"
+
+        [Range(1, 365)]
+        [Display(Name = "Duración (días)")]
+        public int? DuracionDias { get; set; }
+
         // Auditoría y eliminación lógica
         public bool Activo { get; set; } = true;
 
         [Display(Name = "Fecha de eliminación")]
         public DateTime? FechaEliminacion { get; set; }
+
+        [StringLength(100)]
+        [Display(Name = "Eliminado por")]
+        public string? EliminadoPor { get; set; }
 
         [Display(Name = "Fecha de registro")]
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;

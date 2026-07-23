@@ -1,0 +1,60 @@
+@model HuellitasFelices.Models.Proveedor
+@{
+    ViewData["Title"] = "Editar Proveedor";
+}
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Proveedores</a></li>
+            <li class="breadcrumb-item active">Editar</li>
+        </ol></nav>
+        <h1><i class="bi bi-pencil me-2"></i>Editar Proveedor</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+    <div class="hf-card" style="max-width:700px">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label asp-for="Nombre" class="form-label"></label>
+                    <input asp-for="Nombre" class="form-control" />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="RUC" class="form-label"></label>
+                    <input asp-for="RUC" class="form-control" />
+                    <span asp-validation-for="RUC" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Telefono" class="form-label"></label>
+                    <input asp-for="Telefono" class="form-control" />
+                    <span asp-validation-for="Telefono" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Direccion" class="form-label"></label>
+                    <textarea asp-for="Direccion" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Direccion" class="text-danger"></span>
+                </div>
+            </div>
+            <hr />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-search"><i class="bi bi-check-lg"></i> Guardar</button>
+                <a asp-action="Index" class="btn-back">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div></div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

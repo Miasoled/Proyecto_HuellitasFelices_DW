@@ -1,0 +1,46 @@
+@model HuellitasFelices.Models.Categoria
+@{
+    ViewData["Title"] = "Detalle Categoría";
+}
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Categorías</a></li>
+            <li class="breadcrumb-item active">Detalle</li>
+        </ol></nav>
+        <h1><i class="bi bi-eye me-2"></i>@Model.Nombre</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+    <div class="row justify-content-center"><div class="col-lg-6">
+        <div class="hf-card h-100">
+            <h5 class="mb-3">Información de la Categoría</h5>
+            <dl class="row mb-0">
+                <dt class="col-sm-5">Nombre</dt>
+                <dd class="col-sm-7"><strong>@Model.Nombre</strong></dd>
+                <dt class="col-sm-5">Descripción</dt>
+                <dd class="col-sm-7">@(Model.Descripcion ?? "—")</dd>
+                <dt class="col-sm-5">Fecha de creación</dt>
+                <dd class="col-sm-7">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt class="col-sm-5">Estado</dt>
+                <dd class="col-sm-7">
+                    @if (Model.Activo)
+                    {
+                        <span class="badge bg-success">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Inactivo</span>
+                    }
+                </dd>
+            </dl>
+        </div>
+    </div></div>
+    <div class="mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-search"><i class="bi bi-pencil"></i> Editar</a>
+        <a asp-action="Index" class="btn-back">Volver</a>
+    </div>
+</div></div>

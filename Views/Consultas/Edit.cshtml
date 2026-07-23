@@ -37,6 +37,13 @@
 
                     @if (!User.IsInRole("Cliente"))
                     {
+                        <div class="col-12">
+                            <label asp-for="VeterinarioId" class="form-label"><i class="bi bi-person-badge me-1"></i>Veterinario asignado</label>
+                            <select asp-for="VeterinarioId" asp-items="ViewBag.VeterinarioId" class="form-select">
+                                <option value="">-- Sin asignar --</option>
+                            </select>
+                        </div>
+
                         <!-- Solo visible para personal de la clínica -->
                         <div class="col-12">
                             <label asp-for="Diagnostico" class="form-label"><i class="bi bi-clipboard2-check me-1"></i>Diagnóstico médico</label>

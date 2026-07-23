@@ -11,7 +11,7 @@ namespace HuellitasFelices.Data
             RoleManager<IdentityRole> roleManager)
         {
             // ===== ROLES =====
-            string[] roles = { "Administrador", "Supervisor", "Operador", "Consulta", "Cliente" };
+            string[] roles = { "Administrador", "Supervisor", "Operador", "Doctor", "Consulta", "Cliente", "Auditor" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
@@ -88,17 +88,34 @@ namespace HuellitasFelices.Data
                 }
             }
 
+            // ===== USUARIO DOCTOR =====
+            var doctorEmail = "doctor@huellitasfelices.com";
+            if (await userManager.FindByEmailAsync(doctorEmail) == null)
+            {
+                var doctor = new IdentityUser
+                {
+                    UserName = doctorEmail,
+                    Email = doctorEmail,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(doctor, "Doctor1234*");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(doctor, "Doctor");
+                }
+            }
+
             // ===== DATOS DE PRUEBA =====
 
             // Empleados
             if (!context.Empleados.Any())
             {
                 context.Empleados.AddRange(
-                    new Empleado { Nombre = "Dr. Carlos Ramírez", Cargo = "Veterinario", Telefono = "0991234567", Salario = 1800, Activo = true },
-                    new Empleado { Nombre = "Dra. Ana Torres", Cargo = "Veterinario", Telefono = "0987654321", Salario = 1800, Activo = true },
-                    new Empleado { Nombre = "Luis Mendoza", Cargo = "Asistente", Telefono = "0976543210", Salario = 900, Activo = true },
-                    new Empleado { Nombre = "María Suárez", Cargo = "Recepcionista", Telefono = "0965432109", Salario = 800, Activo = true },
-                    new Empleado { Nombre = "Pedro Gómez", Cargo = "Asistente", Telefono = "0954321098", Salario = 900, Activo = true }
+                    new Empleado { Nombre = "Dr. Carlos Ramírez", Cargo = "Veterinario", Email = "doctor@huellitasfelices.com", Telefono = "0991234567", Salario = 1800, Activo = true },
+                    new Empleado { Nombre = "Dra. Ana Torres", Cargo = "Veterinario", Email = "doctora.ana@huellitasfelices.com", Telefono = "0987654321", Salario = 1800, Activo = true },
+                    new Empleado { Nombre = "Luis Mendoza", Cargo = "Asistente", Email = "luis.mendoza@huellitasfelices.com", Telefono = "0976543210", Salario = 900, Activo = true },
+                    new Empleado { Nombre = "María Suárez", Cargo = "Recepcionista", Email = "maria.suarez@huellitasfelices.com", Telefono = "0965432109", Salario = 800, Activo = true },
+                    new Empleado { Nombre = "Pedro Gómez", Cargo = "Asistente", Email = "pedro.gomez@huellitasfelices.com", Telefono = "0954321098", Salario = 900, Activo = true }
                 );
                 context.SaveChanges();
             }
@@ -121,11 +138,11 @@ namespace HuellitasFelices.Data
             {
                 var duenos = context.Duenos.ToList();
                 context.Mascotas.AddRange(
-                    new Mascota { Nombre = "Max", Especie = "Perro", Raza = "Labrador", Edad = 3, Peso = 25.5m, DuenoId = duenos[0].Id, Activo = true },
-                    new Mascota { Nombre = "Luna", Especie = "Gato", Raza = "Persa", Edad = 2, Peso = 4.2m, DuenoId = duenos[1].Id, Activo = true },
-                    new Mascota { Nombre = "Rocky", Especie = "Perro", Raza = "Bulldog", Edad = 5, Peso = 18.0m, DuenoId = duenos[2].Id, Activo = true },
-                    new Mascota { Nombre = "Mia", Especie = "Gato", Raza = "Siamés", Edad = 1, Peso = 3.5m, DuenoId = duenos[3].Id, Activo = true },
-                    new Mascota { Nombre = "Toby", Especie = "Perro", Raza = "Poodle", Edad = 4, Peso = 8.0m, DuenoId = duenos[4].Id, Activo = true }
+                    new Mascota { Nombre = "Max", Especie = "Perro", Raza = "Labrador", Sexo = "Macho", FechaNacimiento = DateTime.UtcNow.AddYears(-3), Peso = 25.5m, DuenoId = duenos[0].Id, Activo = true },
+                    new Mascota { Nombre = "Luna", Especie = "Gato", Raza = "Persa", Sexo = "Hembra", FechaNacimiento = DateTime.UtcNow.AddYears(-2), Peso = 4.2m, DuenoId = duenos[1].Id, Activo = true },
+                    new Mascota { Nombre = "Rocky", Especie = "Perro", Raza = "Bulldog", Sexo = "Macho", FechaNacimiento = DateTime.UtcNow.AddYears(-5), Peso = 18.0m, DuenoId = duenos[2].Id, Activo = true },
+                    new Mascota { Nombre = "Mia", Especie = "Gato", Raza = "Siamés", Sexo = "Hembra", FechaNacimiento = DateTime.UtcNow.AddYears(-1), Peso = 3.5m, DuenoId = duenos[3].Id, Activo = true },
+                    new Mascota { Nombre = "Toby", Especie = "Perro", Raza = "Poodle", Sexo = "Macho", FechaNacimiento = DateTime.UtcNow.AddYears(-4), Peso = 8.0m, DuenoId = duenos[4].Id, Activo = true }
                 );
                 context.SaveChanges();
             }
@@ -154,20 +171,6 @@ namespace HuellitasFelices.Data
                     new Tratamiento { Nombre = "Antiparasitario", Descripcion = "Desparasitación interna", Costo = 12.00m, Medicamento = "Drontal", ConsultaId = consultas[2].Id, Activo = true },
                     new Tratamiento { Nombre = "Vitaminas", Descripcion = "Suplemento vitamínico", Costo = 8.00m, Medicamento = "Vitovet", ConsultaId = consultas[3].Id, Activo = true },
                     new Tratamiento { Nombre = "Limpieza dental", Descripcion = "Profilaxis dental", Costo = 20.00m, Medicamento = "N/A", ConsultaId = consultas[4].Id, Activo = true }
-                );
-                context.SaveChanges();
-            }
-
-            // Pagos
-            if (!context.Pagos.Any())
-            {
-                var duenos = context.Duenos.ToList();
-                context.Pagos.AddRange(
-                    new Pago { Monto = 35.00m, MetodoPago = "Efectivo", Estado = "Pagado", DuenoId = duenos[0].Id, Activo = true },
-                    new Pago { Monto = 20.00m, MetodoPago = "Tarjeta", Estado = "Pagado", DuenoId = duenos[1].Id, Activo = true },
-                    new Pago { Monto = 25.00m, MetodoPago = "Transferencia", Estado = "Pagado", DuenoId = duenos[2].Id, Activo = true },
-                    new Pago { Monto = 30.00m, MetodoPago = "Efectivo", Estado = "Pendiente", DuenoId = duenos[3].Id, Activo = true },
-                    new Pago { Monto = 15.00m, MetodoPago = "Tarjeta", Estado = "Pagado", DuenoId = duenos[4].Id, Activo = true }
                 );
                 context.SaveChanges();
             }

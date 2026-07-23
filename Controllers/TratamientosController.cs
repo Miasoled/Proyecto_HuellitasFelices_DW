@@ -4,11 +4,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
-using HuellitasFelices.ViewModels;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador,Supervisor,Operador")]
+    [Authorize(Roles = "Administrador,Supervisor,Operador,Doctor")]
     public class TratamientosController : Controller
     {
         private readonly AppDbContext _context;
@@ -30,7 +29,10 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(busqueda))
-                consulta = consulta.Where(t => t.Nombre.Contains(busqueda) || t.Medicamento!.Contains(busqueda));
+            {
+                var busquedaLower = busqueda.ToLower();
+                consulta = consulta.Where(t => t.Nombre.ToLower().Contains(busquedaLower) || (t.Medicamento != null && t.Medicamento.ToLower().Contains(busquedaLower)));
+            }
 
             var totalRegistros = await consulta.CountAsync();
             var tratamientos = await consulta
@@ -65,16 +67,21 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: Tratamientos/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create(int? consultaId = null)
         {
-            ViewData["ConsultaId"] = new SelectList(_context.Consultas, "Id", "Motivo");
-            return View();
+            var consultas = await _context.Consultas
+                .Where(c => c.Activo)
+                .OrderByDescending(c => c.FechaConsulta)
+                .ToListAsync();
+
+            ViewData["ConsultaId"] = new SelectList(consultas, "Id", "Motivo", consultaId);
+            return View(new Tratamiento { ConsultaId = consultaId ?? 0 });
         }
 
         // POST: Tratamientos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Descripcion,Costo,Medicamento,ConsultaId")] Tratamiento tratamiento)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Descripcion,Costo,Medicamento,Dosis,Frecuencia,DuracionDias,ConsultaId")] Tratamiento tratamiento)
         {
             if (ModelState.IsValid)
             {
@@ -83,9 +90,13 @@ namespace HuellitasFelices.Controllers
                 tratamiento.Activo = true;
                 _context.Add(tratamiento);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "Consultas", new { id = tratamiento.ConsultaId });
             }
-            ViewData["ConsultaId"] = new SelectList(_context.Consultas, "Id", "Motivo", tratamiento.ConsultaId);
+            var consultas = await _context.Consultas
+                .Where(c => c.Activo)
+                .OrderByDescending(c => c.FechaConsulta)
+                .ToListAsync();
+            ViewData["ConsultaId"] = new SelectList(consultas, "Id", "Motivo", tratamiento.ConsultaId);
             return View(tratamiento);
         }
 
@@ -97,14 +108,19 @@ namespace HuellitasFelices.Controllers
             var tratamiento = await _context.Tratamientos.FindAsync(id);
             if (tratamiento == null) return NotFound();
 
-            ViewData["ConsultaId"] = new SelectList(_context.Consultas, "Id", "Motivo", tratamiento.ConsultaId);
+            var consultas = await _context.Consultas
+                .Where(c => c.Activo)
+                .OrderByDescending(c => c.FechaConsulta)
+                .ToListAsync();
+
+            ViewData["ConsultaId"] = new SelectList(consultas, "Id", "Motivo", tratamiento.ConsultaId);
             return View(tratamiento);
         }
 
         // POST: Tratamientos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Costo,Medicamento,Activo,FechaCreacion,ConsultaId")] Tratamiento tratamiento)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Costo,Medicamento,Dosis,Frecuencia,DuracionDias,Activo,FechaCreacion,ConsultaId")] Tratamiento tratamiento)
         {
             if (id != tratamiento.Id) return NotFound();
 
@@ -113,9 +129,13 @@ namespace HuellitasFelices.Controllers
                 tratamiento.FechaActualizacion = DateTime.UtcNow;
                 _context.Update(tratamiento);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Details", "Consultas", new { id = tratamiento.ConsultaId });
             }
-            ViewData["ConsultaId"] = new SelectList(_context.Consultas, "Id", "Motivo", tratamiento.ConsultaId);
+            var consultas = await _context.Consultas
+                .Where(c => c.Activo)
+                .OrderByDescending(c => c.FechaConsulta)
+                .ToListAsync();
+            ViewData["ConsultaId"] = new SelectList(consultas, "Id", "Motivo", tratamiento.ConsultaId);
             return View(tratamiento);
         }
 

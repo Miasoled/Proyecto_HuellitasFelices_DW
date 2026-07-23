@@ -1,9 +1,9 @@
 using HuellitasFelices.Data;
 using HuellitasFelices.Services;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Settings;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.EntityFrameworkCore;
 
 // Permite enviar DateTime con Kind=Unspecified a PostgreSQL (legacy behavior)
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -14,41 +14,63 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Registrar Identity
+// Registrar Identity con MFA y lockout
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
+    // Contraseña
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 8;
     options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = false;
+
+    // Confirmación
     options.SignIn.RequireConfirmedAccount = true;
+
+    // Lockout por intentos fallidos
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+
+    // MFA
+    options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
 })
 .AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
+.AddDefaultTokenProviders()
+.AddRoles<IdentityRole>();
 
 // Autenticación externa con Google
 builder.Services.AddAuthentication()
     .AddGoogle(options =>
     {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]
-            ?? throw new InvalidOperationException("Falta configurar Authentication:Google:ClientId");
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
-            ?? throw new InvalidOperationException("Falta configurar Authentication:Google:ClientSecret");
-        options.CallbackPath = "/signin-google"; // debe coincidir con el URI autorizado en Google Cloud Console
+        var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+        var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+        if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
+        {
+            options.ClientId = googleClientId;
+            options.ClientSecret = googleClientSecret;
+            options.CallbackPath = "/signin-google";
+        }
     });
-
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
 
 // Configurar rutas de login
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Account/Login";
-    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = true;
 });
 
-// Agregar servicios MVC
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
+
+// ── Servicios de negocio ────────────────────────────────────────────────
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+
+// MVC
+builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
@@ -62,11 +84,11 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// Identity middleware — orden importante
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
@@ -79,8 +101,6 @@ using (var scope = app.Services.CreateScope())
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     await SeedData.Initialize(context, userManager, roleManager);
-
-    // Carga masiva de 500.000 registros (solo si no existen)
     await CargaMasivaService.GenerarDatos(context);
 }
 

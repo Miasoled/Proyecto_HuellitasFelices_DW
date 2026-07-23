@@ -40,6 +40,10 @@ namespace HuellitasFelices.Models
         [Display(Name = "Fecha de eliminación")]
         public DateTime? FechaEliminacion { get; set; }
 
+        [StringLength(100)]
+        [Display(Name = "Eliminado por")]
+        public string? EliminadoPor { get; set; }
+
         [Display(Name = "Fecha de ingreso")]
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 

@@ -14,9 +14,6 @@ namespace HuellitasFelices.Services
     {
         // Listas de datos base para combinaciones y coherencia veterinaria
         private static readonly string[] CargosEmpleado = { "Veterinario", "Asistente", "Recepcionista", "Auxiliar" };
-        private static readonly string[] MetodosPago = { "Efectivo", "Tarjeta de Crédito", "Tarjeta de Débito", "Transferencia Bancaria", "Pago Móvil" };
-        private static readonly string[] EstadosPago = { "Pagado", "Pendiente", "Anulado" };
-        
         private static readonly string[] RazasPerro = {
             "Labrador", "Bulldog", "Poodle", "Pastor Alemán", "Chihuahua", "Mestizo",
             "Golden Retriever", "Beagle", "Rottweiler", "Dálmata", "Schnauzer", "Boxer",
@@ -67,7 +64,6 @@ namespace HuellitasFelices.Services
         private const int MetaMascotas = 200000;
         private const int MetaConsultas = 300000;
         private const int MetaTratamientos = 200000;
-        private const int MetaPagos = 100000;
         private const int MetaAnimalesAdopcion = 20000;
         private const int MetaSolicitudesAdopcion = 18000;
 
@@ -80,7 +76,6 @@ namespace HuellitasFelices.Services
             await GenerarMascotas(context, faker);
             await GenerarConsultas(context, faker);
             await GenerarTratamientos(context, faker);
-            await GenerarPagos(context, faker);
             await GenerarAnimalesAdopcion(context, faker);
             await GenerarSolicitudesAdopcion(context, faker);
         }
@@ -231,7 +226,8 @@ namespace HuellitasFelices.Services
                     Nombre = nombre,
                     Especie = especie,
                     Raza = raza,
-                    Edad = edad,
+                    Sexo = faker.Random.ListItem(new[] { "Macho", "Hembra" }),
+                    FechaNacimiento = DateTime.UtcNow.AddYears(-edad),
                     Peso = peso,
                     DuenoId = faker.Random.ListItem(duenoIds),
                     Activo = faker.Random.Number(100) > 2,
@@ -365,51 +361,7 @@ namespace HuellitasFelices.Services
             }
         }
 
-        // ── 6. 100.000 Pagos ─────────────────────────────────────────────────
-        private static async Task GenerarPagos(AppDbContext context, Faker faker)
-        {
-            int actual = await context.Pagos.CountAsync();
-            if (actual >= MetaPagos) return;
-
-            var duenoIds = await context.Duenos.AsNoTracking().Select(d => d.Id).ToListAsync();
-            if (duenoIds.Count == 0) return;
-
-            var lote = new List<Pago>();
-            int faltantes = MetaPagos - actual;
-
-            for (int i = 1; i <= faltantes; i++)
-            {
-                var fecha = DateTime.UtcNow.AddDays(-faker.Random.Number(1, 1000));
-                lote.Add(new Pago
-                {
-                    Monto = Math.Round((decimal)(faker.Random.Double() * 180 + 15), 2),
-                    MetodoPago = faker.Random.ListItem(MetodosPago),
-                    Estado = faker.Random.ListItem(EstadosPago),
-                    FechaPago = fecha,
-                    DuenoId = faker.Random.ListItem(duenoIds),
-                    Activo = faker.Random.Number(100) > 3,
-                    FechaCreacion = fecha,
-                    FechaActualizacion = DateTime.UtcNow
-                });
-
-                if (lote.Count == 1000)
-                {
-                    context.Pagos.AddRange(lote);
-                    await context.SaveChangesAsync();
-                    context.ChangeTracker.Clear();
-                    lote.Clear();
-                }
-            }
-
-            if (lote.Count > 0)
-            {
-                context.Pagos.AddRange(lote);
-                await context.SaveChangesAsync();
-                context.ChangeTracker.Clear();
-            }
-        }
-
-        // ── 7. 20.000 Animales en Adopción ───────────────────────────────────
+        // ── 6. 20.000 Animales en Adopción ───────────────────────────────────
         private static async Task GenerarAnimalesAdopcion(AppDbContext context, Faker faker)
         {
             int actual = await context.AnimalesAdopcion.CountAsync();

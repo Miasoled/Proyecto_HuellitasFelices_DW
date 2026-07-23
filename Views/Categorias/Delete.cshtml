@@ -1,0 +1,39 @@
+@model HuellitasFelices.Models.Categoria
+@{ ViewData["Title"] = "Eliminar Categoría"; }
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Categorías</a></li>
+        <li class="breadcrumb-item active">Eliminar</li>
+    </ol></nav>
+    <h1><i class="bi bi-trash me-2"></i>Eliminar Categoría</h1>
+</div></div>
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-6">
+    <div class="hf-card" style="border:1.5px solid #fca5a5">
+        <div style="background:linear-gradient(135deg,#dc2626,#ef4444);color:white;padding:16px 20px;font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:8px;border-radius:19px 19px 0 0">
+            <i class="bi bi-exclamation-triangle-fill"></i> Confirmar eliminación
+        </div>
+        <div class="card-body p-4">
+            <div class="text-center mb-4">
+                <div style="width:56px;height:56px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+                    <i class="bi bi-tags" style="font-size:1.6rem;color:#dc2626"></i>
+                </div>
+                <p style="color:var(--text-soft)">El registro se marcará como inactivo (eliminación lógica).</p>
+            </div>
+            <div style="background:var(--gray-50);border-radius:12px;padding:16px;margin-bottom:20px">
+                <div class="row g-2">
+                    <div class="col-6"><small class="text-muted d-block">Nombre</small><strong>@Model.Nombre</strong></div>
+                    <div class="col-6"><small class="text-muted d-block">Productos</small><strong>@Model.Productos.Count</strong></div>
+                </div>
+            </div>
+            <form asp-action="Delete" method="post" class="d-flex gap-3">
+                <input type="hidden" asp-for="Id" />
+                <button type="submit" style="background:#dc2626;color:white;border:none;padding:11px 24px;border-radius:10px;font-weight:600;display:flex;align-items:center;gap:7px">
+                    <i class="bi bi-trash"></i> Confirmar
+                </button>
+                <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div></div></div></div>

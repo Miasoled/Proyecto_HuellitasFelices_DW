@@ -43,6 +43,10 @@ namespace HuellitasFelices.Migrations
                     b.Property<int>("EdadAproximada")
                         .HasColumnType("integer");
 
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Especie")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -75,6 +79,161 @@ namespace HuellitasFelices.Migrations
                     b.ToTable("AnimalesAdopcion");
                 });
 
+            modelBuilder.Entity("HuellitasFelices.Models.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("DireccionIP")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Entidad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int?>("IdentificadorEntidad")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nivel")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("UsuarioEmail")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("UsuarioId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ValorAnterior")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ValorNuevo")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Accion");
+
+                    b.HasIndex("Entidad");
+
+                    b.HasIndex("FechaCreacion");
+
+                    b.HasIndex("UsuarioEmail");
+
+                    b.ToTable("AuditLogs", (string)null);
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Categoria", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categorias", (string)null);
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Compra", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("FechaCompra")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("NumeroCompra")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("ProveedorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SucursalId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProveedorId");
+
+                    b.HasIndex("SucursalId");
+
+                    b.ToTable("Compras", (string)null);
+                });
+
             modelBuilder.Entity("HuellitasFelices.Models.Consulta", b =>
                 {
                     b.Property<int>("Id")
@@ -92,6 +251,15 @@ namespace HuellitasFelices.Migrations
                     b.Property<string>("Diagnostico")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<DateTime>("FechaActualizacion")
                         .HasColumnType("timestamp without time zone");
@@ -117,11 +285,49 @@ namespace HuellitasFelices.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<int?>("VeterinarioId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Estado");
+
+                    b.HasIndex("FechaConsulta");
 
                     b.HasIndex("MascotaId");
 
+                    b.HasIndex("VeterinarioId");
+
                     b.ToTable("Consultas");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.DetalleCompra", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CompraId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompraId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("DetallesCompra", (string)null);
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.Dueno", b =>
@@ -138,6 +344,10 @@ namespace HuellitasFelices.Migrations
                     b.Property<string>("Direccion")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(150)
@@ -164,6 +374,10 @@ namespace HuellitasFelices.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email");
+
+                    b.HasIndex("Nombre");
+
                     b.ToTable("Duenos");
                 });
 
@@ -182,6 +396,15 @@ namespace HuellitasFelices.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("FechaActualizacion")
                         .HasColumnType("timestamp without time zone");
@@ -206,7 +429,41 @@ namespace HuellitasFelices.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Cargo");
+
+                    b.HasIndex("Email");
+
                     b.ToTable("Empleados");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Inventario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StockActual")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SucursalId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SucursalId");
+
+                    b.HasIndex("ProductoId", "SucursalId")
+                        .IsUnique();
+
+                    b.ToTable("Inventarios", (string)null);
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.Mascota", b =>
@@ -223,8 +480,9 @@ namespace HuellitasFelices.Migrations
                     b.Property<int?>("DuenoId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Edad")
-                        .HasColumnType("integer");
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Especie")
                         .IsRequired()
@@ -240,6 +498,9 @@ namespace HuellitasFelices.Migrations
                     b.Property<DateTime?>("FechaEliminacion")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<DateTime?>("FechaNacimiento")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -252,14 +513,87 @@ namespace HuellitasFelices.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("Sexo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DuenoId");
 
+                    b.HasIndex("Nombre");
+
                     b.ToTable("Mascotas");
                 });
 
-            modelBuilder.Entity("HuellitasFelices.Models.Pago", b =>
+            modelBuilder.Entity("HuellitasFelices.Models.MovimientoInventario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CompraId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaMovimiento")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("StockAnterior")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StockPosterior")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SucursalDestinoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SucursalOrigenId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TipoMovimiento")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("UsuarioId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompraId");
+
+                    b.HasIndex("FechaMovimiento");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("SucursalDestinoId");
+
+                    b.HasIndex("SucursalOrigenId");
+
+                    b.HasIndex("TipoMovimiento");
+
+                    b.ToTable("MovimientosInventario", (string)null);
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Producto", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -270,13 +604,20 @@ namespace HuellitasFelices.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("DuenoId")
+                    b.Property<int>("CategoriaId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Estado")
-                        .IsRequired()
+                    b.Property<string>("CodigoBarras")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("FechaActualizacion")
                         .HasColumnType("timestamp without time zone");
@@ -287,22 +628,88 @@ namespace HuellitasFelices.Migrations
                     b.Property<DateTime?>("FechaEliminacion")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<DateTime>("FechaPago")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("MetodoPago")
+                    b.Property<string>("Nombre")
                         .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<decimal>("PrecioCompra")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("PrecioVenta")
+                        .HasColumnType("numeric");
+
+                    b.Property<int?>("ProveedorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StockMinimo")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UnidadMedida")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<decimal>("Monto")
-                        .HasColumnType("numeric");
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoriaId");
+
+                    b.HasIndex("CodigoBarras");
+
+                    b.HasIndex("Nombre");
+
+                    b.HasIndex("ProveedorId");
+
+                    b.ToTable("Productos", (string)null);
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Proveedor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Direccion")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("RUC")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DuenoId");
-
-                    b.ToTable("Pagos", (string)null);
+                    b.ToTable("Proveedores", (string)null);
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.SolicitudAdopcion", b =>
@@ -318,6 +725,10 @@ namespace HuellitasFelices.Migrations
 
                     b.Property<int>("AnimalAdopcionId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(150)
@@ -359,7 +770,51 @@ namespace HuellitasFelices.Migrations
 
                     b.HasIndex("AnimalAdopcionId");
 
+                    b.HasIndex("Estado");
+
                     b.ToTable("SolicitudesAdopcion");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Sucursal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Direccion")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sucursales", (string)null);
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.Tratamiento", b =>
@@ -383,6 +838,17 @@ namespace HuellitasFelices.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<string>("Dosis")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("DuracionDias")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTime>("FechaActualizacion")
                         .HasColumnType("timestamp without time zone");
 
@@ -391,6 +857,10 @@ namespace HuellitasFelices.Migrations
 
                     b.Property<DateTime?>("FechaEliminacion")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Frecuencia")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Medicamento")
                         .HasMaxLength(100)
@@ -604,6 +1074,25 @@ namespace HuellitasFelices.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("HuellitasFelices.Models.Compra", b =>
+                {
+                    b.HasOne("HuellitasFelices.Models.Proveedor", "Proveedor")
+                        .WithMany("Compras")
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "Sucursal")
+                        .WithMany()
+                        .HasForeignKey("SucursalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Proveedor");
+
+                    b.Navigation("Sucursal");
+                });
+
             modelBuilder.Entity("HuellitasFelices.Models.Consulta", b =>
                 {
                     b.HasOne("HuellitasFelices.Models.Mascota", "Mascota")
@@ -612,7 +1101,52 @@ namespace HuellitasFelices.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HuellitasFelices.Models.Empleado", "Veterinario")
+                        .WithMany()
+                        .HasForeignKey("VeterinarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Mascota");
+
+                    b.Navigation("Veterinario");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.DetalleCompra", b =>
+                {
+                    b.HasOne("HuellitasFelices.Models.Compra", "Compra")
+                        .WithMany("Detalles")
+                        .HasForeignKey("CompraId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HuellitasFelices.Models.Producto", "Producto")
+                        .WithMany("DetallesCompra")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Compra");
+
+                    b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Inventario", b =>
+                {
+                    b.HasOne("HuellitasFelices.Models.Producto", "Producto")
+                        .WithMany("Inventarios")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "Sucursal")
+                        .WithMany("Inventarios")
+                        .HasForeignKey("SucursalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("Sucursal");
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.Mascota", b =>
@@ -625,15 +1159,54 @@ namespace HuellitasFelices.Migrations
                     b.Navigation("Dueno");
                 });
 
-            modelBuilder.Entity("HuellitasFelices.Models.Pago", b =>
+            modelBuilder.Entity("HuellitasFelices.Models.MovimientoInventario", b =>
                 {
-                    b.HasOne("HuellitasFelices.Models.Dueno", "Dueno")
-                        .WithMany("Pagos")
-                        .HasForeignKey("DuenoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("HuellitasFelices.Models.Compra", "Compra")
+                        .WithMany()
+                        .HasForeignKey("CompraId");
+
+                    b.HasOne("HuellitasFelices.Models.Producto", "Producto")
+                        .WithMany("Movimientos")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Dueno");
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "SucursalDestino")
+                        .WithMany("MovimientosDestino")
+                        .HasForeignKey("SucursalDestinoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "SucursalOrigen")
+                        .WithMany("MovimientosOrigen")
+                        .HasForeignKey("SucursalOrigenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Compra");
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("SucursalDestino");
+
+                    b.Navigation("SucursalOrigen");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Producto", b =>
+                {
+                    b.HasOne("HuellitasFelices.Models.Categoria", "Categoria")
+                        .WithMany("Productos")
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HuellitasFelices.Models.Proveedor", "Proveedor")
+                        .WithMany("Productos")
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Categoria");
+
+                    b.Navigation("Proveedor");
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.SolicitudAdopcion", b =>
@@ -714,6 +1287,16 @@ namespace HuellitasFelices.Migrations
                     b.Navigation("Solicitudes");
                 });
 
+            modelBuilder.Entity("HuellitasFelices.Models.Categoria", b =>
+                {
+                    b.Navigation("Productos");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Compra", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
             modelBuilder.Entity("HuellitasFelices.Models.Consulta", b =>
                 {
                     b.Navigation("Tratamientos");
@@ -722,13 +1305,36 @@ namespace HuellitasFelices.Migrations
             modelBuilder.Entity("HuellitasFelices.Models.Dueno", b =>
                 {
                     b.Navigation("Mascotas");
-
-                    b.Navigation("Pagos");
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.Mascota", b =>
                 {
                     b.Navigation("Consultas");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Producto", b =>
+                {
+                    b.Navigation("DetallesCompra");
+
+                    b.Navigation("Inventarios");
+
+                    b.Navigation("Movimientos");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Proveedor", b =>
+                {
+                    b.Navigation("Compras");
+
+                    b.Navigation("Productos");
+                });
+
+            modelBuilder.Entity("HuellitasFelices.Models.Sucursal", b =>
+                {
+                    b.Navigation("Inventarios");
+
+                    b.Navigation("MovimientosDestino");
+
+                    b.Navigation("MovimientosOrigen");
                 });
 #pragma warning restore 612, 618
         }

@@ -32,8 +32,15 @@
                         <input asp-for="Raza" class="form-control" />
                     </div>
                     <div class="col-md-3">
-                        <label asp-for="Edad" class="form-label"><i class="bi bi-calendar me-1"></i>Edad</label>
-                        <input asp-for="Edad" class="form-control" type="number" />
+                        <label asp-for="Sexo" class="form-label"><i class="bi bi-gender-ambiguous me-1"></i>Sexo</label>
+                        <select asp-for="Sexo" class="form-select">
+                            <option value="Macho">Macho</option>
+                            <option value="Hembra">Hembra</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="FechaNacimiento" class="form-label"><i class="bi bi-calendar me-1"></i>Fecha nacimiento</label>
+                        <input asp-for="FechaNacimiento" class="form-control" type="date" />
                     </div>
                     <div class="col-md-3">
                         <label asp-for="Peso" class="form-label"><i class="bi bi-speedometer me-1"></i>Peso</label>

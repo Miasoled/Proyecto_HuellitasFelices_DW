@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
-using HuellitasFelices.ViewModels;
 
 namespace HuellitasFelices.Controllers
 {
@@ -91,7 +90,7 @@ namespace HuellitasFelices.Controllers
         // POST: Mascotas/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Especie,Raza,Edad,Peso")] Mascota mascota)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Especie,Raza,Sexo,FechaNacimiento,Peso")] Mascota mascota)
         {
             var user = await _userManager.GetUserAsync(User);
             var dueno = _context.Duenos.FirstOrDefault(d => d.Email == user!.Email && d.Activo);
@@ -142,7 +141,7 @@ namespace HuellitasFelices.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Especie,Raza,Edad,Peso,Activo,FechaCreacion,DuenoId")] Mascota mascota)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Especie,Raza,Sexo,FechaNacimiento,Peso,Activo,FechaCreacion,DuenoId")] Mascota mascota)
         {
             if (id != mascota.Id)
             {

@@ -1,0 +1,68 @@
+@model HuellitasFelices.Models.Compra
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Editar Compra";
+}
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Inventario" asp-action="Index">Inventario</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Compras</a></li>
+            <li class="breadcrumb-item active">Editar</li>
+        </ol></nav>
+        <h1><i class="bi bi-pencil me-2"></i>Editar Compra</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+    <div class="hf-card" style="max-width:700px">
+        <form asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="NumeroCompra" class="form-label">N° Compra</label>
+                    <input asp-for="NumeroCompra" class="form-control" />
+                    <span asp-validation-for="NumeroCompra" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Estado" class="form-label">Estado</label>
+                    <select asp-for="Estado" class="form-select">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Recibida">Recibida</option>
+                        <option value="Cancelada">Cancelada</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ProveedorId" class="form-label">Proveedor</label>
+                    <select asp-for="ProveedorId" class="form-select" asp-items="ViewBag.ProveedorId"></select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SucursalId" class="form-label">Sucursal</label>
+                    <select asp-for="SucursalId" class="form-select" asp-items="ViewBag.SucursalId"></select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="FechaCompra" class="form-label">Fecha</label>
+                    <input asp-for="FechaCompra" class="form-control" type="date" />
+                    <span asp-validation-for="FechaCompra" class="text-danger"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Observacion" class="form-label">Observación</label>
+                    <textarea asp-for="Observacion" class="form-control" rows="2"></textarea>
+                    <span asp-validation-for="Observacion" class="text-danger"></span>
+                </div>
+            </div>
+            <hr />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-search"><i class="bi bi-check-lg"></i> Guardar</button>
+                <a asp-action="Index" class="btn-back">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div></div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

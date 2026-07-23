@@ -1,0 +1,57 @@
+@model IEnumerable<HuellitasFelices.Models.Mascota>
+@{ ViewData["Title"] = "Reporte de Mascotas"; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Reportes</a></li>
+            <li class="breadcrumb-item active">Mascotas</li>
+        </ol></nav>
+        <h1><i class="bi bi-heart-pulse me-2"></i>Reporte de mascotas</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="hf-card text-center p-3">
+                <i class="bi bi-heart-pulse text-success fs-3"></i>
+                <p class="fw-bold fs-4 mb-0">@ViewBag.Total</p>
+                <small class="text-muted">Total mascotas</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="hf-card"><div class="table-responsive">
+        <table class="hf-table">
+            <thead><tr>
+                <th>Nombre</th><th>Especie</th><th>Raza</th><th>Edad</th><th>Peso</th><th>Dueño</th><th>Estado</th>
+            </tr></thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><strong>@item.Nombre</strong></td>
+                        <td><span class="badge-@(item.Especie=="Perro"?"success":"info")-hf">@item.Especie</span></td>
+                        <td style="font-size:.88rem">@(item.Raza ?? "—")</td>
+                        <td>@item.Edad años</td>
+                        <td>@item.Peso kg</td>
+                        <td style="font-size:.88rem">@(item.Dueno?.Nombre ?? "—")</td>
+                        <td>
+                            @if (item.Activo)
+                            {
+                                <span class="badge-success-hf">Activo</span>
+                            }
+                            else
+                            {
+                                <span class="badge-danger-hf">Inactivo</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+</div></div>

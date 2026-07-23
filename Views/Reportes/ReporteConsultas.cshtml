@@ -1,0 +1,69 @@
+@model IEnumerable<HuellitasFelices.Models.Consulta>
+@{ ViewData["Title"] = "Reporte de Consultas"; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Reportes</a></li>
+            <li class="breadcrumb-item active">Consultas</li>
+        </ol></nav>
+        <h1><i class="bi bi-clipboard2-pulse me-2"></i>Reporte de consultas</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+
+    <form method="get" class="search-bar d-flex gap-2 flex-wrap mb-4">
+        <label class="align-self-center fw-semibold">Desde:</label>
+        <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" style="width:auto" />
+        <label class="align-self-center fw-semibold">Hasta:</label>
+        <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" style="width:auto" />
+        <button type="submit" class="btn-search"><i class="bi bi-search"></i> Filtrar</button>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="hf-card text-center p-3">
+                <i class="bi bi-clipboard2-pulse text-primary fs-3"></i>
+                <p class="fw-bold fs-4 mb-0">@ViewBag.TotalConsultas</p>
+                <small class="text-muted">Total consultas</small>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="hf-card text-center p-3">
+                <i class="bi bi-cash-stack text-success fs-3"></i>
+                <p class="fw-bold fs-4 mb-0">$@(((decimal)ViewBag.TotalCosto).ToString("N2"))</p>
+                <small class="text-muted">Costo total</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="hf-card"><div class="table-responsive">
+        <table class="hf-table">
+            <thead><tr>
+                <th>Fecha</th><th>Mascota</th><th>Dueño</th><th>Motivo</th><th>Diagnóstico</th><th>Costo</th><th>Estado</th>
+            </tr></thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                     var badgeClass = item.Estado switch {
+                         "Pendiente"  => "badge-warning-hf",
+                         "EnRevision" => "badge-info-hf",
+                         "Completada" => "badge-success-hf",
+                         _            => "badge-warning-hf"
+                     };
+                    <tr>
+                        <td style="font-size:.85rem; color:var(--text-soft)">@item.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td><strong>@item.Mascota?.Nombre</strong></td>
+                        <td style="font-size:.88rem">@item.Mascota?.Dueno?.Nombre</td>
+                        <td style="font-size:.88rem">@item.Motivo</td>
+                        <td style="font-size:.88rem; color:var(--text-soft)">@(item.Diagnostico ?? "—")</td>
+                        <td><span class="badge-success-hf">$@item.Costo.ToString("N2")</span></td>
+                        <td><span class="@badgeClass">@item.Estado</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+</div></div>

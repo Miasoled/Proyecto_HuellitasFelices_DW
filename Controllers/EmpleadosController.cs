@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
-using HuellitasFelices.ViewModels;
 
 namespace HuellitasFelices.Controllers
 {
@@ -78,7 +77,7 @@ namespace HuellitasFelices.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Cargo,Telefono,Salario,Activo,FechaCreacion")] Empleado empleado)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Cargo,Email,Telefono,Salario,Activo,FechaCreacion")] Empleado empleado)
         {
             if (ModelState.IsValid)
             {
@@ -110,7 +109,7 @@ namespace HuellitasFelices.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Cargo,Telefono,Salario,Activo,FechaCreacion")] Empleado empleado)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Cargo,Email,Telefono,Salario,Activo,FechaCreacion")] Empleado empleado)
         {
             if (id != empleado.Id)
             {

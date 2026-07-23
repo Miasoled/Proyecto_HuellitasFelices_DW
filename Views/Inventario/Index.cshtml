@@ -1,0 +1,59 @@
+@model IEnumerable<HuellitasFelices.Models.Producto>
+@using HuellitasFelices.Models
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Inventario";
+    var p = ViewBag.Paginacion as PaginacionViewModel;
+}
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item active">Inventario</li>
+        </ol></nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-box-seam me-2"></i>Inventario</h1>
+                <small style="opacity:.8">@(p?.TotalRegistros.ToString("N0") ?? "–") productos</small>
+            </div>
+            <a asp-action="Create" class="btn-hero-primary"><i class="bi bi-plus-lg"></i> Nuevo producto</a>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <form method="get" class="search-bar d-flex gap-2 flex-wrap">
+            <input type="text" name="busqueda" value="@p?.Busqueda" class="form-control" placeholder="Buscar producto…" style="min-width:250px" />
+            <select name="categoriaId" class="form-select" style="width:auto" asp-items="@(ViewBag.Categorias as List<SelectListItem> ?? new())"></select>
+            <button type="submit" class="btn-search"><i class="bi bi-search"></i></button>
+        </form>
+    </div>
+
+    <div class="hf-card"><div class="table-responsive">
+        <table class="hf-table">
+            <thead><tr>
+                <th>Código</th><th>Nombre</th><th>Categoría</th><th>P. Compra</th><th>P. Venta</th><th>Stock Mín.</th><th style="width:130px">Acciones</th>
+            </tr></thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><code>@(item.CodigoBarras ?? "—")</code></td>
+                        <td><strong>@item.Nombre</strong></td>
+                        <td>@item.Categoria?.Nombre</td>
+                        <td>$@item.PrecioCompra.ToString("N2")</td>
+                        <td>$@item.PrecioVenta.ToString("N2")</td>
+                        <td>@item.StockMinimo</td>
+                        <td><div class="d-flex gap-1">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-edit"><i class="bi bi-pencil"></i></a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-view"><i class="bi bi-eye"></i></a>
+                        </div></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+    @if (p != null) { @await Html.PartialAsync("_Paginacion", p) }
+</div></div>

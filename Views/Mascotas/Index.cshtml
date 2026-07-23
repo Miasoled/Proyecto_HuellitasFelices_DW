@@ -1,5 +1,5 @@
 @model IEnumerable<HuellitasFelices.Models.Mascota>
-@using HuellitasFelices.ViewModels
+@using HuellitasFelices.Models
 @{ ViewData["Title"] = "Mascotas"; var p = ViewBag.Paginacion as PaginacionViewModel; }
 
 <div class="page-header">
@@ -31,7 +31,7 @@
     <div class="hf-card"><div class="table-responsive">
         <table class="hf-table">
             <thead><tr>
-                <th>Nombre</th><th>Especie</th><th>Raza</th><th>Edad</th><th>Peso</th><th>Dueño</th><th>Registro</th><th style="width:130px">Acciones</th>
+                <th>Nombre</th><th>Especie</th><th>Raza</th><th>Sexo</th><th>Edad</th><th>Peso</th><th>Dueño</th><th>Registro</th><th style="width:130px">Acciones</th>
             </tr></thead>
             <tbody>
                 @foreach (var item in Model)
@@ -40,6 +40,7 @@
                         <td><strong>@item.Nombre</strong></td>
                         <td><span class="badge-@(item.Especie=="Perro"?"success":"info")-hf">@item.Especie</span></td>
                         <td style="font-size:.88rem">@item.Raza</td>
+                        <td>@item.Sexo</td>
                         <td>@item.Edad años</td>
                         <td>@item.Peso kg</td>
                         <td style="font-size:.88rem">@item.Dueno?.Nombre</td>

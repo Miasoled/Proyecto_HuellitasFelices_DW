@@ -16,6 +16,11 @@ namespace HuellitasFelices.Models
         [Display(Name = "Cargo")]
         public string Cargo { get; set; } = string.Empty; // Veterinario, Asistente, Recepcionista
 
+        [Required]
+        [StringLength(100)]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = string.Empty;
+
         [StringLength(20)]
         [Display(Name = "Teléfono")]
         public string? Telefono { get; set; }
@@ -28,6 +33,10 @@ namespace HuellitasFelices.Models
 
         [Display(Name = "Fecha de eliminación")]
         public DateTime? FechaEliminacion { get; set; }
+
+        [StringLength(100)]
+        [Display(Name = "Eliminado por")]
+        public string? EliminadoPor { get; set; }
 
         [Display(Name = "Fecha de ingreso")]
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;

@@ -1,0 +1,49 @@
+@page
+@model HuellitasFelices.Areas.Identity.Pages.Account.EnableAuthenticatorModel
+@{
+    ViewData["Title"] = "Configurar autenticador";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-hf-gradient text-white rounded-top-4">
+                    <h3 class="mb-0"><i class="bi bi-shield-lock"></i> Configurar autenticador</h3>
+                </div>
+                <div class="card-body p-4">
+                    <p>Para usar la autenticación multifactor, siga estos pasos:</p>
+                    <ol class="list-group list-group-numbered list-group-flush mb-4">
+                        <li class="list-group-item">
+                            Descargue una aplicación autenticadora como <strong>Google Authenticator</strong> o <strong>Microsoft Authenticator</strong>.
+                        </li>
+                        <li class="list-group-item">
+                            Escanee el código QR o ingrese manualmente la clave:
+                            <div class="mt-2 p-3 bg-light rounded text-center">
+                                <code style="font-size:1.1rem; letter-spacing:2px">@Model.SharedKey</code>
+                            </div>
+                        </li>
+                        <li class="list-group-item">
+                            Ingrese el código de 6 dígitos que muestra la aplicación:
+                            <form asp-action="EnableAuthenticator" method="post" class="mt-3">
+                                <input type="hidden" name="SharedKey" value="@Model.SharedKey" />
+                                <input type="hidden" name="AuthenticatorUri" value="@Model.AuthenticatorUri" />
+                                <div class="input-group" style="max-width:300px">
+                                    <input type="text" name="Code" class="form-control form-control-lg text-center"
+                                           placeholder="000000" maxlength="7" autocomplete="off" required />
+                                    <button type="submit" class="btn btn-hf-primary">
+                                        <i class="bi bi-check-lg"></i> Verificar
+                                    </button>
+                                </div>
+                                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                                {
+                                    <div class="text-danger mt-2">@Model.ErrorMessage</div>
+                                }
+                            </form>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

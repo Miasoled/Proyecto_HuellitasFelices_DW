@@ -1,39 +1,193 @@
 @model HuellitasFelices.Models.Consulta
-@{ ViewData["Title"] = "Detalle de consulta"; }
+@{
+    ViewData["Title"] = "Detalle de consulta";
+    var tratamientos = Model.Tratamientos?.Where(t => t.Activo).ToList() ?? new();
+    var total        = Model.Costo + tratamientos.Sum(t => t.Costo);
+     var estadoBadge  = Model.Estado switch {
+         "Pendiente"   => "badge-warning-hf",
+         "EnRevision"  => "badge-info-hf",
+         "Completada"  => "badge-success-hf",
+         _             => "badge-warning-hf"
+     };
+}
+
 <div class="page-header"><div class="container">
     <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
         <li class="breadcrumb-item"><a asp-action="Index">Consultas</a></li>
         <li class="breadcrumb-item active">Detalle</li>
     </ol></nav>
-    <h1><i class="bi bi-clipboard2-pulse-fill me-2"></i>Detalle de consulta</h1>
-</div></div>
-<div class="content-wrapper"><div class="container">
-<div class="row justify-content-center"><div class="col-lg-7">
-    <div class="hf-card">
-        <div class="hf-card-header"><i class="bi bi-clipboard2-pulse me-2"></i>@Model.Motivo</div>
-        <div class="card-body p-4">
-            <div class="row g-3">
-                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-patch-heart me-1"></i>Mascota</small><strong>@(Model.Mascota?.Nombre ?? "—") (@(Model.Mascota?.Especie ?? "—"))</strong></div>
-                <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>Fecha de la cita</small><strong>@Model.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy hh:mm tt")</strong></div>
-                
-                <div class="col-12"><small class="text-muted d-block"><i class="bi bi-chat-left-text me-1"></i>Motivo</small><strong>@Model.Motivo</strong></div>
-                
-                @if (!string.IsNullOrEmpty(Model.Sintomas))
-                {
-                    <div class="col-12"><small class="text-muted d-block"><i class="bi bi-activity me-1"></i>Síntomas reportados</small><p style="margin:0; background:var(--gray-50); padding:10px 14px; border-radius:10px; border:1px solid var(--border); font-style:italic">@Model.Sintomas</p></div>
-                }
-
-                @if (!User.IsInRole("Cliente") || (!string.IsNullOrEmpty(Model.Diagnostico) || Model.Costo > 0))
-                {
-                    <div class="col-12"><small class="text-muted d-block"><i class="bi bi-clipboard2-check me-1"></i>Diagnóstico</small><p style="margin:0; background:var(--primary-bg); padding:12px; border-radius:10px; border:1.5px solid var(--primary-soft)">@(Model.Diagnostico ?? "Pendiente de revisión médica.")</p></div>
-                    <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-cash me-1"></i>Costo de consulta</small><span class="badge-success-hf">$@Model.Costo.ToString("N2")</span></div>
-                }
-            </div>
+    <div class="d-flex justify-content-between align-items-start">
+        <div class="d-flex align-items-center gap-3">
+            <h1><i class="bi bi-clipboard2-pulse-fill me-2"></i>Detalle de consulta</h1>
+            <span class="@estadoBadge" style="font-size:.82rem"><i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>@Model.Estado</span>
         </div>
-        <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px">
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-primary-hf"><i class="bi bi-pencil"></i> Editar</a>
-            <a asp-action="Index" class="btn-outline-hf"><i class="bi bi-arrow-left"></i> Volver</a>
+        <div>
+            <a asp-action="Index" class="btn-outline-hf">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
         </div>
     </div>
-</div></div></div></div>
+</div></div>
+
+<div class="content-wrapper"><div class="container">
+<div class="row g-4 justify-content-center">
+
+    <!-- Datos de la consulta -->
+    <div class="col-lg-7">
+        <div class="hf-card">
+            <div class="hf-card-header"><i class="bi bi-clipboard2-pulse me-2"></i>@Model.Motivo</div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <small class="text-muted d-block"><i class="bi bi-patch-heart me-1"></i>Mascota</small>
+                        <strong>@(Model.Mascota?.Nombre ?? "—") (@(Model.Mascota?.Especie ?? "—"))</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>Fecha de la cita</small>
+                        <strong>@Model.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy hh:mm tt")</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block"><i class="bi bi-person-badge me-1"></i>Veterinario</small>
+                        <strong>@(Model.Veterinario?.Nombre ?? "Sin asignar")</strong>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted d-block"><i class="bi bi-chat-left-text me-1"></i>Motivo</small>
+                        <strong>@Model.Motivo</strong>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Sintomas))
+                    {
+                        <div class="col-12">
+                            <small class="text-muted d-block"><i class="bi bi-activity me-1"></i>Síntomas</small>
+                            <p style="margin:0;background:var(--gray-50);padding:10px 14px;border-radius:10px;border:1px solid var(--border);font-style:italic">@Model.Sintomas</p>
+                        </div>
+                    }
+                    @if (!User.IsInRole("Cliente") || !string.IsNullOrEmpty(Model.Diagnostico))
+                    {
+                        <div class="col-12">
+                            <small class="text-muted d-block"><i class="bi bi-clipboard2-check me-1"></i>Diagnóstico</small>
+                            <p style="margin:0;background:var(--primary-bg);padding:12px;border-radius:10px;border:1.5px solid var(--primary-soft)">
+                                @(Model.Diagnostico ?? "Pendiente de revisión médica.")
+                            </p>
+                        </div>
+                    }
+                    @if (!User.IsInRole("Cliente"))
+                    {
+                        <div class="col-md-4">
+                            <small class="text-muted d-block"><i class="bi bi-cash me-1"></i>Costo consulta</small>
+                            <span class="badge-success-hf">$@Model.Costo.ToString("N2")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap">
+                @if (!User.IsInRole("Cliente"))
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-primary-hf">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                }
+                <a asp-action="Index" class="btn-outline-hf">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tratamientos y resumen de cobro -->
+    <div class="col-lg-5">
+
+        <!-- Tratamientos -->
+        <div class="hf-card mb-4">
+            <div class="hf-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-capsule me-2"></i>Tratamientos</span>
+                @if (!User.IsInRole("Cliente"))
+                {
+                    <a asp-controller="Tratamientos" asp-action="Create" asp-route-consultaId="@Model.Id"
+                       class="btn-hero-primary" style="padding:6px 14px; font-size:.8rem">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </a>
+                }
+            </div>
+            @if (!tratamientos.Any())
+            {
+                <div style="padding:24px;text-align:center;color:var(--text-soft)">
+                    <i class="bi bi-capsule" style="font-size:2rem;opacity:.3;display:block;margin-bottom:8px"></i>
+                    Sin tratamientos registrados
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="hf-table">
+                        <thead><tr>
+                            <th>Tratamiento</th>
+                            <th>Medicamento</th>
+                            @if (!User.IsInRole("Cliente")) { <th style="text-align:right">Costo</th> }
+                        </tr></thead>
+                        <tbody>
+                            @foreach (var t in tratamientos)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong style="font-size:.88rem">@t.Nombre</strong>
+                                        @if (!string.IsNullOrEmpty(t.Dosis))
+                                        {
+                                            <br><small class="text-muted">@t.Dosis — @t.Frecuencia
+                                            @if (t.DuracionDias.HasValue) { <span>(@t.DuracionDias días)</span> }
+                                            </small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(t.Medicamento))
+                                        { <span class="badge-warning-hf" style="font-size:.78rem">@t.Medicamento</span> }
+                                    </td>
+                                    @if (!User.IsInRole("Cliente"))
+                                    {
+                                        <td style="text-align:right;font-weight:600;color:var(--primary)">$@t.Costo.ToString("N2")</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <!-- Resumen de cobro -->
+        @if (Model.Costo > 0 || tratamientos.Any())
+        {
+            <div class="hf-card">
+                <div class="hf-card-header"><i class="bi bi-receipt me-2"></i>Resumen de cobro</div>
+                <div class="card-body p-4">
+                    @if (!User.IsInRole("Cliente"))
+                    {
+                        <div class="d-flex justify-content-between mb-2" style="font-size:.9rem">
+                            <span style="color:var(--text-soft)">Consulta</span>
+                            <span>$@Model.Costo.ToString("N2")</span>
+                        </div>
+                    }
+                    @if (tratamientos.Any())
+                    {
+                        <div class="d-flex justify-content-between mb-2" style="font-size:.9rem">
+                            <span style="color:var(--text-soft)">Tratamientos (@tratamientos.Count)</span>
+                            <span>$@tratamientos.Sum(t => t.Costo).ToString("N2")</span>
+                        </div>
+                    }
+                    <div class="d-flex justify-content-between pt-2" style="border-top:2px solid var(--border);font-weight:800;font-size:1.05rem">
+                        <span>Total</span>
+                        <span style="color:var(--primary)">$@total.ToString("N2")</span>
+                    </div>
+
+                    <div class="mt-3">
+                        <a asp-action="Index"
+                           class="btn-outline-hf w-100 justify-content-center" style="padding:12px">
+                            <i class="bi bi-arrow-left"></i> Volver a consultas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+</div></div></div>

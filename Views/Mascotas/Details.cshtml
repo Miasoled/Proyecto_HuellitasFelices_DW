@@ -17,6 +17,7 @@
                 <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-tag me-1"></i>Nombre</small><strong>@Model.Nombre</strong></div>
                 <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-info-circle me-1"></i>Especie</small><span class="badge-success-hf">@Model.Especie</span></div>
                 <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-bookmark me-1"></i>Raza</small><strong>@(Model.Raza ?? "—")</strong></div>
+                <div class="col-md-3"><small class="text-muted d-block"><i class="bi bi-gender-ambiguous me-1"></i>Sexo</small><strong>@Model.Sexo</strong></div>
                 <div class="col-md-3"><small class="text-muted d-block"><i class="bi bi-calendar me-1"></i>Edad</small><strong>@Model.Edad años</strong></div>
                 <div class="col-md-3"><small class="text-muted d-block"><i class="bi bi-speedometer me-1"></i>Peso</small><strong>@Model.Peso kg</strong></div>
                 <div class="col-md-6"><small class="text-muted d-block"><i class="bi bi-person me-1"></i>Dueño</small><strong>@(Model.Dueno?.Nombre ?? "Sin dueño")</strong></div>

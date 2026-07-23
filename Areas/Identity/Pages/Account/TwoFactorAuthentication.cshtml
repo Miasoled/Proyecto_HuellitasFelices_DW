@@ -1,0 +1,77 @@
+@page
+@model HuellitasFelices.Areas.Identity.Pages.Account.TwoFactorAuthenticationModel
+@{
+    ViewData["Title"] = "Autenticación multifactor";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-hf-gradient text-white rounded-top-4">
+                    <h3 class="mb-0"><i class="bi bi-shield-lock"></i> Autenticación multifactor</h3>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success rounded-3">
+                            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+                        </div>
+                    }
+                    
+                    @if (Model.IsEnabled)
+                    {
+                        <div class="alert alert-success rounded-3">
+                            <i class="bi bi-shield-check me-2"></i>
+                            <strong>MFA está habilitado</strong> en su cuenta.
+                        </div>
+                        
+                        @if (Model.RecoveryCodes != null && Model.RecoveryCodes.Any())
+                        {
+                            <div class="card border-warning mb-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <i class="bi bi-key me-2"></i>Códigos de recuperación
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted mb-3">Guarde estos códigos en un lugar seguro. Cada código solo se puede usar una vez.</p>
+                                    <div class="row">
+                                        @foreach (var code in Model.RecoveryCodes)
+                                        {
+                                            <div class="col-md-4 mb-2">
+                                                <code class="d-block p-2 bg-light rounded text-center">@code</code>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        
+                        <div class="d-flex gap-2">
+                            <form asp-action="ResetAuthenticator" method="post">
+                                <button type="submit" class="btn btn-outline-warning">
+                                    <i class="bi bi-arrow-clockwise me-1"></i> Regenerar claves
+                                </button>
+                            </form>
+                            <form asp-action="Disable2fa" method="post">
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="bi bi-x-lg me-1"></i> Desactivar MFA
+                                </button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning rounded-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>MFA no está habilitado.</strong> Se recomienda activar la autenticación multifactor para mayor seguridad.
+                        </div>
+                        
+                        <a asp-action="EnableAuthenticator" class="btn btn-hf-primary btn-lg">
+                            <i class="bi bi-shield-plus me-2"></i> Activar MFA
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

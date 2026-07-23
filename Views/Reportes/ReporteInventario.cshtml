@@ -1,0 +1,57 @@
+@model IEnumerable<HuellitasFelices.Models.Producto>
+@{ ViewData["Title"] = "Reporte de Inventario"; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Reportes</a></li>
+            <li class="breadcrumb-item active">Inventario</li>
+        </ol></nav>
+        <h1><i class="bi bi-box-seam me-2"></i>Reporte de inventario</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="hf-card text-center p-3">
+                <i class="bi bi-box-seam text-primary fs-3"></i>
+                <p class="fw-bold fs-4 mb-0">@ViewBag.TotalProductos</p>
+                <small class="text-muted">Total productos</small>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="hf-card text-center p-3">
+                <i class="bi bi-stack text-success fs-3"></i>
+                <p class="fw-bold fs-4 mb-0">@ViewBag.StockTotal</p>
+                <small class="text-muted">Stock total</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="hf-card"><div class="table-responsive">
+        <table class="hf-table">
+            <thead><tr>
+                <th>Código</th><th>Nombre</th><th>Categoría</th><th>Precio Compra</th><th>Precio Venta</th><th>Stock Total</th><th>Stock Mínimo</th>
+            </tr></thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var stockTotal = item.Inventarios?.Sum(i => i.StockActual) ?? 0;
+                    var stockClass = stockTotal <= item.StockMinimo ? "badge-danger-hf" : "badge-success-hf";
+                    <tr>
+                        <td style="font-size:.85rem; color:var(--text-soft)">@(item.CodigoBarras ?? item.Id.ToString())</td>
+                        <td><strong>@item.Nombre</strong></td>
+                        <td><span class="badge-info-hf">@item.Categoria?.Nombre</span></td>
+                        <td style="font-size:.88rem">$@item.PrecioCompra.ToString("N2")</td>
+                        <td style="font-size:.88rem">$@item.PrecioVenta.ToString("N2")</td>
+                        <td><span class="@stockClass">@stockTotal</span></td>
+                        <td>@item.StockMinimo</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+</div></div>

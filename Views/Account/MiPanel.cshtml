@@ -120,15 +120,25 @@
             <div class="hf-card-header"><i class="bi bi-clipboard2-pulse-fill me-2"></i>Últimas consultas</div>
             <div class="table-responsive">
                 <table class="hf-table">
-                    <thead><tr><th>Motivo</th><th>Diagnóstico</th><th>Costo</th><th>Fecha</th></tr></thead>
+                    <thead><tr><th>Motivo</th><th>Estado</th><th>Fecha</th><th></th></tr></thead>
                     <tbody>
                         @foreach (var c in consultas)
                         {
+                             var badgeClass = c.Estado switch {
+                                 "Pendiente"   => "badge-warning-hf",
+                                 "EnRevision"  => "badge-info-hf",
+                                 "Completada"  => "badge-success-hf",
+                                 _             => "badge-warning-hf"
+                             };
                             <tr>
                                 <td><strong style="font-size:.9rem">@c.Motivo</strong></td>
-                                <td style="font-size:.88rem; color:var(--text-soft)">@c.Diagnostico</td>
-                                <td><span class="badge-success-hf">$@c.Costo.ToString("N2")</span></td>
+                                <td><span class="@badgeClass" style="font-size:.78rem">@c.Estado</span></td>
                                 <td style="font-size:.85rem; color:var(--text-soft)">@c.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <a asp-controller="Consultas" asp-action="Details" asp-route-id="@c.Id" class="btn-action btn-view">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
                             </tr>
                         }
                     </tbody>

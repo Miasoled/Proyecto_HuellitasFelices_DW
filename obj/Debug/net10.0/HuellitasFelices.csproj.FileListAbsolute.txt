@@ -11,7 +11,9 @@ C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\HuellitasFelices.pdb
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Azure.Core.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Azure.Identity.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Bogus.dll
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\BouncyCastle.Cryptography.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Humanizer.dll
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\MailKit.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.Google.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.AspNetCore.Identity.UI.dll
@@ -59,6 +61,7 @@ C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.VisualStudio.
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.VisualStudio.Web.CodeGeneration.Templating.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.VisualStudio.Web.CodeGeneration.Utils.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.VisualStudio.Web.CodeGenerators.Mvc.dll
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\MimeKit.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Mono.TextTemplating.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Newtonsoft.Json.dll
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Npgsql.dll
@@ -408,6 +411,3 @@ C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\refint\HuellitasFelices
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\HuellitasFelices.pdb
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\HuellitasFelices.genruntimeconfig.cache
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\ref\HuellitasFelices.dll
-C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\BouncyCastle.Cryptography.dll
-C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\MailKit.dll
-C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\MimeKit.dll

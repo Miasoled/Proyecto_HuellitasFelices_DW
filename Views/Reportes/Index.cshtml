@@ -1,4 +1,4 @@
-@model HuellitasFelices.ViewModels.ReporteViewModel
+@model HuellitasFelices.Models.ReporteViewModel
 @{ ViewData["Title"] = "Reportes"; }
 
 <div class="page-header">
@@ -18,28 +18,10 @@
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-lg-3">
             <div class="report-kpi">
-                <div class="kpi-icon" style="background:#dcfce7"><i class="bi bi-cash-coin text-success fs-4"></i></div>
-                <div>
-                    <p class="kpi-value text-success">$@Model.TotalIngresosPagos.ToString("N0")</p>
-                    <p class="kpi-label">Ingresos por pagos</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="report-kpi">
                 <div class="kpi-icon" style="background:#dbeafe"><i class="bi bi-clipboard2-pulse-fill text-primary fs-4"></i></div>
                 <div>
                     <p class="kpi-value text-primary">$@Model.TotalIngresosConsultas.ToString("N0")</p>
                     <p class="kpi-label">Ingresos por consultas</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="report-kpi">
-                <div class="kpi-icon" style="background:#fef9c3"><i class="bi bi-graph-up text-warning fs-4"></i></div>
-                <div>
-                    <p class="kpi-value text-warning">$@Model.PromedioMontoPago.ToString("N2")</p>
-                    <p class="kpi-label">Promedio por pago</p>
                 </div>
             </div>
         </div>
@@ -65,9 +47,7 @@
                         ("bi-patch-heart","text-success","#dcfce7", Model.MascotasActivas.ToString("N0"), "Activas"),
                         ("bi-dash-circle","text-danger","#fee2e2", Model.MascotasInactivas.ToString("N0"), "Inactivas"),
                         ("bi-people-fill","text-primary","#dbeafe", Model.TotalDuenos.ToString("N0"), "Dueños"),
-                        ("bi-clipboard2-pulse","text-info","#e0f2fe", Model.TotalConsultas.ToString("N0"), "Consultas"),
-                        ("bi-credit-card","text-success","#dcfce7", Model.PagosActivos.ToString("N0"), "Pagos activos"),
-                        ("bi-x-circle","text-danger","#fee2e2", Model.PagosInactivos.ToString("N0"), "Pagos inactivos")
+                        ("bi-clipboard2-pulse","text-info","#e0f2fe", Model.TotalConsultas.ToString("N0"), "Consultas")
                     };
                 }
                 @foreach (var (icon, color, bg, val, label) in items)
@@ -161,28 +141,6 @@
                                 <td style="color:var(--primary); font-weight:700; font-size:.88rem">$@Model.ConsultasPorMes.Sum(c => c.TotalIngresos).ToString("N2")</td>
                             </tr>
                         </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pagos por método -->
-        <div class="col-lg-3">
-            <div class="hf-card h-100">
-                <div class="hf-card-header"><i class="bi bi-wallet2"></i> Pagos por método</div>
-                <div class="table-responsive">
-                    <table class="hf-table">
-                        <thead><tr><th>Método</th><th>Cant.</th><th>Total</th></tr></thead>
-                        <tbody>
-                            @foreach (var item in Model.PagosPorMetodo)
-                            {
-                                <tr>
-                                    <td style="font-size:.88rem; font-weight:600">@item.MetodoPago</td>
-                                    <td><span class="badge-warning-hf">@item.Cantidad.ToString("N0")</span></td>
-                                    <td style="color:var(--primary); font-size:.88rem">$@item.Total.ToString("N2")</td>
-                                </tr>
-                            }
-                        </tbody>
                     </table>
                 </div>
             </div>

@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
-using HuellitasFelices.ViewModels;
 
 namespace HuellitasFelices.Controllers
 {
