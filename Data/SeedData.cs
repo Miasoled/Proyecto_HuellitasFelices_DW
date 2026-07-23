@@ -150,6 +150,90 @@ namespace HuellitasFelices.Data
                 );
                 context.SaveChanges();
             }
+
+            // ===== CATEGORÍAS =====
+            if (!context.Categorias.Any())
+            {
+                context.Categorias.AddRange(
+                    new Categoria { Nombre = "Alimento", Descripcion = "Alimentos balanceados para mascotas", Activo = true },
+                    new Categoria { Nombre = "Medicamento", Descripcion = "Medicamentos veterinarios", Activo = true },
+                    new Categoria { Nombre = "Accesorio", Descripcion = "Collares, juguetes, camas y más", Activo = true },
+                    new Categoria { Nombre = "Higiene", Descripcion = "Shampoo, cepillos, limpieza dental", Activo = true }
+                );
+                context.SaveChanges();
+            }
+
+            // ===== PROVEEDORES =====
+            if (!context.Proveedores.Any())
+            {
+                context.Proveedores.AddRange(
+                    new Proveedor { Nombre = "PetSupply Ecuador", Telefono = "022345678", Email = "ventas@petsupply.ec", Direccion = "Av. De los Shyris N36-40, Quito", Activo = true },
+                    new Proveedor { Nombre = "VetFarma", Telefono = "0998765432", Email = "info@vetfarma.ec", Direccion = "Calle Colón 1225, Quito", Activo = true },
+                    new Proveedor { Nombre = "MascotaTotal", Telefono = "0987123456", Email = "compras@mascotatotal.ec", Direccion = "Av. Eloy Alfaro 1234, Quito", Activo = true }
+                );
+                context.SaveChanges();
+            }
+
+            // ===== PRODUCTOS =====
+            if (!context.Productos.Any())
+            {
+                var cats = context.Categorias.ToList();
+                var provs = context.Proveedores.ToList();
+
+                var catAlimento = cats.First(c => c.Nombre == "Alimento");
+                var catMedicamento = cats.First(c => c.Nombre == "Medicamento");
+                var catAccesorio = cats.First(c => c.Nombre == "Accesorio");
+                var catHigiene = cats.First(c => c.Nombre == "Higiene");
+                var provPS = provs.First(p => p.Nombre == "PetSupply Ecuador");
+                var provVF = provs.First(p => p.Nombre == "VetFarma");
+                var provMT = provs.First(p => p.Nombre == "MascotaTotal");
+
+                context.Productos.AddRange(
+                    // Alimentos
+                    new Producto { Nombre = "Dog Chow Adulto 15kg", Descripcion = "Alimento balanceado para perros adultos de tamaño mediano y grande. Fórmula con proteína de pollo.", PrecioCompra = 28.50m, PrecioVenta = 38.99m, CodigoBarras = "7501020300123", UnidadMedida = "Paquete", StockMinimo = 10, CategoriaId = catAlimento.Id, ProveedorId = provPS.Id, Activo = true },
+                    new Producto { Nombre = "Cat Chow Gatos Adultos 8kg", Descripcion = "Nutrición completa para gatos adultos. Con taurina y ácidos grasos esenciales.", PrecioCompra = 22.00m, PrecioVenta = 31.50m, CodigoBarras = "7501020300124", UnidadMedida = "Paquete", StockMinimo = 8, CategoriaId = catAlimento.Id, ProveedorId = provPS.Id, Activo = true },
+                    new Producto { Nombre = "Dog Chow Cachorros 3kg", Descripcion = "Alimento especial para cachorros de razas pequeñas y medianas. Rico en calcio y fósforo.", PrecioCompra = 10.50m, PrecioVenta = 16.99m, CodigoBarras = "7501020300125", UnidadMedida = "Paquete", StockMinimo = 12, CategoriaId = catAlimento.Id, ProveedorId = provPS.Id, Activo = true },
+                    new Producto { Nombre = "Cat Chow Gatitos 2kg", Descripcion = "Alimento para gatitos en crecimiento. Texturas suaves y fáciles de masticar.", PrecioCompra = 7.80m, PrecioVenta = 12.99m, CodigoBarras = "7501020300126", UnidadMedida = "Paquete", StockMinimo = 10, CategoriaId = catAlimento.Id, ProveedorId = provPS.Id, Activo = true },
+                    new Producto { Nombre = "Dog Chow Light 12kg", Descripcion = "Alimento reducido en grasa para perros con tendencia a sobrepeso. Con L-carnitina.", PrecioCompra = 30.00m, PrecioVenta = 42.50m, CodigoBarras = "7501020300127", UnidadMedida = "Paquete", StockMinimo = 6, CategoriaId = catAlimento.Id, ProveedorId = provPS.Id, Activo = true },
+                    new Producto { Nombre = "Pienso Premium Carne y Arroz 10kg", Descripcion = "Alimento premium con trozos de carne real y arroz integral. Sin colorantes artificiales.", PrecioCompra = 35.00m, PrecioVenta = 49.99m, CodigoBarras = "7501020300128", UnidadMedida = "Paquete", StockMinimo = 5, CategoriaId = catAlimento.Id, ProveedorId = provMT.Id, Activo = true },
+
+                    // Medicamentos
+                    new Producto { Nombre = "Antiparasitario Drontal Plus", Descripcion = "Desparasitante interno para perros. Tratamiento contra tenias, gusitos y ascarias.", PrecioCompra = 5.50m, PrecioVenta = 9.99m, CodigoBarras = "7501020300201", UnidadMedida = "Unidad", StockMinimo = 20, CategoriaId = catMedicamento.Id, ProveedorId = provVF.Id, Activo = true },
+                    new Producto { Nombre = "Vacuna Antirrábica Rabisin", Descripcion = "Vacuna antirrábica para perros y gatos. Protección anual obligatoria.", PrecioCompra = 4.00m, PrecioVenta = 12.00m, CodigoBarras = "7501020300202", UnidadMedida = "Unidad", StockMinimo = 15, CategoriaId = catMedicamento.Id, ProveedorId = provVF.Id, Activo = true },
+                    new Producto { Nombre = "Gotas para Ojos VetOptic", Descripcion = "Solución limpiadora y protectora para los ojos de mascotas. Alivia irritaciones.", PrecioCompra = 3.20m, PrecioVenta = 7.50m, CodigoBarras = "7501020300203", UnidadMedida = "Unidad", StockMinimo = 15, CategoriaId = catMedicamento.Id, ProveedorId = provVF.Id, Activo = true },
+                    new Producto { Nombre = "Suplemento Vitamínico Vitovet", Descripcion = "Complex vitamínico para fortalecer el sistema inmunológico. Ideal para mascotas convalecientes.", PrecioCompra = 4.50m, PrecioVenta = 8.99m, CodigoBarras = "7501020300204", UnidadMedida = "Unidad", StockMinimo = 12, CategoriaId = catMedicamento.Id, ProveedorId = provVF.Id, Activo = true },
+
+                    // Accesorios
+                    new Producto { Nombre = "Collar de Cuero Ajustable", Descripcion = "Collar de cuero genuino con hebilla de seguridad. Disponible en varios tamaños.", PrecioCompra = 6.00m, PrecioVenta = 14.99m, CodigoBarras = "7501020300301", UnidadMedida = "Unidad", StockMinimo = 10, CategoriaId = catAccesorio.Id, ProveedorId = provMT.Id, Activo = true },
+                    new Producto { Nombre = "Juguete Pelota Interactiva", Descripcion = "Pelota de goma resistente con dispensador de snacks. Perfecta para juego activo.", PrecioCompra = 3.00m, PrecioVenta = 8.50m, CodigoBarras = "7501020300302", UnidadMedida = "Unidad", StockMinimo = 15, CategoriaId = catAccesorio.Id, ProveedorId = provMT.Id, Activo = true },
+                    new Producto { Nombre = "Cama Orthopédica para Perro", Descripcion = "Cama con espuma de memoria ortopédica. Ideal para perros mayores o con problemas articulares.", PrecioCompra = 25.00m, PrecioVenta = 45.99m, CodigoBarras = "7501020300303", UnidadMedida = "Unidad", StockMinimo = 5, CategoriaId = catAccesorio.Id, ProveedorId = provPS.Id, Activo = true },
+                    new Producto { Nombre = "Correa Retráctil 5 metros", Descripcion = "Correa extensible con freno automático y empuñadura ergonómica. Soporta hasta 15kg.", PrecioCompra = 7.00m, PrecioVenta = 15.99m, CodigoBarras = "7501020300304", UnidadMedida = "Unidad", StockMinimo = 10, CategoriaId = catAccesorio.Id, ProveedorId = provMT.Id, Activo = true },
+
+                    // Higiene
+                    new Producto { Nombre = "Shampoo Antipulgas", Descripcion = "Shampoo medicado con extracto de neem. Elimina pulgas y garrapatas. Apto para perros y gatos.", PrecioCompra = 4.50m, PrecioVenta = 10.99m, CodigoBarras = "7501020300401", UnidadMedida = "Litro", StockMinimo = 15, CategoriaId = catHigiene.Id, ProveedorId = provVF.Id, Activo = true },
+                    new Producto { Nombre = "Pasta Dental Veterinaria", Descripcion = "Pasta dental enzimática para mascotas. Sabor a pollo. Uso diario recomendado.", PrecioCompra = 3.80m, PrecioVenta = 8.99m, CodigoBarras = "7501020300402", UnidadMedida = "Unidad", StockMinimo = 20, CategoriaId = catHigiene.Id, ProveedorId = provVF.Id, Activo = true },
+                    new Producto { Nombre = "Cepillo Doble Cara para Perro", Descripcion = "Cepillo con cerdas suaves y duras. Elimina pelo muerto y distribute los aceites naturales.", PrecioCompra = 2.50m, PrecioVenta = 6.50m, CodigoBarras = "7501020300403", UnidadMedida = "Unidad", StockMinimo = 12, CategoriaId = catHigiene.Id, ProveedorId = provPS.Id, Activo = true },
+                    new Producto { Nombre = "Toallas Húmedas para Mascotas", Descripcion = "Paquete de 100 toallas húmedas con aloe vera. Para limpieza diaria de patas y pelaje.", PrecioCompra = 3.00m, PrecioVenta = 6.99m, CodigoBarras = "7501020300404", UnidadMedida = "Paquete", StockMinimo = 20, CategoriaId = catHigiene.Id, ProveedorId = provPS.Id, Activo = true }
+                );
+                context.SaveChanges();
+            }
+
+            // ===== INVENTARIOS (stock para cada producto) =====
+            if (!context.Inventarios.Any())
+            {
+                var productos = context.Productos.ToList();
+                var random = new Random(42);
+                foreach (var prod in productos)
+                {
+                    context.Inventarios.Add(new Inventario
+                    {
+                        ProductoId = prod.Id,
+                        StockActual = random.Next(5, 50),
+                        FechaActualizacion = DateTime.UtcNow
+                    });
+                }
+                context.SaveChanges();
+            }
         }
     }
 }

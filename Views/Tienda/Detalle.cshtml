@@ -97,7 +97,33 @@
                     }
                 </div>
 
-                <div style="margin-top:24px">
+                @if (disponible)
+                {
+                    <form asp-controller="Carrito" asp-action="Agregar" method="post" class="d-flex align-items-center gap-3 flex-wrap" style="margin-top:24px">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productoId" value="@Model.Id" />
+                        <input type="hidden" name="returnUrl" value="/Tienda/Detalle/@Model.Id" />
+
+                        <div class="d-flex align-items-center" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+                            <button type="button" onclick="var inp=this.nextElementSibling;var v=parseInt(inp.value);if(v>1)inp.value=v-1"
+                                    class="btn btn-sm btn-outline-secondary" style="border:none;border-radius:0;padding:10px 14px;font-size:1rem">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" name="cantidad" value="1" min="1" max="@stock"
+                                   class="form-control text-center" style="width:60px;border:none;border-radius:0;font-weight:700;font-size:1rem" />
+                            <button type="button" onclick="var inp=this.previousElementSibling;var v=parseInt(inp.value);if(v<@stock)inp.value=v+1"
+                                    class="btn btn-sm btn-outline-secondary" style="border:none;border-radius:0;padding:10px 14px;font-size:1rem">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+
+                        <button type="submit" class="btn-primary-hf" style="padding:12px 32px;font-size:1rem">
+                            <i class="bi bi-cart-plus"></i> Agregar al carrito
+                        </button>
+                    </form>
+                }
+
+                <div style="margin-top:20px">
                     <a asp-action="Index" class="btn-outline-hf" style="padding:10px 24px">
                         <i class="bi bi-arrow-left"></i> Volver a la tienda
                     </a>

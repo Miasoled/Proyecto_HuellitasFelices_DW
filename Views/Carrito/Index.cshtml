@@ -1,0 +1,152 @@
+@model IEnumerable<HuellitasFelices.Models.CarritoItem>
+@{
+    ViewData["Title"] = "Mi Carrito";
+    var total = ViewBag.Total as decimal? ?? 0;
+}
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Tienda" asp-action="Index">Tienda</a></li>
+            <li class="breadcrumb-item active">Carrito</li>
+        </ol></nav>
+        <h1><i class="bi bi-cart3 me-2"></i>Mi Carrito</h1>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <div class="container">
+
+        @if (TempData["CarritoMensaje"] is string msg)
+        {
+            <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4" role="alert" style="border:none;background:#dcfce7;color:#166534">
+                <i class="bi bi-check-circle-fill me-2"></i>@msg
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="hf-card text-center" style="padding:60px 20px">
+                <i class="bi bi-cart" style="font-size:4rem;color:var(--border);display:block;margin-bottom:16px"></i>
+                <h4 style="font-weight:700;color:var(--text-soft)">Tu carrito está vacío</h4>
+                <p style="color:var(--text-soft);font-size:.9rem">Explora nuestra tienda y encuentra productos increíbles para tu mascota.</p>
+                <a asp-controller="Tienda" asp-action="Index" class="btn-primary-hf mt-3">
+                    <i class="bi bi-bag-heart"></i> Ir a la tienda
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                <!-- Lista de productos -->
+                <div class="col-lg-8">
+                    <div class="hf-card">
+                        <div class="hf-card-header d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-bag-check me-2"></i>@Model.Count() producto(s) en el carrito</span>
+                            <form asp-action="Vaciar" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-3" style="font-size:.8rem"
+                                        onclick="return confirm('¿Vaciar todo el carrito?')">
+                                    <i class="bi bi-trash3"></i> Vaciar
+                                </button>
+                            </form>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="hf-table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Precio</th>
+                                        <th style="width:160px">Cantidad</th>
+                                        <th>Subtotal</th>
+                                        <th style="width:60px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong style="font-size:.92rem">@item.Nombre</strong>
+                                                <br />
+                                                <small style="color:var(--text-soft);font-size:.78rem">
+                                                    @(item.CategoriaNombre ?? "General") · @(item.UnidadMedida ?? "Unidad")
+                                                </small>
+                                            </td>
+                                            <td style="white-space:nowrap">$@item.Precio.ToString("F2")</td>
+                                            <td>
+                                                <form asp-action="Actualizar" method="post" class="d-flex align-items-center gap-1">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                                    <button type="submit" name="cantidad" value="@(item.Cantidad - 1)"
+                                                            class="btn btn-sm btn-outline-secondary rounded-3"
+                                                            style="width:32px;height:32px;padding:0;font-size:.9rem"
+                                                            @(item.Cantidad <= 1 ? "disabled" : "")>
+                                                        <i class="bi bi-dash"></i>
+                                                    </button>
+                                                    <span style="min-width:28px;text-align:center;font-weight:700;font-size:.95rem">@item.Cantidad</span>
+                                                    <button type="submit" name="cantidad" value="@(item.Cantidad + 1)"
+                                                            class="btn btn-sm btn-outline-secondary rounded-3"
+                                                            style="width:32px;height:32px;padding:0;font-size:.9rem"
+                                                            @(item.Cantidad >= item.StockDisponible ? "disabled" : "")>
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+                                                    <small style="color:var(--text-soft);font-size:.72rem;margin-left:4px">Stock: @item.StockDisponible</small>
+                                                </form>
+                                            </td>
+                                            <td style="font-weight:700;color:var(--primary);white-space:nowrap">$@item.Subtotal.ToString("F2")</td>
+                                            <td>
+                                                <form asp-action="Eliminar" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-3"
+                                                            style="width:32px;height:32px;padding:0"
+                                                            title="Eliminar">
+                                                        <i class="bi bi-trash3"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen -->
+                <div class="col-lg-4">
+                    <div class="hf-card" style="position:sticky;top:90px">
+                        <div class="hf-card-header"><i class="bi bi-receipt me-2"></i>Resumen del pedido</div>
+                        <div style="padding:20px">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span style="color:var(--text-soft);font-size:.9rem">Productos (@Model.Sum(i => i.Cantidad))</span>
+                                <span style="font-weight:600">$@total.ToString("F2")</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span style="color:var(--text-soft);font-size:.9rem">Envío</span>
+                                <span style="font-weight:600;color:var(--primary)">Gratis</span>
+                            </div>
+                            <hr />
+                            <div class="d-flex justify-content-between mb-4">
+                                <strong style="font-size:1.1rem">Total</strong>
+                                <strong style="font-size:1.3rem;color:var(--primary)">$@total.ToString("F2")</strong>
+                            </div>
+
+                            <button class="btn-primary-hf w-100 justify-content-center" style="font-size:1rem;padding:14px"
+                                    onclick="alert('Funcionalidad de pago próximamente.')">
+                                <i class="bi bi-credit-card"></i> Proceder al pago
+                            </button>
+
+                            <a asp-controller="Tienda" asp-action="Index" class="btn-outline-hf w-100 justify-content-center mt-2" style="font-size:.88rem">
+                                <i class="bi bi-arrow-left"></i> Seguir comprando
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
