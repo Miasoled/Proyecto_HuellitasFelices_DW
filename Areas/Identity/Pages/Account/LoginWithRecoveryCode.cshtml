@@ -1,0 +1,55 @@
+@page
+@model LoginWithRecoveryCodeModel
+@{
+    ViewData["Title"] = "Código de recuperación";
+}
+
+<div style="background:var(--gray-50); min-height:calc(100vh - 120px); display:flex; align-items:center; padding:40px 16px">
+    <div style="width:100%; max-width:420px; margin:0 auto">
+        <div class="login-card">
+            <div class="login-card-header">
+                <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+                    <i class="bi bi-key" style="font-size:1.6rem; color:white"></i>
+                </div>
+                <h4>Código de recuperación</h4>
+                <p>Ingresa uno de tus códigos de recuperación</p>
+            </div>
+            <div class="card-body">
+                <form asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="Input.RecoveryCode" class="form-label">
+                            <i class="bi bi-key me-1"></i>Código de recuperación
+                        </label>
+                        <input asp-for="Input.RecoveryCode" class="form-control text-center"
+                               placeholder="XXXX-XXXX-XXXX" autocomplete="off" autofocus
+                               style="font-size:1.1rem; letter-spacing:2px" />
+                        <span asp-validation-for="Input.RecoveryCode" class="text-danger" style="font-size:.82rem"></span>
+                        <div class="form-text">Cada código de recuperación solo se puede usar una vez.</div>
+                    </div>
+
+                    <button type="submit" class="btn-primary-hf w-100 justify-content-center" style="padding:13px">
+                        <i class="bi bi-check-lg"></i> Ingresar
+                    </button>
+                </form>
+
+                <div style="text-align:center; margin-top:20px">
+                    <a asp-page="LoginWith2fa" asp-route-returnUrl="@Model.ReturnUrl"
+                       style="font-size:.85rem; color:var(--primary); text-decoration:none; font-weight:500">
+                        Usar código de autenticación
+                    </a>
+                </div>
+
+                <div style="text-align:center; margin-top:12px">
+                    <a asp-page="Login"
+                       style="font-size:.85rem; color:var(--text-soft); text-decoration:none">
+                        <i class="bi bi-arrow-left me-1"></i>Volver al inicio de sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }

@@ -47,12 +47,12 @@
                         }
                         
                         <div class="d-flex gap-2">
-                            <form asp-action="ResetAuthenticator" method="post">
+                            <form asp-page-handler="ResetAuthenticator" method="post">
                                 <button type="submit" class="btn btn-outline-warning">
                                     <i class="bi bi-arrow-clockwise me-1"></i> Regenerar claves
                                 </button>
                             </form>
-                            <form asp-action="Disable2fa" method="post">
+                            <form asp-page-handler="Disable2fa" method="post">
                                 <button type="submit" class="btn btn-outline-danger">
                                     <i class="bi bi-x-lg me-1"></i> Desactivar MFA
                                 </button>
@@ -66,7 +66,7 @@
                             <strong>MFA no está habilitado.</strong> Se recomienda activar la autenticación multifactor para mayor seguridad.
                         </div>
                         
-                        <a asp-action="EnableAuthenticator" class="btn btn-hf-primary btn-lg">
+                        <a asp-page="EnableAuthenticator" class="btn btn-hf-primary btn-lg">
                             <i class="bi bi-shield-plus me-2"></i> Activar MFA
                         </a>
                     }

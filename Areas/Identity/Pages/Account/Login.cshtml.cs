@@ -10,10 +10,12 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager)
+        public LoginModel(SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager)
         {
             _signInManager = signInManager;
+            _userManager = userManager;
         }
 
         [BindProperty]
@@ -40,6 +42,22 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
 
             if (result.Succeeded)
                 return LocalRedirect(returnUrl);
+
+            if (result.RequiresTwoFactor)
+            {
+                var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+                if (user != null && await _userManager.IsInRoleAsync(user, "Cliente"))
+                {
+                    return RedirectToPage("LoginWith2fa", new
+                    {
+                        RememberMe = Input.RememberMe,
+                        ReturnUrl = returnUrl
+                    });
+                }
+
+                await _signInManager.SignInAsync(user!, Input.RememberMe);
+                return LocalRedirect(returnUrl);
+            }
 
             if (result.IsLockedOut)
             {

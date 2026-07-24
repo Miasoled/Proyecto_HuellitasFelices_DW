@@ -19,13 +19,17 @@
                         </li>
                         <li class="list-group-item">
                             Escanee el código QR o ingrese manualmente la clave:
+                            <div class="text-center mt-3 mb-3">
+                                <div id="qrcode" style="display:inline-block"></div>
+                            </div>
                             <div class="mt-2 p-3 bg-light rounded text-center">
+                                <small class="text-muted d-block mb-1">Clave manual:</small>
                                 <code style="font-size:1.1rem; letter-spacing:2px">@Model.SharedKey</code>
                             </div>
                         </li>
                         <li class="list-group-item">
                             Ingrese el código de 6 dígitos que muestra la aplicación:
-                            <form asp-action="EnableAuthenticator" method="post" class="mt-3">
+                            <form method="post" class="mt-3">
                                 <input type="hidden" name="SharedKey" value="@Model.SharedKey" />
                                 <input type="hidden" name="AuthenticatorUri" value="@Model.AuthenticatorUri" />
                                 <div class="input-group" style="max-width:300px">
@@ -47,3 +51,13 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    new QRCode(document.getElementById("qrcode"), {
+        text: "@Model.AuthenticatorUri",
+        width: 200,
+        height: 200,
+        correctLevel: QRCode.CorrectLevel.M
+    });
+</script>

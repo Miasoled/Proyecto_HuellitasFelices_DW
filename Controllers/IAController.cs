@@ -39,11 +39,17 @@ public class IAController : Controller
         {
             var contexto = await _contextProvider.ObtenerContextoAsync(peticion.Prompt);
 
-            var promptCompleto = $@"Eres el asistente inteligente de la clinica veterinaria Huellitas Felices. 
-Responde de forma clara, profesional y en español. Usa los datos de la clinica proporcionados para responder.
-Si no tienes suficiente informacion, indicalo. No inventes datos.
+            var promptCompleto = $@"Eres el asistente inteligente de la clinica veterinaria Huellitas Felices.
+Responde de forma clara, profesional y en español. Sé conciso y útil.
 
-Datos de la clinica: {contexto}
+INSTRUCCIONES:
+- Si el contexto incluye datos de la clinica, úsalos para responder.
+- Si el contexto incluye CUIDADO GENERAL, usa esa información para dar consejos prácticos y accionables.
+- Si el contexto indica que no hay datos, responde con un mensaje amable y sugiere consultar al veterinario.
+- Siempre termina recomendando acudir al veterinario para un diagnóstico profesional.
+- No inventes nombres de medicamentos ni dosis. No uses información que no esté en el contexto.
+
+Contexto disponible: {contexto}
 
 Pregunta del usuario: {peticion.Prompt}
 
