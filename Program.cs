@@ -70,6 +70,8 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHostedService<EmailWorker>();
 
 // ── Servicios de negocio ────────────────────────────────────────────────
 builder.Services.AddDistributedMemoryCache();

@@ -1,5 +1,6 @@
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 using HuellitasFelices.Areas.Identity.Pages.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,15 +15,18 @@ namespace HuellitasFelices.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly AppDbContext _context;
+        private readonly IEmailService _emailService;
 
         public AccountController(
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            AppDbContext context)
+            AppDbContext context,
+            IEmailService emailService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _context = context;
+            _emailService = emailService;
         }
 
         // ── PANEL DEL CLIENTE ─────────────────────────────────────────────────
@@ -244,6 +248,49 @@ namespace HuellitasFelices.Controllers
 
             var rolesList = _roleManager.Roles.Where(r => r.Name != "Cliente").ToList();
             ViewBag.Roles = new SelectList(rolesList, "Name", "Name");
+            return View(model);
+        }
+
+        // ── CAMBIAR CONTRASEÑA ────────────────────────────────────────────
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult CambiarPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CambiarPassword(CambiarPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToAction("Index", "Home");
+
+            var result = await _userManager.ChangePasswordAsync(user, model.PasswordActual, model.NuevaPassword);
+
+            if (result.Succeeded)
+            {
+                try
+                {
+                    await _emailService.EnviarCambioPasswordAsync(
+                        user.Email!,
+                        user.Email!);
+                }
+                catch { }
+
+                TempData["Mensaje"] = "Contraseña cambiada correctamente. Se ha enviado una notificación a tu correo.";
+                return RedirectToAction("MiPanel");
+            }
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
+
             return View(model);
         }
     }

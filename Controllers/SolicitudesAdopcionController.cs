@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
@@ -13,13 +12,13 @@ namespace HuellitasFelices.Controllers
     public class SolicitudesAdopcionController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailService _emailService;
         private const int TamanioPagina = 20;
 
-        public SolicitudesAdopcionController(AppDbContext context, IEmailSender emailSender)
+        public SolicitudesAdopcionController(AppDbContext context, IEmailService emailService)
         {
             _context = context;
-            _emailSender = emailSender;
+            _emailService = emailService;
         }
 
         // GET: SolicitudesAdopcion
@@ -135,15 +134,12 @@ namespace HuellitasFelices.Controllers
                         string animalNombre = animal?.Nombre ?? "Nuestra Mascota";
                         string animalEspecie = animal?.Especie ?? "Mascota";
 
-                        await _emailSender.SendEmailAsync(
+                        await _emailService.EnviarAdopcionAsync(
                             solicitudAdopcion.Email,
-                            $"Solicitud de adopción recibida - Huellitas Felices",
-                            EmailTemplates.AdoptionTemplate(
-                                solicitudAdopcion.NombreSolicitante,
-                                animalNombre,
-                                animalEspecie,
-                                solicitudAdopcion.Id.ToString()
-                            )
+                            solicitudAdopcion.NombreSolicitante,
+                            animalNombre,
+                            animalEspecie,
+                            solicitudAdopcion.Id.ToString()
                         );
                     }
                 }

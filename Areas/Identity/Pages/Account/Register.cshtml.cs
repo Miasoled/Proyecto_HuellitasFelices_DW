@@ -4,7 +4,6 @@ using HuellitasFelices.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -16,18 +15,18 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AppDbContext _context;
-        private readonly Microsoft.AspNetCore.Identity.UI.Services.IEmailSender _emailSender;
+        private readonly IEmailService _emailService;
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             AppDbContext context,
-            Microsoft.AspNetCore.Identity.UI.Services.IEmailSender emailSender)
+            IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
-            _emailSender = emailSender;
+            _emailService = emailService;
         }
 
         [BindProperty]
@@ -80,10 +79,10 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
                     values: new { userId = user.Id, token = token },
                     protocol: Request.Scheme);
 
-                await _emailSender.SendEmailAsync(
+                await _emailService.EnviarConfirmacionCorreoAsync(
                     Input.Email,
-                    "Confirma tu correo electrónico - Huellitas Felices",
-                    EmailTemplates.WelcomeTemplate(Input.Email, confirmationLink!));
+                    Input.NombreCompleto,
+                    confirmationLink!);
 
                 return RedirectToPage("./RegisterConfirmation", new { email = Input.Email });
             }

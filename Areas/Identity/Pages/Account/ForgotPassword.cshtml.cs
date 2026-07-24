@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace HuellitasFelices.Areas.Identity.Pages.Account
 {
@@ -11,12 +10,12 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
     public class ForgotPasswordModel : PageModel
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly Microsoft.AspNetCore.Identity.UI.Services.IEmailSender _emailSender;
+        private readonly IEmailService _emailService;
 
-        public ForgotPasswordModel(UserManager<IdentityUser> userManager, Microsoft.AspNetCore.Identity.UI.Services.IEmailSender emailSender)
+        public ForgotPasswordModel(UserManager<IdentityUser> userManager, IEmailService emailService)
         {
             _userManager = userManager;
-            _emailSender = emailSender;
+            _emailService = emailService;
         }
 
         [BindProperty]
@@ -44,10 +43,9 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
                 values: new { token, email = Input.Email },
                 protocol: Request.Scheme);
 
-            await _emailSender.SendEmailAsync(
+            await _emailService.EnviarRecuperarPasswordAsync(
                 Input.Email,
-                "Restablecer contraseña - Huellitas Felices",
-                EmailTemplates.ForgotPasswordTemplate(callbackUrl!));
+                callbackUrl!);
 
             return RedirectToPage("./ForgotPasswordConfirmation");
         }

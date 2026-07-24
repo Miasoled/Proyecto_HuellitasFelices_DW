@@ -30,6 +30,7 @@ namespace HuellitasFelices.Data
         public DbSet<ConsultaMedicamento> ConsultaMedicamentos { get; set; }
         public DbSet<Venta> Ventas { get; set; }
         public DbSet<DetalleVenta> DetallesVenta { get; set; }
+        public DbSet<EmailLog> EmailLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -81,6 +82,9 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<Venta>().HasIndex(v => v.Estado);
             modelBuilder.Entity<DetalleVenta>().HasIndex(dv => dv.VentaId);
             modelBuilder.Entity<DetalleVenta>().HasIndex(dv => dv.ProductoId);
+            modelBuilder.Entity<EmailLog>().HasIndex(e => e.Estado);
+            modelBuilder.Entity<EmailLog>().HasIndex(e => e.TipoNotificacion);
+            modelBuilder.Entity<EmailLog>().HasIndex(e => e.FechaSolicitud);
 
             // ── Mapeo de tablas ────────────────────────────────────────────
             modelBuilder.Entity<Tratamiento>().ToTable("Tratamientos");
@@ -95,6 +99,7 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<ConsultaMedicamento>().ToTable("ConsultaMedicamentos");
             modelBuilder.Entity<Venta>().ToTable("Ventas");
             modelBuilder.Entity<DetalleVenta>().ToTable("DetallesVenta");
+            modelBuilder.Entity<EmailLog>().ToTable("EmailLogs");
 
             // ── Relaciones ─────────────────────────────────────────────────
 
