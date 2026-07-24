@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/bootstrap-icons/css/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chatbot.css" asp-append-version="true" />
 </head>
 <body>
 @using HuellitasFelices.Services
@@ -141,6 +142,12 @@
                                 </a>
                             </li>
                         }
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="IA" asp-action="Asistente">
+                                <i class="bi bi-robot"></i> Asistente IA
+                            </a>
+                        </li>
 
                         @if (User.IsInRole("Administrador"))
                         {
@@ -306,5 +313,51 @@
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+<!-- Chatbot flotante -->
+<button id="chatbot-bubble" title="Asistente IA">
+    <i class="bi bi-chat-dots-fill"></i>
+    <span class="chatbot-badge"></span>
+</button>
+
+<div id="chatbot-panel">
+    <div class="chatbot-header">
+        <div class="chatbot-header-avatar">
+            <i class="bi bi-robot"></i>
+        </div>
+        <div class="chatbot-header-info">
+            <h6>Asistente IA</h6>
+            <small>Huellitas Felices</small>
+        </div>
+        <button id="chatbot-close" class="chatbot-header-close"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="chatbot-messages" id="chatbot-messages">
+        <div class="chatbot-msg bot">
+            <div class="chatbot-msg-avatar"><i class="bi bi-robot"></i></div>
+            <div class="chatbot-msg-bubble">Hola! Soy el asistente de <strong>Huellitas Felices</strong>. Puedo responder preguntas sobre clientes, mascotas, consultas, ventas, inventario y mas.</div>
+        </div>
+    </div>
+
+    <div class="chatbot-suggestions" id="chatbot-suggestions">
+        <button class="chatbot-suggestion-btn">Cuantos clientes tenemos?</button>
+        <button class="chatbot-suggestion-btn">Que mascotas hay?</button>
+        <button class="chatbot-suggestion-btn">Cuantas consultas hay hoy?</button>
+        <button class="chatbot-suggestion-btn">Hay bajo stock?</button>
+        <button class="chatbot-suggestion-btn">Cuanto vendimos este mes?</button>
+    </div>
+
+    <form id="chatbot-form" class="chatbot-input-area">
+        <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Escribe tu pregunta..." autocomplete="off" />
+        <button type="submit" id="chatbot-send" class="chatbot-send-btn">
+            <i class="bi bi-send-fill"></i>
+        </button>
+    </form>
+</div>
+
+<script src="~/js/chatbot.js" asp-append-version="true"></script>
+}
 </body>
 </html>

@@ -78,6 +78,15 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();
 
+// ── IA / Ollama ──────────────────────────────────────────────────────
+builder.Services.Configure<AiSettings>(builder.Configuration.GetSection("AI"));
+builder.Services.AddHttpClient<IOllamaService, OllamaService>(client =>
+{
+    var settings = builder.Configuration.GetSection("AI").Get<AiSettings>() ?? new AiSettings();
+    client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
+});
+builder.Services.AddScoped<IContextProviderService, ContextProviderService>();
+
 // MVC
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
