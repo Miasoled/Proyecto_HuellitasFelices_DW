@@ -9,7 +9,7 @@ public class Venta
     [MaxLength(50)]
     public string? NumeroVenta { get; set; }
 
-    public int ConsultaId { get; set; }
+    public int? ConsultaId { get; set; }
     public Consulta? Consulta { get; set; }
 
     public int? DuenoId { get; set; }

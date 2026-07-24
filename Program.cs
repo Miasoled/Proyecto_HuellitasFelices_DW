@@ -1,5 +1,6 @@
 using HuellitasFelices.Data;
 using HuellitasFelices.Services;
+using HuellitasFelices.Services.PaymentGateway;
 using HuellitasFelices.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -94,6 +95,12 @@ builder.Services.AddHttpClient<IOllamaService, OllamaService>(client =>
     client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
 });
 builder.Services.AddScoped<IContextProviderService, ContextProviderService>();
+
+// ── Pasarelas de pago ───────────────────────────────────────────────
+builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
+builder.Services.AddHttpClient<IPaymentGateway, PayPalPaymentGateway>();
+builder.Services.AddHttpClient<IPaymentGateway, PayPhonePaymentGateway>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // MVC
 builder.Services.AddRazorPages();

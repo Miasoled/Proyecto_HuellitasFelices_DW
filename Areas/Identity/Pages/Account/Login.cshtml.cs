@@ -55,8 +55,14 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
                     });
                 }
 
-                await _signInManager.SignInAsync(user!, Input.RememberMe);
-                return LocalRedirect(returnUrl);
+                if (user != null)
+                {
+                    await _signInManager.SignInAsync(user, Input.RememberMe);
+                    return LocalRedirect(returnUrl);
+                }
+
+                ModelState.AddModelError(string.Empty, "No se pudo completar la autenticación. Intente iniciar sesión nuevamente.");
+                return Page();
             }
 
             if (result.IsLockedOut)

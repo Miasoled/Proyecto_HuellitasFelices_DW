@@ -51,8 +51,9 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
             if (!ModelState.IsValid)
                 return Page();
 
-            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync()
-                ?? throw new InvalidOperationException("No se pudo cargar el usuario de autenticación de dos factores.");
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+                return RedirectToPage("Login");
 
             var authenticatorCode = Input.AuthenticatorCode
                 .Replace(" ", string.Empty)

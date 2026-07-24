@@ -135,10 +135,42 @@
                                 <strong style="font-size:1.3rem;color:var(--primary)">$@total.ToString("F2")</strong>
                             </div>
 
-                            <button class="btn-primary-hf w-100 justify-content-center" style="font-size:1rem;padding:14px"
-                                    onclick="alert('Funcionalidad de pago próximamente.')">
-                                <i class="bi bi-credit-card"></i> Proceder al pago
-                            </button>
+                            <form asp-action="Pagar" method="post" id="formPago">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="metodoPago" id="metodoPagoCarrito" value="PayPal" />
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <button type="button" class="btn-payment-carrito active" onclick="selectMetodo('PayPal', this)" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;transition:all .2s;text-align:center;">
+                                            <i class="bi bi-paypal" style="font-size:1.2rem;color:#003087;"></i><br />
+                                            <small style="font-weight:600;color:#003087;">PayPal</small>
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button type="button" class="btn-payment-carrito" onclick="selectMetodo('PayPhone', this)" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;transition:all .2s;text-align:center;">
+                                            <i class="bi bi-phone" style="font-size:1.2rem;color:#FF6B00;"></i><br />
+                                            <small style="font-weight:600;color:#FF6B00;">PayPhone</small>
+                                        </button>
+                                    </div>
+                                </div>
+                                <script>
+                                    function selectMetodo(metodo, btn) {
+                                        document.getElementById('metodoPagoCarrito').value = metodo;
+                                        document.querySelectorAll('.btn-payment-carrito').forEach(function(b) {
+                                            b.style.borderColor = 'var(--border)';
+                                            b.style.background = 'var(--bg)';
+                                        });
+                                        btn.style.borderColor = 'var(--primary)';
+                                        btn.style.background = 'color-mix(in srgb, var(--primary) 10%, transparent)';
+                                    }
+                                    document.querySelector('.btn-payment-carrito.active').style.borderColor = 'var(--primary)';
+                                    document.querySelector('.btn-payment-carrito.active').style.background = 'color-mix(in srgb, var(--primary) 10%, transparent)';
+                                </script>
+
+                                <button type="submit" class="btn-primary-hf w-100 justify-content-center" style="font-size:1rem;padding:14px">
+                                    <i class="bi bi-credit-card"></i> Proceder al pago
+                                </button>
+                            </form>
 
                             <a asp-controller="Tienda" asp-action="Index" class="btn-outline-hf w-100 justify-content-center mt-2" style="font-size:.88rem">
                                 <i class="bi bi-arrow-left"></i> Seguir comprando

@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
+using HuellitasFelices.Settings;
+using Microsoft.Extensions.Options;
 
 namespace HuellitasFelices.Controllers
 {
@@ -12,14 +15,23 @@ namespace HuellitasFelices.Controllers
     {
         private readonly AppDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IPaymentService _paymentService;
+        private readonly PayPalSettings _paypalSettings;
+        private readonly PayPhoneSettings _payphoneSettings;
 
-        public VentasController(AppDbContext context, UserManager<IdentityUser> userManager)
+        public VentasController(
+            AppDbContext context,
+            UserManager<IdentityUser> userManager,
+            IPaymentService paymentService,
+            IOptions<PaymentSettings> paymentSettings)
         {
             _context = context;
             _userManager = userManager;
+            _paymentService = paymentService;
+            _paypalSettings = paymentSettings.Value.PayPal;
+            _payphoneSettings = paymentSettings.Value.PayPhone;
         }
 
-        // GET: Ventas/Pagar?consultaId=5
         [HttpGet]
         [Authorize(Roles = "Cliente")]
         public async Task<IActionResult> Pagar(int? consultaId)
@@ -42,17 +54,12 @@ namespace HuellitasFelices.Controllers
 
             if (consulta == null) return NotFound();
             if (consulta.Mascota?.DuenoId != dueno.Id) return Forbid();
-
-            if (consulta.Estado != "EnRevision")
-                return RedirectToAction("MiPanel", "Account");
-
-            if (consulta.Venta != null)
-                return RedirectToAction("MiPanel", "Account");
+            if (consulta.Estado != "EnRevision") return RedirectToAction("MiPanel", "Account");
+            if (consulta.Venta != null) return RedirectToAction("MiPanel", "Account");
 
             return View(consulta);
         }
 
-        // POST: Ventas/PagarConfirm
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Cliente")]
@@ -77,6 +84,7 @@ namespace HuellitasFelices.Controllers
                 return RedirectToAction("MiPanel", "Account");
 
             var totalMedicamentos = consulta.Medicamentos?.Sum(m => m.Subtotal) ?? 0;
+            var totalGeneral = consulta.Costo + totalMedicamentos;
             var numeroVenta = $"VTA-{DateTime.UtcNow:yyyyMMdd}-{consultaId}";
 
             var venta = new Venta
@@ -86,47 +94,42 @@ namespace HuellitasFelices.Controllers
                 DuenoId = dueno.Id,
                 TotalConsulta = consulta.Costo,
                 TotalMedicamentos = totalMedicamentos,
-                Estado = "Pagada",
+                Estado = "Pendiente",
                 MetodoPago = metodoPago,
                 FechaVenta = DateTime.UtcNow,
-                FechaPago = DateTime.UtcNow,
                 Activo = true
             };
 
             _context.Ventas.Add(venta);
             await _context.SaveChangesAsync();
 
-            if (consulta.Medicamentos != null)
-            {
-                foreach (var med in consulta.Medicamentos)
-                {
-                    _context.DetallesVenta.Add(new DetalleVenta
-                    {
-                        VentaId = venta.Id,
-                        ProductoId = med.ProductoId,
-                        Cantidad = med.Cantidad,
-                        PrecioUnitario = med.PrecioUnitario
-                    });
+            string returnUrl, cancelUrl;
 
-                    var inventario = await _context.Inventarios
-                        .FirstOrDefaultAsync(i => i.ProductoId == med.ProductoId);
-                    if (inventario != null)
-                    {
-                        inventario.StockActual = Math.Max(0, inventario.StockActual - med.Cantidad);
-                        inventario.FechaActualizacion = DateTime.UtcNow;
-                    }
-                }
+            if (metodoPago.Equals("PayPal", StringComparison.OrdinalIgnoreCase))
+            {
+                returnUrl = _paypalSettings.ReturnUrl;
+                cancelUrl = _paypalSettings.CancelUrl;
+            }
+            else
+            {
+                returnUrl = _payphoneSettings.ReturnUrl;
+                cancelUrl = _payphoneSettings.CancelUrl;
             }
 
-            consulta.Estado = "Completada";
-            consulta.FechaActualizacion = DateTime.UtcNow;
+            var pago = await _paymentService.CrearPagoAsync(
+                venta.Id, totalGeneral, metodoPago, returnUrl, cancelUrl);
 
-            await _context.SaveChangesAsync();
+            if (pago.Estado == "Fallido")
+            {
+                return RedirectToAction("PagoFallido", "Payment");
+            }
 
-            return RedirectToAction("Factura", new { ventaId = venta.Id });
+            if (!string.IsNullOrEmpty(pago.UrlAprobacion))
+                return Redirect(pago.UrlAprobacion);
+
+            return RedirectToAction("PagoFallido", "Payment");
         }
 
-        // GET: Ventas/Factura?ventaId=5
         [HttpGet]
         [Authorize(Roles = "Cliente")]
         public async Task<IActionResult> Factura(int? ventaId)
@@ -149,6 +152,13 @@ namespace HuellitasFelices.Controllers
 
             if (venta == null) return NotFound();
             if (venta.DuenoId != dueno.Id) return Forbid();
+
+            var pago = await _context.Pagos
+                .Where(p => p.VentaId == ventaId && p.Estado == "Aprobado")
+                .OrderByDescending(p => p.FechaConfirmacion)
+                .FirstOrDefaultAsync();
+
+            ViewBag.Pago = pago;
 
             return View(venta);
         }

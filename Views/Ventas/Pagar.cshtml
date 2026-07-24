@@ -104,28 +104,31 @@
                 <input type="hidden" name="consultaId" value="@Model.Id" />
 
                 <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label"><i class="bi bi-cash me-1"></i>Efectivo</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="metodoPago" value="Efectivo" id="pagoEfectivo" checked />
-                            <label class="form-check-label" for="pagoEfectivo">Pagar en efectivo</label>
-                        </div>
+                    <div class="col-md-6">
+                        <input type="hidden" name="metodoPago" value="" id="metodoPagoHidden" />
+                        <button type="button" class="btn-payment" id="btnPaypal" onclick="seleccionarPago('PayPal', this)" style="width:100%;padding:20px;border:2px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer;transition:all .2s;">
+                            <i class="bi bi-paypal me-2" style="font-size:1.5rem;color:#003087;"></i>
+                            <strong style="color:#003087;">PayPal</strong>
+                        </button>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label"><i class="bi bi-credit-card me-1"></i>Tarjeta</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="metodoPago" value="Tarjeta" id="pagoTarjeta" />
-                            <label class="form-check-label" for="pagoTarjeta">Tarjeta de credito/debito</label>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label"><i class="bi bi-phone me-1"></i>Transferencia</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="metodoPago" value="Transferencia" id="pagoTransferencia" />
-                            <label class="form-check-label" for="pagoTransferencia">Transferencia bancaria</label>
-                        </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn-payment" id="btnPayphone" onclick="seleccionarPago('Payphone', this)" style="width:100%;padding:20px;border:2px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer;transition:all .2s;">
+                            <i class="bi bi-phone me-2" style="font-size:1.5rem;color:#FF6B00;"></i>
+                            <strong style="color:#FF6B00;">PayPhone</strong>
+                        </button>
                     </div>
                 </div>
+                <script>
+                    function seleccionarPago(metodo, btn) {
+                        document.getElementById('metodoPagoHidden').value = metodo;
+                        document.querySelectorAll('.btn-payment').forEach(function(b) {
+                            b.style.borderColor = 'var(--border)';
+                            b.style.background = 'var(--bg)';
+                        });
+                        btn.style.borderColor = 'var(--primary)';
+                        btn.style.background = 'color-mix(in srgb, var(--primary) 10%, transparent)';
+                    }
+                </script>
 
                 <div class="d-flex gap-3">
                     <button type="submit" class="btn-primary-hf" style="padding:12px 28px;">

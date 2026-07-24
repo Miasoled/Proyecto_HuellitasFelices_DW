@@ -3,6 +3,7 @@ using System;
 using HuellitasFelices.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HuellitasFelices.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260724212658_AddVentaIdToPagos")]
+    partial class AddVentaIdToPagos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1061,7 +1064,7 @@ namespace HuellitasFelices.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
 
-                    b.Property<int?>("ConsultaId")
+                    b.Property<int>("ConsultaId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("DuenoId")
@@ -1502,7 +1505,8 @@ namespace HuellitasFelices.Migrations
                     b.HasOne("HuellitasFelices.Models.Consulta", "Consulta")
                         .WithOne("Venta")
                         .HasForeignKey("HuellitasFelices.Models.Venta", "ConsultaId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("HuellitasFelices.Models.Dueno", "Dueno")
                         .WithMany()

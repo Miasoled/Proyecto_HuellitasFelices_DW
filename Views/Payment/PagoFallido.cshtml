@@ -1,0 +1,33 @@
+@{
+    ViewData["Title"] = "Error en el pago";
+    var motivo = ViewBag.Motivo as string;
+}
+
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active">Error en el pago</li>
+    </ol></nav>
+    <h1><i class="bi bi-exclamation-triangle me-2"></i>Error en el pago</h1>
+</div></div>
+
+<div class="content-wrapper"><div class="container">
+<div class="row justify-content-center"><div class="col-lg-6 text-center">
+    <div class="hf-card p-5">
+        <i class="bi bi-exclamation-diamond" style="font-size:4rem; color:var(--danger, #dc3545);"></i>
+        <h3 class="mt-3">El pago no pudo ser procesado</h3>
+        <p class="text-muted mt-2">Ocurrió un problema al procesar tu pago. No se realizó ningún cobro.</p>
+        @if (!string.IsNullOrEmpty(motivo))
+        {
+            <div class="alert alert-warning mt-3" style="font-size:.85rem; text-align:left;">
+                <i class="bi bi-info-circle me-1"></i><strong>Detalle:</strong> @motivo
+            </div>
+        }
+        <p class="text-muted">Por favor, intenta nuevamente o contacta al administrador si el problema persiste.</p>
+        <div class="d-flex gap-3 justify-content-center mt-4">
+            <a asp-controller="Account" asp-action="MiPanel" class="btn-primary-hf" style="padding:12px 28px;">
+                <i class="bi bi-house me-1"></i>Volver a mi panel
+            </a>
+        </div>
+    </div>
+</div></div></div></div>

@@ -31,6 +31,7 @@ namespace HuellitasFelices.Data
         public DbSet<Venta> Ventas { get; set; }
         public DbSet<DetalleVenta> DetallesVenta { get; set; }
         public DbSet<EmailLog> EmailLogs { get; set; }
+        public DbSet<Pago> Pagos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,6 +87,13 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<EmailLog>().HasIndex(e => e.TipoNotificacion);
             modelBuilder.Entity<EmailLog>().HasIndex(e => e.FechaSolicitud);
 
+            // ── Pago ─────────────────────────────────────────────────────
+            modelBuilder.Entity<Pago>().HasIndex(p => p.Estado);
+            modelBuilder.Entity<Pago>().HasIndex(p => p.ProveedorPago);
+            modelBuilder.Entity<Pago>().HasIndex(p => p.IdentificadorExterno);
+            modelBuilder.Entity<Pago>().HasIndex(p => p.VentaId);
+            modelBuilder.Entity<Pago>().HasIndex(p => p.NumeroPago);
+
             // ── Mapeo de tablas ────────────────────────────────────────────
             modelBuilder.Entity<Tratamiento>().ToTable("Tratamientos");
             modelBuilder.Entity<AuditLog>().ToTable("AuditLogs");
@@ -100,6 +108,7 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<Venta>().ToTable("Ventas");
             modelBuilder.Entity<DetalleVenta>().ToTable("DetallesVenta");
             modelBuilder.Entity<EmailLog>().ToTable("EmailLogs");
+            modelBuilder.Entity<Pago>().ToTable("Pagos");
 
             // ── Relaciones ─────────────────────────────────────────────────
 
@@ -201,7 +210,7 @@ namespace HuellitasFelices.Data
                 .HasForeignKey(cm => cm.ProductoId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Venta -> Consulta (1:1)
+            // Venta -> Consulta (1:1 optional — nullable for store purchases)
             modelBuilder.Entity<Venta>()
                 .HasOne(v => v.Consulta)
                 .WithOne(c => c.Venta)
@@ -228,6 +237,28 @@ namespace HuellitasFelices.Data
                 .WithMany()
                 .HasForeignKey(dv => dv.ProductoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Pago -> Venta
+            modelBuilder.Entity<Pago>()
+                .HasOne(p => p.Venta)
+                .WithMany()
+                .HasForeignKey(p => p.VentaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Pago -> Consulta (opcional)
+            modelBuilder.Entity<Pago>()
+                .HasOne(p => p.Consulta)
+                .WithMany()
+                .HasForeignKey(p => p.ConsultaId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            // Pago -> Dueno
+            modelBuilder.Entity<Pago>()
+                .HasOne(p => p.Dueno)
+                .WithMany()
+                .HasForeignKey(p => p.DuenoId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -1,0 +1,162 @@
+@model List<HuellitasFelices.Models.Pago>
+@{
+    ViewData["Title"] = "Reporte de Pagos";
+    var resumen = ViewBag.Resumen as dynamic;
+}
+
+<div class="page-header"><div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Reportes" asp-action="Index">Reportes</a></li>
+        <li class="breadcrumb-item active">Pagos</li>
+    </ol></nav>
+    <h1><i class="bi bi-credit-card me-2"></i>Reporte de Pagos</h1>
+</div></div>
+
+<div class="content-wrapper"><div class="container py-4">
+
+    <!-- Filtros -->
+    <div class="hf-card mb-4">
+        <div class="hf-card-header"><i class="bi bi-funnel me-2"></i>Filtros de busqueda</div>
+        <div class="card-body p-4">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="busqueda" value="@ViewBag.Busqueda" class="form-control"
+                           placeholder="N. pago o cliente..." />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="Pendiente" selected="@(ViewBag.Estado == "Pendiente")">Pendiente</option>
+                        <option value="Aprobado" selected="@(ViewBag.Estado == "Aprobado")">Aprobado</option>
+                        <option value="Cancelado" selected="@(ViewBag.Estado == "Cancelado")">Cancelado</option>
+                        <option value="Fallido" selected="@(ViewBag.Estado == "Fallido")">Fallido</option>
+                        <option value="Expirado" selected="@(ViewBag.Estado == "Expirado")">Expirado</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Pasarela</label>
+                    <select name="proveedor" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="PayPal" selected="@(ViewBag.Proveedor == "PayPal")">PayPal</option>
+                        <option value="PayPhone" selected="@(ViewBag.Proveedor == "PayPhone")">PayPhone</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Desde</label>
+                    <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" />
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn-primary-hf w-100 justify-content-center" style="padding:10px">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen por pasarela y estado -->
+    @if (resumen != null)
+    {
+        <div class="row g-3 mb-4">
+            @foreach (dynamic item in resumen)
+            {
+                <div class="col-md-3">
+                    <div class="hf-card p-3 text-center">
+                        <div style="font-size:.82rem; color:var(--text-soft);">@item.Proveedor - @item.Estado</div>
+                        <div class="fw-bold" style="font-size:1.3rem; color:var(--primary);">$@item.MontoTotal.ToString("F2")</div>
+                        <div style="font-size:.85rem;">@item.Cantidad transacciones</div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Tabla de pagos -->
+    <div class="hf-card">
+        <div class="hf-card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-table me-2"></i>Transacciones</span>
+                <span style="font-size:.85rem;">Total: @ViewBag.TotalRegistros registros</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="hf-table">
+                    <thead>
+                        <tr>
+                            <th>N. Pago</th>
+                            <th>Cliente</th>
+                            <th>Pasarela</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>ID Externo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pago in Model)
+                        {
+                            <tr>
+                                <td><strong>@pago.NumeroPago</strong></td>
+                                <td>@pago.Dueno?.Nombre</td>
+                                <td><span class="badge bg-info">@pago.ProveedorPago</span></td>
+                                <td><strong>$@pago.Monto.ToString("F2")</strong></td>
+                                <td>
+                                    @switch (pago.Estado)
+                                    {
+                                        case "Aprobado":
+                                            <span class="badge bg-success">Aprobado</span>
+                                            break;
+                                        case "Pendiente":
+                                            <span class="badge bg-warning text-dark">Pendiente</span>
+                                            break;
+                                        case "Cancelado":
+                                            <span class="badge bg-secondary">Cancelado</span>
+                                            break;
+                                        case "Fallido":
+                                            <span class="badge bg-danger">Fallido</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-light text-dark">@pago.Estado</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>@pago.FechaCreacion.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td style="font-size:.8rem;">@(pago.IdentificadorExterno ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginacion -->
+    @if ((int)ViewBag.TotalPaginas > 1)
+    {
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= (int)ViewBag.TotalPaginas; i++)
+                {
+                    <li class="page-item @(i == (int)ViewBag.PaginaActual ? "active" : "")">
+                        <a class="page-link" asp-action="ReportePagos"
+                           asp-route-pagina="@i"
+                           asp-route-busqueda="@ViewBag.Busqueda"
+                           asp-route-estado="@ViewBag.Estado"
+                           asp-route-proveedor="@ViewBag.Proveedor"
+                           asp-route-desde="@ViewBag.Desde"
+                           asp-route-hasta="@ViewBag.Hasta">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+
+</div></div>

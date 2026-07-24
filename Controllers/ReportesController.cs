@@ -1,5 +1,6 @@
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -233,6 +234,67 @@ namespace HuellitasFelices.Controllers
             ViewBag.Entidades = await _context.AuditLogs.Select(a => a.Entidad).Distinct().ToListAsync();
 
             return View(logs);
+        }
+
+        public async Task<IActionResult> ReportePagos(
+            int pagina = 1, string? busqueda = null, string? estado = null,
+            string? proveedor = null, DateTime? desde = null, DateTime? hasta = null)
+        {
+            const int tamPagina = 20;
+
+            var query = _context.Pagos
+                .AsNoTracking()
+                .Include(p => p.Venta).ThenInclude(v => v!.Consulta).ThenInclude(c => c!.Mascota)
+                .Include(p => p.Dueno)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(busqueda))
+                query = query.Where(p => p.NumeroPago.Contains(busqueda) ||
+                    (p.Dueno != null && p.Dueno.Nombre.Contains(busqueda)));
+
+            if (!string.IsNullOrWhiteSpace(estado))
+                query = query.Where(p => p.Estado == estado);
+
+            if (!string.IsNullOrWhiteSpace(proveedor))
+                query = query.Where(p => p.ProveedorPago == proveedor);
+
+            if (desde.HasValue)
+                query = query.Where(p => p.FechaCreacion >= desde.Value);
+
+            if (hasta.HasValue)
+                query = query.Where(p => p.FechaCreacion <= hasta.Value);
+
+            var total = await query.CountAsync();
+            var pagos = await query
+                .OrderByDescending(p => p.FechaCreacion)
+                .Skip((pagina - 1) * tamPagina)
+                .Take(tamPagina)
+                .ToListAsync();
+
+            var resumen = await _context.Pagos
+                .AsNoTracking()
+                .GroupBy(p => new { p.ProveedorPago, p.Estado })
+                .Select(g => new
+                {
+                    Proveedor = g.Key.ProveedorPago,
+                    Estado = g.Key.Estado,
+                    Cantidad = g.Count(),
+                    MontoTotal = g.Sum(p => p.Monto)
+                })
+                .OrderBy(x => x.Proveedor).ThenBy(x => x.Estado)
+                .ToListAsync();
+
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)tamPagina);
+            ViewBag.TotalRegistros = total;
+            ViewBag.Busqueda = busqueda;
+            ViewBag.Estado = estado;
+            ViewBag.Proveedor = proveedor;
+            ViewBag.Desde = desde?.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = hasta?.ToString("yyyy-MM-dd");
+            ViewBag.Resumen = resumen;
+
+            return View(pagos);
         }
     }
 }

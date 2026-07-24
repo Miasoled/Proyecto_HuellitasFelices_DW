@@ -1,6 +1,7 @@
 @model HuellitasFelices.Models.Venta
 @{
     ViewData["Title"] = "Factura";
+    var pago = ViewBag.Pago as HuellitasFelices.Models.Pago;
 }
 
 <div class="page-header"><div class="container">
@@ -35,6 +36,30 @@
                     <strong>Metodo:</strong> @Model.MetodoPago<br />
                 </div>
             </div>
+
+            @if (pago != null)
+            {
+                <div class="alert alert-success py-2 mb-3" style="font-size:.85rem;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Pasarela:</strong> @pago.ProveedorPago<br />
+                            <strong>N. Pago:</strong> @pago.NumeroPago<br />
+                            <strong>Moneda:</strong> @pago.Moneda
+                        </div>
+                        <div class="col-md-6">
+                            @if (!string.IsNullOrEmpty(pago.IdentificadorExterno))
+                            {
+                                <strong>ID Transaccion:</strong> @pago.IdentificadorExterno<br />
+                            }
+                            @if (pago.FechaConfirmacion.HasValue)
+                            {
+                                <strong>Confirmado:</strong> @pago.FechaConfirmacion.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")<br />
+                            }
+                            <strong>Estado:</strong> <span class="badge bg-success">@pago.Estado</span>
+                        </div>
+                    </div>
+                </div>
+            }
 
             <hr style="border-color: var(--border);" />
 
