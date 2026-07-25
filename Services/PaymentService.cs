@@ -11,6 +11,7 @@ public class PaymentService : IPaymentService
     private readonly IEnumerable<IPaymentGateway> _gateways;
     private readonly IAuditService _auditService;
     private readonly IEmailService _emailService;
+    private readonly IInventoryService _inventoryService;
     private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
@@ -18,12 +19,14 @@ public class PaymentService : IPaymentService
         IEnumerable<IPaymentGateway> gateways,
         IAuditService auditService,
         IEmailService emailService,
+        IInventoryService inventoryService,
         ILogger<PaymentService> logger)
     {
         _context = context;
         _gateways = gateways;
         _auditService = auditService;
         _emailService = emailService;
+        _inventoryService = inventoryService;
         _logger = logger;
     }
 
@@ -154,29 +157,6 @@ public class PaymentService : IPaymentService
                                 Cantidad = med.Cantidad,
                                 PrecioUnitario = med.PrecioUnitario
                             });
-
-                            var inventario = await _context.Inventarios
-                                .FirstOrDefaultAsync(i => i.ProductoId == med.ProductoId);
-
-                            if (inventario != null && inventario.StockActual >= med.Cantidad)
-                            {
-                                var stockAnterior = inventario.StockActual;
-                                inventario.StockActual -= med.Cantidad;
-                                inventario.FechaActualizacion = DateTime.UtcNow;
-
-                                _context.MovimientosInventario.Add(new MovimientoInventario
-                                {
-                                    TipoMovimiento = "Venta",
-                                    Cantidad = med.Cantidad,
-                                    StockAnterior = stockAnterior,
-                                    StockPosterior = inventario.StockActual,
-                                    Referencia = pago.NumeroPago,
-                                    ProductoId = med.ProductoId,
-                                    UsuarioId = pago.DuenoId.ToString(),
-                                    FechaMovimiento = DateTime.UtcNow,
-                                    Observacion = $"Venta aprobada via {pago.ProveedorPago}"
-                                });
-                            }
                         }
                     }
 
@@ -232,9 +212,23 @@ public class PaymentService : IPaymentService
             pago.FechaActualizacion = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
+            if (pago.VentaId > 0)
+            {
+                try
+                {
+                    await _inventoryService.RevertirReservaAsync(
+                        pago.VentaId, pago.DuenoId.ToString(),
+                        $"Pago {pago.Estado}: {pago.NumeroPago}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al revertir reserva para pago {PagoId}", pagoId);
+                }
+            }
+
             await _auditService.LogAsync("PagoNoAprobado", "Pago", pago.Id,
                 usuarioId: pago.DuenoId.ToString(),
-                valorNuevo: $"Pago {pago.NumeroPago} estado: {pago.Estado}. Razón: {pago.MensajeRespuesta}");
+                valorNuevo: $"Pago {pago.NumeroPago} estado: {pago.Estado}. Razon: {pago.MensajeRespuesta}");
 
             if (pago.Dueno?.Email != null)
             {
@@ -268,6 +262,20 @@ public class PaymentService : IPaymentService
         pago.Estado = "Cancelado";
         pago.FechaActualizacion = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        if (pago.VentaId > 0)
+        {
+            try
+            {
+                await _inventoryService.RevertirReservaAsync(
+                    pago.VentaId, pago.DuenoId.ToString(),
+                    $"Pago cancelado: {pago.NumeroPago}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al revertir reserva en cancelación de pago {PagoId}", pagoId);
+            }
+        }
 
         await _auditService.LogAsync("PagoCancelado", "Pago", pago.Id,
             usuarioId: pago.DuenoId.ToString(),

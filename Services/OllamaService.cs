@@ -5,27 +5,27 @@ using Microsoft.Extensions.Options;
 
 namespace HuellitasFelices.Services;
 
-public class OllamaService : IOllamaService
+public class OllamaService : IAIService
 {
     private readonly HttpClient _http;
     private readonly AiSettings _settings;
-    private readonly ILogger<OllamaService> _logger;
+    private readonly ILogger<IAIService> _logger;
 
-    public OllamaService(HttpClient http, IOptions<AiSettings> settings, ILogger<OllamaService> logger)
+    public OllamaService(HttpClient http, IOptions<AiSettings> settings, ILogger<IAIService> logger)
     {
         _http = http;
         _settings = settings.Value;
         _logger = logger;
     }
 
-    public async Task<string?> GenerarRespuestaAsync(string prompt, CancellationToken ct = default)
+    public async Task<string?> GenerateAsync(string instruction, CancellationToken ct = default)
     {
         try
         {
             var payload = new
             {
                 model = _settings.ModelName,
-                prompt = prompt,
+                prompt = instruction,
                 stream = false
             };
 

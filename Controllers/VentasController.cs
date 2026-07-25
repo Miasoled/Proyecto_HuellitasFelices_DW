@@ -16,20 +16,26 @@ namespace HuellitasFelices.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IPaymentService _paymentService;
+        private readonly IInventoryService _inventoryService;
         private readonly PayPalSettings _paypalSettings;
         private readonly PayPhoneSettings _payphoneSettings;
+        private readonly ILogger<VentasController> _logger;
 
         public VentasController(
             AppDbContext context,
             UserManager<IdentityUser> userManager,
             IPaymentService paymentService,
-            IOptions<PaymentSettings> paymentSettings)
+            IInventoryService inventoryService,
+            IOptions<PaymentSettings> paymentSettings,
+            ILogger<VentasController> logger)
         {
             _context = context;
             _userManager = userManager;
             _paymentService = paymentService;
+            _inventoryService = inventoryService;
             _paypalSettings = paymentSettings.Value.PayPal;
             _payphoneSettings = paymentSettings.Value.PayPhone;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -103,6 +109,24 @@ namespace HuellitasFelices.Controllers
             _context.Ventas.Add(venta);
             await _context.SaveChangesAsync();
 
+            if (consulta.Medicamentos != null && consulta.Medicamentos.Count > 0)
+            {
+                var itemsParaReservar = consulta.Medicamentos
+                    .Select(m => (m.ProductoId, m.Cantidad))
+                    .ToList();
+
+                var reserva = await _inventoryService.ReservarStockParaVentaAsync(
+                    venta.Id, itemsParaReservar, user.Id);
+
+                if (reserva == null || reserva.Count == 0)
+                {
+                    _context.Ventas.Remove(venta);
+                    await _context.SaveChangesAsync();
+                    TempData["ErrorMessage"] = "No hay stock suficiente para los medicamentos recetados.";
+                    return RedirectToAction("Pagar", new { consultaId });
+                }
+            }
+
             string returnUrl, cancelUrl;
 
             if (metodoPago.Equals("PayPal", StringComparison.OrdinalIgnoreCase))
@@ -121,12 +145,20 @@ namespace HuellitasFelices.Controllers
 
             if (pago.Estado == "Fallido")
             {
+                if (consulta.Medicamentos != null && consulta.Medicamentos.Count > 0)
+                {
+                    await _inventoryService.RevertirReservaAsync(venta.Id, user.Id, "Fallo al crear pago");
+                }
                 return RedirectToAction("PagoFallido", "Payment");
             }
 
             if (!string.IsNullOrEmpty(pago.UrlAprobacion))
                 return Redirect(pago.UrlAprobacion);
 
+            if (consulta.Medicamentos != null && consulta.Medicamentos.Count > 0)
+            {
+                await _inventoryService.RevertirReservaAsync(venta.Id, user.Id, "No se obtuvo URL de aprobacion");
+            }
             return RedirectToAction("PagoFallido", "Payment");
         }
 

@@ -9,14 +9,14 @@ namespace HuellitasFelices.Controllers;
 [Authorize]
 public class IAController : Controller
 {
-    private readonly IOllamaService _ollama;
+    private readonly IAIService _ai;
     private readonly IContextProviderService _contextProvider;
     private readonly AiSettings _aiSettings;
     private readonly ILogger<IAController> _logger;
 
-    public IAController(IOllamaService ollama, IContextProviderService contextProvider, IOptions<AiSettings> aiSettings, ILogger<IAController> logger)
+    public IAController(IAIService ai, IContextProviderService contextProvider, IOptions<AiSettings> aiSettings, ILogger<IAController> logger)
     {
-        _ollama = ollama;
+        _ai = ai;
         _contextProvider = contextProvider;
         _aiSettings = aiSettings.Value;
         _logger = logger;
@@ -55,7 +55,7 @@ Pregunta del usuario: {peticion.Prompt}
 
 Respuesta:";
 
-            var respuesta = await _ollama.GenerarRespuestaAsync(promptCompleto);
+            var respuesta = await _ai.GenerateAsync(promptCompleto);
 
             if (string.IsNullOrEmpty(respuesta))
             {

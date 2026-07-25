@@ -11,6 +11,9 @@ namespace HuellitasFelices.Models
         
         public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
         
+        [Timestamp]
+        public byte[]? RowVersion { get; set; }
+        
         // FK
         [Display(Name = "Producto")]
         public int ProductoId { get; set; }

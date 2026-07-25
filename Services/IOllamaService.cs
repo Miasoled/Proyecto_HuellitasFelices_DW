@@ -1,6 +1,6 @@
 namespace HuellitasFelices.Services;
 
-public interface IOllamaService
+public interface IAIService
 {
-    Task<string?> GenerarRespuestaAsync(string prompt, CancellationToken ct = default);
+    Task<string?> GenerateAsync(string instruction, CancellationToken ct = default);
 }

@@ -11,5 +11,7 @@ namespace HuellitasFelices.Services
         Task<MovimientoInventario?> AjustarAsync(int productoId, int nuevoStock, string motivo, string? usuarioId);
         Task<List<MovimientoInventario>> GetMovimientosAsync(int? productoId = null, DateTime? desde = null, DateTime? hasta = null, int pagina = 1, int tamanioPagina = 20);
         Task<int> GetTotalMovimientosAsync(int? productoId = null, DateTime? desde = null, DateTime? hasta = null);
+        Task<List<MovimientoInventario>> ReservarStockParaVentaAsync(int ventaId, List<(int ProductoId, int Cantidad)> items, string? usuarioId);
+        Task RevertirReservaAsync(int ventaId, string? usuarioId, string motivo);
     }
 }

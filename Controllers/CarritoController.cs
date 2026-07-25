@@ -17,22 +17,28 @@ namespace HuellitasFelices.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IPaymentService _paymentService;
+        private readonly IInventoryService _inventoryService;
         private readonly PayPalSettings _paypalSettings;
         private readonly PayPhoneSettings _payphoneSettings;
+        private readonly ILogger<CarritoController> _logger;
 
         public CarritoController(
             ICarritoService carrito,
             AppDbContext context,
             UserManager<IdentityUser> userManager,
             IPaymentService paymentService,
-            IOptions<PaymentSettings> paymentSettings)
+            IInventoryService inventoryService,
+            IOptions<PaymentSettings> paymentSettings,
+            ILogger<CarritoController> logger)
         {
             _carrito = carrito;
             _context = context;
             _userManager = userManager;
             _paymentService = paymentService;
+            _inventoryService = inventoryService;
             _paypalSettings = paymentSettings.Value.PayPal;
             _payphoneSettings = paymentSettings.Value.PayPhone;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -139,6 +145,19 @@ namespace HuellitasFelices.Controllers
             _context.Ventas.Add(venta);
             await _context.SaveChangesAsync();
 
+            var itemsParaReservar = items.Select(i => (i.ProductoId, i.Cantidad)).ToList();
+            var reserva = await _inventoryService.ReservarStockParaVentaAsync(
+                venta.Id, itemsParaReservar, user.Id);
+
+            if (reserva == null || reserva.Count == 0)
+            {
+                _context.Ventas.Remove(venta);
+                await _context.SaveChangesAsync();
+                _carrito.Vaciar();
+                TempData["CarritoMensaje"] = "No hay stock suficiente para algunos productos del carrito.";
+                return RedirectToAction(nameof(Index));
+            }
+
             string returnUrl, cancelUrl;
 
             if (metodoPago.Equals("PayPal", StringComparison.OrdinalIgnoreCase))
@@ -157,6 +176,7 @@ namespace HuellitasFelices.Controllers
 
             if (pago.Estado == "Fallido")
             {
+                await _inventoryService.RevertirReservaAsync(venta.Id, user.Id, "Fallo al crear pago");
                 _carrito.Vaciar();
                 return RedirectToAction("PagoFallido", "Payment",
                     new { motivo = pago.MensajeRespuesta ?? "No se pudo crear el pago con el proveedor" });
@@ -168,6 +188,7 @@ namespace HuellitasFelices.Controllers
                 return Redirect(pago.UrlAprobacion);
             }
 
+            await _inventoryService.RevertirReservaAsync(venta.Id, user.Id, "No se obtuvo URL de aprobacion");
             _carrito.Vaciar();
             return RedirectToAction("PagoFallido", "Payment",
                 new { motivo = "No se obtuvo URL de aprobación del proveedor de pago" });
@@ -208,6 +229,17 @@ namespace HuellitasFelices.Controllers
             _context.Ventas.Add(venta);
             await _context.SaveChangesAsync();
 
+            var itemsParaReservar = items.Select(i => (i.ProductoId, i.Cantidad)).ToList();
+            var reserva = await _inventoryService.ReservarStockParaVentaAsync(
+                venta.Id, itemsParaReservar, user.Id);
+
+            if (reserva == null || reserva.Count == 0)
+            {
+                _context.Ventas.Remove(venta);
+                await _context.SaveChangesAsync();
+                return Json(new { success = false, message = "No hay stock suficiente para algunos productos" });
+            }
+
             var returnUrl = _paypalSettings.ReturnUrl;
             var cancelUrl = _paypalSettings.CancelUrl;
 
@@ -216,10 +248,10 @@ namespace HuellitasFelices.Controllers
 
             if (pago.Estado == "Fallido")
             {
+                await _inventoryService.RevertirReservaAsync(venta.Id, user.Id, "Fallo al crear pago PayPal");
                 return Json(new { success = false, message = pago.MensajeRespuesta ?? "No se pudo crear el pago con el proveedor" });
             }
 
-            // Vaciar el carrito ya que la orden se creó correctamente en PayPal y en BD
             _carrito.Vaciar();
 
             return Json(new

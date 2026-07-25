@@ -89,7 +89,7 @@ builder.Services.AddScoped<ICarritoService, CarritoService>();
 
 // ── IA / Ollama ──────────────────────────────────────────────────────
 builder.Services.Configure<AiSettings>(builder.Configuration.GetSection("AI"));
-builder.Services.AddHttpClient<IOllamaService, OllamaService>(client =>
+builder.Services.AddHttpClient<IAIService, OllamaService>(client =>
 {
     var settings = builder.Configuration.GetSection("AI").Get<AiSettings>() ?? new AiSettings();
     client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds);
