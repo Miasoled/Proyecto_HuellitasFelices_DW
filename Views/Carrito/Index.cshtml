@@ -4,6 +4,9 @@
     var total = ViewBag.Total as decimal? ?? 0;
 }
 
+<!-- Carga del SDK de PayPal con el Client ID de ViewBag -->
+<script src="https://www.paypal.com/sdk/js?client-id=@ViewBag.ClientId&currency=USD"></script>
+
 <div class="page-header">
     <div class="container">
         <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
@@ -126,7 +129,7 @@
                                 <span style="font-weight:600">$@total.ToString("F2")</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
-                                <span style="color:var(--text-soft);font-size:.9rem">Envío</span>
+                                <span style="color:var(--text-soft);font-size:.9rem">Envio</span>
                                 <span style="font-weight:600;color:var(--primary)">Gratis</span>
                             </div>
                             <hr />
@@ -135,44 +138,53 @@
                                 <strong style="font-size:1.3rem;color:var(--primary)">$@total.ToString("F2")</strong>
                             </div>
 
-                            <form asp-action="Pagar" method="post" id="formPago">
+                            <form asp-action="Pagar" method="post" id="formPagoCarrito">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="metodoPago" id="metodoPagoCarrito" value="PayPal" />
+                                <input type="hidden" name="metodoPago" id="metodoPagoCarrito" value="" />
 
-                                <div class="row g-2 mb-3">
-                                    <div class="col-6">
-                                        <button type="button" class="btn-payment-carrito active" onclick="selectMetodo('PayPal', this)" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;transition:all .2s;text-align:center;">
-                                            <i class="bi bi-paypal" style="font-size:1.2rem;color:#003087;"></i><br />
-                                            <small style="font-weight:600;color:#003087;">PayPal</small>
-                                        </button>
-                                    </div>
-                                    <div class="col-6">
-                                        <button type="button" class="btn-payment-carrito" onclick="selectMetodo('PayPhone', this)" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;transition:all .2s;text-align:center;">
-                                            <i class="bi bi-phone" style="font-size:1.2rem;color:#FF6B00;"></i><br />
-                                            <small style="font-weight:600;color:#FF6B00;">PayPhone</small>
-                                        </button>
-                                    </div>
-                                </div>
-                                <script>
-                                    function selectMetodo(metodo, btn) {
-                                        document.getElementById('metodoPagoCarrito').value = metodo;
-                                        document.querySelectorAll('.btn-payment-carrito').forEach(function(b) {
-                                            b.style.borderColor = 'var(--border)';
-                                            b.style.background = 'var(--bg)';
-                                        });
-                                        btn.style.borderColor = 'var(--primary)';
-                                        btn.style.background = 'color-mix(in srgb, var(--primary) 10%, transparent)';
-                                    }
-                                    document.querySelector('.btn-payment-carrito.active').style.borderColor = 'var(--primary)';
-                                    document.querySelector('.btn-payment-carrito.active').style.background = 'color-mix(in srgb, var(--primary) 10%, transparent)';
-                                </script>
+                                <!-- Opción 1: Pagar con PayPhone (Solid Blue) -->
+                                <button type="submit" onclick="document.getElementById('metodoPagoCarrito').value='PayPhone'"
+                                        class="btn text-white w-100 mb-2"
+                                        style="background-color: #2563eb; border: none; font-weight: 600; padding: 12px; border-radius: 8px; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.2s;">
+                                    <i class="bi bi-smartphone" style="font-size: 1.1rem;"></i>
+                                    Pagar con PayPhone
+                                </button>
 
-                                <button type="submit" class="btn-primary-hf w-100 justify-content-center" style="font-size:1rem;padding:14px">
-                                    <i class="bi bi-credit-card"></i> Proceder al pago
+                                <!-- Opción 2: Pagar con PayPal Sandbox (White / Blue border) -->
+                                <button type="submit" onclick="document.getElementById('metodoPagoCarrito').value='PayPal'"
+                                        class="btn w-100 mb-2"
+                                        style="background-color: #ffffff; border: 1.5px solid #3b82f6; color: #2563eb; font-weight: 600; padding: 12px; border-radius: 8px; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.2s;">
+                                    <i class="bi bi-paypal" style="font-size: 1.1rem;"></i>
+                                    Pagar con PayPal Sandbox
+                                </button>
+
+                                <!-- Opción 3: Botón PayPal / Tarjeta (White / Gray border) -->
+                                <button type="button" id="btn-toggle-paypal-cart"
+                                        class="btn w-100 mb-3"
+                                        style="background-color: #ffffff; border: 1.5px solid #d1d5db; color: #374151; font-weight: 600; padding: 12px; border-radius: 8px; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.2s;">
+                                    <i class="bi bi-credit-card" style="font-size: 1.1rem;"></i>
+                                    Botón PayPal / Tarjeta
                                 </button>
                             </form>
 
-                            <a asp-controller="Tienda" asp-action="Index" class="btn-outline-hf w-100 justify-content-center mt-2" style="font-size:.88rem">
+                            <!-- Alertas de Estado/Errores en el Carrito -->
+                            <div id="payment-cart-alert" class="alert alert-danger d-none mb-3" role="alert" style="border-radius: 8px; font-size: 0.85rem; padding: 8px 12px;">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <span id="payment-cart-alert-msg"></span>
+                            </div>
+
+                            <!-- Contenedor del Widget Inteligente (Oculto) -->
+                            <div id="paypal-cart-widget-wrapper" class="d-none mb-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+                                <div id="paypal-button-container"></div>
+                            </div>
+
+                            <!-- Footer de Seguridad -->
+                            <div class="text-center mt-3 mb-2" style="color: #94a3b8; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                <i class="bi bi-shield-check" style="font-size: 1.1rem; color: #94a3b8;"></i>
+                                <span>Ambiente de pruebas — no se realizan cargos reales</span>
+                            </div>
+
+                            <a asp-controller="Tienda" asp-action="Index" class="btn-outline-hf w-100 justify-content-center mt-2" style="font-size:.85rem;padding:10px;">
                                 <i class="bi bi-arrow-left"></i> Seguir comprando
                             </a>
                         </div>
@@ -182,3 +194,124 @@
         }
     </div>
 </div>
+
+<!-- Overlay y Spinner de Procesamiento de Pago -->
+<div id="loading-overlay" class="d-none" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white;">
+    <div class="spinner-border text-success" role="status" style="width: 3.5rem; height: 3.5rem; border-width: 5px; margin-bottom: 20px;">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+    <h4 style="font-weight: 700; letter-spacing: 0.5px;">Procesando y Capturando el Pago...</h4>
+    <p class="text-white-50" style="font-size: 0.95rem;">Por favor, no recargues ni cierres la página.</p>
+</div>
+
+<script>
+    let buttonsInitialized = false;
+
+    function initPayPalButtons() {
+        if (buttonsInitialized) return;
+        buttonsInitialized = true;
+
+        paypal.Buttons({
+            createOrder: function (data, actions) {
+                const alertDiv = document.getElementById('payment-cart-alert');
+                alertDiv.classList.add('d-none');
+
+                // Hacer petición AJAX para crear la venta y la orden de PayPal
+                return fetch('@Url.Action("CrearPagoBotonJson", "Carrito")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Error al iniciar orden en el servidor");
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.success && result.paypalOrderId) {
+                        // Guardar pagoId globalmente para usarlo en onApprove
+                        window.currentPagoId = result.pagoId;
+                        return result.paypalOrderId;
+                    } else {
+                        throw new Error(result.message || "Error al crear la orden de PayPal.");
+                    }
+                })
+                .catch(error => {
+                    alertDiv.classList.remove('d-none');
+                    document.getElementById('payment-cart-alert-msg').innerText = error.message;
+                    buttonsInitialized = false;
+                    throw error;
+                });
+            },
+            onApprove: function (data, actions) {
+                // Mostrar overlay de carga
+                const overlay = document.getElementById('loading-overlay');
+                overlay.classList.remove('d-none');
+                overlay.style.display = 'flex';
+
+                const alertDiv = document.getElementById('payment-cart-alert');
+                alertDiv.classList.add('d-none');
+
+                // Capturar el pago en el backend
+                fetch('@Url.Action("CapturePayPalButtonOrderJson", "Payment")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        PayPalOrderId: data.orderID,
+                        PagoId: window.currentPagoId
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Error en la respuesta del servidor");
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.success && result.redirectUrl) {
+                        window.location.href = result.redirectUrl;
+                    } else {
+                        overlay.classList.add('d-none');
+                        overlay.style.display = 'none';
+                        document.getElementById('payment-cart-alert-msg').innerText = result.message || "No se pudo completar el pago.";
+                        alertDiv.classList.remove('d-none');
+                    }
+                })
+                .catch(error => {
+                    overlay.classList.add('d-none');
+                    overlay.style.display = 'none';
+                    document.getElementById('payment-cart-alert-msg').innerText = "Ocurrió un problema de red al procesar el pago.";
+                    alertDiv.classList.remove('d-none');
+                    console.error("Error:", error);
+                });
+            },
+            onCancel: function (data) {
+                if (window.currentPagoId) {
+                    window.location.href = '@Url.Action("Cancel", "Payment")?token=' + data.orderID;
+                }
+            },
+            onError: function (err) {
+                const alertDiv = document.getElementById('payment-cart-alert');
+                document.getElementById('payment-cart-alert-msg').innerText = "Error con PayPal. Por favor, reintente.";
+                alertDiv.classList.remove('d-none');
+                console.error("PayPal Error:", err);
+            }
+        }).render('#paypal-button-container');
+    }
+
+    document.getElementById('btn-toggle-paypal-cart').addEventListener('click', function() {
+        const wrapper = document.getElementById('paypal-cart-widget-wrapper');
+        if (wrapper.classList.contains('d-none')) {
+            wrapper.classList.remove('d-none');
+            initPayPalButtons();
+            wrapper.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            wrapper.classList.add('d-none');
+        }
+    });
+</script>

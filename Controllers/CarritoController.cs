@@ -40,6 +40,7 @@ namespace HuellitasFelices.Controllers
         {
             var items = _carrito.ObtenerItems();
             ViewBag.Total = _carrito.Total();
+            ViewBag.ClientId = _paypalSettings.ClientId;
             return View(items);
         }
 
@@ -170,6 +171,63 @@ namespace HuellitasFelices.Controllers
             _carrito.Vaciar();
             return RedirectToAction("PagoFallido", "Payment",
                 new { motivo = "No se obtuvo URL de aprobación del proveedor de pago" });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Cliente")]
+        public async Task<IActionResult> CrearPagoBotonJson()
+        {
+            var items = _carrito.ObtenerItems();
+            if (!items.Any())
+            {
+                return Json(new { success = false, message = "El carrito está vacío" });
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Json(new { success = false, message = "Sesión no válida" });
+
+            var dueno = await _context.Duenos
+                .FirstOrDefaultAsync(d => d.Email != null && d.Email == user.Email && d.Activo);
+            if (dueno == null) return Json(new { success = false, message = "Acceso denegado" });
+
+            var totalGeneral = _carrito.Total();
+
+            var venta = new Venta
+            {
+                NumeroVenta = $"VTA-TIENDA-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(1000, 9999)}",
+                ConsultaId = null,
+                DuenoId = dueno.Id,
+                TotalConsulta = 0,
+                TotalMedicamentos = totalGeneral,
+                Estado = "Pendiente",
+                MetodoPago = "PayPal",
+                FechaVenta = DateTime.UtcNow,
+                Activo = true
+            };
+
+            _context.Ventas.Add(venta);
+            await _context.SaveChangesAsync();
+
+            var returnUrl = _paypalSettings.ReturnUrl;
+            var cancelUrl = _paypalSettings.CancelUrl;
+
+            var pago = await _paymentService.CrearPagoAsync(
+                venta.Id, totalGeneral, "PayPal", returnUrl, cancelUrl);
+
+            if (pago.Estado == "Fallido")
+            {
+                return Json(new { success = false, message = pago.MensajeRespuesta ?? "No se pudo crear el pago con el proveedor" });
+            }
+
+            // Vaciar el carrito ya que la orden se creó correctamente en PayPal y en BD
+            _carrito.Vaciar();
+
+            return Json(new
+            {
+                success = true,
+                paypalOrderId = pago.TokenPasarela,
+                pagoId = pago.Id
+            });
         }
     }
 }

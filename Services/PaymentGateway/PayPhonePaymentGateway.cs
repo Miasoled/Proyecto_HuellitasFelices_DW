@@ -30,11 +30,13 @@ public class PayPhonePaymentGateway : IPaymentGateway
         {
             var transactionId = Guid.NewGuid().ToString("N");
 
+            int amountInCents = (int)Math.Round(request.Monto * 100, MidpointRounding.AwayFromZero);
+
             var payment = new
             {
                 id = transactionId,
-                amount = request.Monto,
-                amountWithTax = request.Monto,
+                amount = amountInCents,
+                amountWithTax = amountInCents,
                 amountWithoutTax = 0,
                 tax = 0,
                 service = 0,
