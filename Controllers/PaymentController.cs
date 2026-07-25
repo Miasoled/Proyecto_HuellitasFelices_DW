@@ -38,11 +38,8 @@ public class PaymentController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Success(string? token, string? PayerID)
+    public async Task<IActionResult> Success(string? token, string? PayerID, string? id, string? clientTransactionId)
     {
-        if (string.IsNullOrEmpty(token))
-            return RedirectToAction("PagoFallido", "Payment", new { motivo = "No se recibió token de PayPal" });
-
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToAction("Index", "Home");
 
@@ -50,10 +47,33 @@ public class PaymentController : Controller
             .FirstOrDefaultAsync(d => d.Email != null && d.Email == user.Email && d.Activo);
         if (dueno == null) return Forbid();
 
-        var pago = await _context.Pagos
-            .Where(p => p.DuenoId == dueno.Id && p.Estado == "Pendiente")
-            .OrderByDescending(p => p.FechaCreacion)
-            .FirstOrDefaultAsync();
+        Pago? pago = null;
+
+        if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(clientTransactionId))
+        {
+            int ventaId = 0;
+            if (int.TryParse(clientTransactionId, out ventaId))
+            {
+                pago = await _context.Pagos
+                    .Where(p => p.VentaId == ventaId && p.Estado == "Pendiente")
+                    .OrderByDescending(p => p.FechaCreacion)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (pago != null)
+            {
+                pago.IdentificadorExterno = id;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        if (pago == null)
+        {
+            pago = await _context.Pagos
+                .Where(p => p.DuenoId == dueno.Id && p.Estado == "Pendiente")
+                .OrderByDescending(p => p.FechaCreacion)
+                .FirstOrDefaultAsync();
+        }
 
         if (pago == null)
             return RedirectToAction("PagoFallido", "Payment", new { motivo = "No se encontró un pago pendiente" });
@@ -75,7 +95,7 @@ public class PaymentController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error en callback de PayPal Success");
+            _logger.LogError(ex, "Error en callback de pago Success");
             return RedirectToAction("PagoFallido", "Payment", new { motivo = "Error interno al procesar el pago" });
         }
     }

@@ -82,6 +82,7 @@ public class PaymentService : IPaymentService
             {
                 pago.TokenPasarela = result.TokenPago;
                 pago.UrlAprobacion = result.UrlAprobacion;
+                pago.IdentificadorExterno = result.TokenPago;
             }
             else
             {
@@ -127,7 +128,7 @@ public class PaymentService : IPaymentService
         pago.IntentosVerificacion++;
         pago.FechaActualizacion = DateTime.UtcNow;
 
-        var verification = await gateway.VerifyPaymentAsync(pago.TokenPasarela);
+        var verification = await gateway.VerifyPaymentAsync(pago);
 
         pago.EstadoExterno = verification.Estado;
         pago.MensajeRespuesta = verification.MensajeError != null && verification.MensajeError.Length > 500

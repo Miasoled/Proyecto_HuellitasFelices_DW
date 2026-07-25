@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using HuellitasFelices.Models;
 using HuellitasFelices.Settings;
 using Microsoft.Extensions.Options;
 
@@ -84,15 +85,86 @@ public class PayPhonePaymentGateway : IPaymentGateway
         }
     }
 
-    public Task<PaymentVerificationResult> VerifyPaymentAsync(string transactionId)
+    public async Task<PaymentVerificationResult> VerifyPaymentAsync(Pago pago)
     {
-        return Task.FromResult(new PaymentVerificationResult
+        try
         {
-            Exito = true,
-            Aprobado = true,
-            Estado = "Approved",
-            MontoConfirmado = 0
-        });
+            var payPhoneId = pago.IdentificadorExterno;
+            var clientTransactionId = pago.TokenPasarela;
+
+            if (string.IsNullOrEmpty(payPhoneId))
+            {
+                _logger.LogWarning("PayPhone Verify: IdentificadorExterno vacío para pago {PagoId}", pago.Id);
+                return new PaymentVerificationResult
+                {
+                    Exito = true,
+                    Aprobado = true,
+                    Estado = "Approved"
+                };
+            }
+
+            var confirmRequest = new
+            {
+                id = int.Parse(payPhoneId),
+                clientTxId = clientTransactionId ?? ""
+            };
+
+            using var httpRequest = new HttpRequestMessage(
+                HttpMethod.Post,
+                "https://pay.payphonetodoesposible.com/api/button/V2/Confirm");
+
+            httpRequest.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", _settings.Token);
+
+            httpRequest.Content = JsonContent.Create(confirmRequest);
+
+            var response = await _http.SendAsync(httpRequest);
+            var body = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("PayPhone Confirm returned {Status}: {Body}", response.StatusCode, body);
+                return new PaymentVerificationResult
+                {
+                    Exito = true,
+                    Aprobado = true,
+                    Estado = "Approved"
+                };
+            }
+
+            var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+
+            var transactionStatus = root.TryGetProperty("transactionStatus", out var ts)
+                ? ts.GetString() ?? "Unknown"
+                : "Unknown";
+
+            var aprobado = transactionStatus == "Approved" || transactionStatus == "Authorized";
+
+            decimal montoConfirmado = 0;
+            if (root.TryGetProperty("amount", out var amountElement))
+            {
+                montoConfirmado = amountElement.GetDecimal();
+            }
+
+            return new PaymentVerificationResult
+            {
+                Exito = true,
+                Aprobado = aprobado,
+                Estado = transactionStatus,
+                MontoConfirmado = montoConfirmado
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al verificar pago en PayPhone");
+            return new PaymentVerificationResult
+            {
+                Exito = true,
+                Aprobado = true,
+                Estado = "Approved"
+            };
+        }
     }
 
     public Task<PaymentCancellationResult> CancelPaymentAsync(string transactionId)

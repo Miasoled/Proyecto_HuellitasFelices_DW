@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using HuellitasFelices.Models;
 using HuellitasFelices.Settings;
 using Microsoft.Extensions.Options;
 
@@ -109,7 +110,7 @@ public class PayPalPaymentGateway : IPaymentGateway
         }
     }
 
-    public async Task<PaymentVerificationResult> VerifyPaymentAsync(string orderId)
+    public async Task<PaymentVerificationResult> VerifyPaymentAsync(Pago pago)
     {
         try
         {
@@ -117,6 +118,7 @@ public class PayPalPaymentGateway : IPaymentGateway
             if (string.IsNullOrEmpty(token))
                 return new PaymentVerificationResult { MensajeError = "No se pudo obtener token de acceso" };
 
+            var orderId = pago.TokenPasarela ?? "";
             var req = new HttpRequestMessage(HttpMethod.Get, $"{_settings.BaseUrl}/v2/checkout/orders/{orderId}");
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
