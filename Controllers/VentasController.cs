@@ -18,7 +18,6 @@ namespace HuellitasFelices.Controllers
         private readonly IPaymentService _paymentService;
         private readonly IInventoryService _inventoryService;
         private readonly PayPalSettings _paypalSettings;
-        private readonly PayPhoneSettings _payphoneSettings;
         private readonly ILogger<VentasController> _logger;
 
         public VentasController(
@@ -34,7 +33,6 @@ namespace HuellitasFelices.Controllers
             _paymentService = paymentService;
             _inventoryService = inventoryService;
             _paypalSettings = paymentSettings.Value.PayPal;
-            _payphoneSettings = paymentSettings.Value.PayPhone;
             _logger = logger;
         }
 
@@ -127,18 +125,8 @@ namespace HuellitasFelices.Controllers
                 }
             }
 
-            string returnUrl, cancelUrl;
-
-            if (metodoPago.Equals("PayPal", StringComparison.OrdinalIgnoreCase))
-            {
-                returnUrl = _paypalSettings.ReturnUrl;
-                cancelUrl = _paypalSettings.CancelUrl;
-            }
-            else
-            {
-                returnUrl = _payphoneSettings.ReturnUrl;
-                cancelUrl = _payphoneSettings.CancelUrl;
-            }
+            string returnUrl = _paypalSettings.ReturnUrl;
+            string cancelUrl = _paypalSettings.CancelUrl;
 
             var pago = await _paymentService.CrearPagoAsync(
                 venta.Id, totalGeneral, metodoPago, returnUrl, cancelUrl);

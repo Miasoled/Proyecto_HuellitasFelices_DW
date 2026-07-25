@@ -17,9 +17,9 @@ public class PayPalSettings
 
 public class PayPhoneSettings
 {
-    public string ClientId { get; set; } = string.Empty;
-    public string ClientSecret { get; set; } = string.Empty;
-    public string BaseUrl { get; set; } = "https://paypay.ec/sandbox";
+    public string Token { get; set; } = string.Empty;
+    public string StoreId { get; set; } = string.Empty;
+    public string BaseUrl { get; set; } = "https://pay.payphonetodoesposible.com";
     public string ReturnUrl { get; set; } = string.Empty;
     public string CancelUrl { get; set; } = string.Empty;
 }

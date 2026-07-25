@@ -98,6 +98,7 @@ builder.Services.AddScoped<IContextProviderService, ContextProviderService>();
 
 // ── Pasarelas de pago ───────────────────────────────────────────────
 builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
+builder.Services.Configure<PayPhoneSettings>(builder.Configuration.GetSection("PayPhone"));
 builder.Services.AddHttpClient<IPaymentGateway, PayPalPaymentGateway>();
 builder.Services.AddHttpClient<IPaymentGateway, PayPhonePaymentGateway>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();

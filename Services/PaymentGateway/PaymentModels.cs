@@ -8,6 +8,8 @@ public class PaymentRequest
     public int VentaId { get; set; }
     public string ReturnUrl { get; set; } = string.Empty;
     public string CancelUrl { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string? Email { get; set; }
 }
 
 public class PaymentStartResult

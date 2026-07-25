@@ -19,7 +19,6 @@ public class PaymentController : Controller
     private readonly AppDbContext _context;
     private readonly ILogger<PaymentController> _logger;
     private readonly PayPalSettings _paypalSettings;
-    private readonly PayPhoneSettings _payphoneSettings;
     private readonly IEnumerable<IPaymentGateway> _gateways;
 
     public PaymentController(
@@ -35,7 +34,6 @@ public class PaymentController : Controller
         _context = context;
         _logger = logger;
         _paypalSettings = paymentSettings.Value.PayPal;
-        _payphoneSettings = paymentSettings.Value.PayPhone;
         _gateways = gateways;
     }
 
@@ -217,13 +215,8 @@ public class PaymentController : Controller
 
             if (gateway != null)
             {
-                var returnUrl = metodo.Equals("PayPal", StringComparison.OrdinalIgnoreCase) 
-                    ? _paypalSettings.ReturnUrl 
-                    : _payphoneSettings.ReturnUrl;
-
-                var cancelUrl = metodo.Equals("PayPal", StringComparison.OrdinalIgnoreCase)
-                    ? _paypalSettings.CancelUrl
-                    : _payphoneSettings.CancelUrl;
+                var returnUrl = _paypalSettings.ReturnUrl;
+                var cancelUrl = _paypalSettings.CancelUrl;
 
                 var result = await gateway.CreatePaymentAsync(new PaymentRequest
                 {

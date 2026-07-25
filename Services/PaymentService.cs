@@ -73,7 +73,9 @@ public class PaymentService : IPaymentService
                 Descripcion = $"Huellitas Felices - {numeroPago}",
                 VentaId = ventaId,
                 ReturnUrl = returnUrl,
-                CancelUrl = cancelUrl
+                CancelUrl = cancelUrl,
+                PhoneNumber = venta?.Dueno?.Telefono,
+                Email = venta?.Dueno?.Email
             });
 
             if (result.Exito)
