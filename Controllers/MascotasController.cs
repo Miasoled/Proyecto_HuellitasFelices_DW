@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
@@ -13,12 +14,14 @@ namespace HuellitasFelices.Controllers
     {
         private readonly AppDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IAuditService _auditService;
         private const int TamanioPagina = 20;
 
-        public MascotasController(AppDbContext context, UserManager<IdentityUser> userManager)
+        public MascotasController(AppDbContext context, UserManager<IdentityUser> userManager, IAuditService auditService)
         {
             _context = context;
             _userManager = userManager;
+            _auditService = auditService;
         }
 
         // GET: Mascotas
@@ -32,7 +35,7 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(busqueda))
-                consulta = consulta.Where(m => m.Nombre.Contains(busqueda) || m.Especie.Contains(busqueda));
+                consulta = consulta.Where(m => EF.Functions.ILike(m.Nombre, $"%{busqueda}%") || EF.Functions.ILike(m.Especie, $"%{busqueda}%"));
 
             var totalRegistros = await consulta.CountAsync();
             var mascotas = await consulta
@@ -112,6 +115,10 @@ namespace HuellitasFelices.Controllers
             {
                 _context.Add(mascota);
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("Creacion", "Mascota", mascota.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorNuevo: mascota.Nombre);
                 TempData["Mensaje"] = $"Mascota '{mascota.Nombre}' registrada exitosamente.";
                 return RedirectToAction("MiPanel", "Account");
             }
@@ -152,8 +159,14 @@ namespace HuellitasFelices.Controllers
             {
                 try
                 {
+                    var anterior = await _context.Mascotas.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id);
                     _context.Update(mascota);
                     await _context.SaveChangesAsync();
+                    await _auditService.LogAsync("Edicion", "Mascota", mascota.Id,
+                        usuarioEmail: User.Identity?.Name,
+                        direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        valorAnterior: anterior?.Nombre,
+                        valorNuevo: mascota.Nombre);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -202,7 +215,13 @@ namespace HuellitasFelices.Controllers
             {
                 mascota.Activo = false;
                 mascota.FechaEliminacion = DateTime.UtcNow;
+                mascota.EliminadoPor = User.Identity?.Name;
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("EliminacionLogica", "Mascota", mascota.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorAnterior: "Registro activo",
+                    valorNuevo: "Registro eliminado lógicamente");
             }
             return RedirectToAction(nameof(Index));
         }

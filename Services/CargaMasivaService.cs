@@ -146,33 +146,48 @@ namespace HuellitasFelices.Services
         };
 
         // Metas de registros para alcanzar exactamente 1.000.000 en total
+        // Distribución: Empleados(2K) + Dueños(160K) + Mascotas(200K) + Consultas(340K) +
+        // Tratamientos(200K) + AnimalesAdopcion(20K) + SolicitudesAdopcion(18K) +
+        // Productos(50K) + Inventarios(50K) + Compras(5K) + Ventas(2K) +
+        // Pagos(2K) + MovimientosInventario(13K) = 1.000.000
         private const int MetaEmpleados = 2000;
         private const int MetaDuenos = 160000;
         private const int MetaMascotas = 200000;
-        private const int MetaConsultas = 300000;
+        private const int MetaConsultas = 340000;
         private const int MetaTratamientos = 200000;
         private const int MetaAnimalesAdopcion = 20000;
         private const int MetaSolicitudesAdopcion = 18000;
         private const int MetaProductos = 50000;
         private const int MetaInventarios = 50000;
+        private const int MetaCompras = 5000;
+        private const int MetaVentas = 2000;
+        private const int MetaPagos = 2000;
+        private const int MetaMovimientosInventario = 13000;
 
         public static async Task GenerarDatos(AppDbContext context)
         {
             var faker = new Faker("es");
 
-            await GenerarEmpleados(context, faker);
+            var sucursalIds = await context.Sucursales.AsNoTracking().Select(s => s.Id).ToListAsync();
+            int sucursalIdPredeterminada = sucursalIds.Count > 0 ? sucursalIds[0] : 0;
+
+            await GenerarEmpleados(context, faker, sucursalIdPredeterminada);
             await GenerarDuenos(context, faker);
             await GenerarMascotas(context, faker);
-            await GenerarConsultas(context, faker);
+            await GenerarConsultas(context, faker, sucursalIdPredeterminada);
             await GenerarTratamientos(context, faker);
             await GenerarAnimalesAdopcion(context, faker);
             await GenerarSolicitudesAdopcion(context, faker);
             await GenerarProductos(context, faker);
-            await GenerarInventarios(context, faker);
+            await GenerarInventarios(context, faker, sucursalIdPredeterminada);
+            await GenerarCompras(context, faker, sucursalIdPredeterminada);
+            await GenerarVentas(context, faker, sucursalIdPredeterminada);
+            await GenerarPagos(context, faker);
+            await GenerarMovimientosInventario(context, faker, sucursalIdPredeterminada);
         }
 
         // ── 1. 2.000 Empleados ────────────────────────────────────────────────
-        private static async Task GenerarEmpleados(AppDbContext context, Faker faker)
+        private static async Task GenerarEmpleados(AppDbContext context, Faker faker, int sucursalId)
         {
             int actual = await context.Empleados.CountAsync();
             if (actual >= MetaEmpleados) return;
@@ -198,6 +213,7 @@ namespace HuellitasFelices.Services
                     Cargo = cargo,
                     Telefono = faker.Phone.PhoneNumber("09########"),
                     Salario = salario,
+                    SucursalId = sucursalId,
                     Activo = true,
                     FechaCreacion = DateTime.UtcNow.AddDays(-faker.Random.Number(30, 1200)),
                     FechaActualizacion = DateTime.UtcNow
@@ -344,7 +360,7 @@ namespace HuellitasFelices.Services
         }
 
         // ── 4. 300.000 Consultas ─────────────────────────────────────────────
-        private static async Task GenerarConsultas(AppDbContext context, Faker faker)
+        private static async Task GenerarConsultas(AppDbContext context, Faker faker, int sucursalId)
         {
             int actual = await context.Consultas.CountAsync();
             if (actual >= MetaConsultas) return;
@@ -369,6 +385,7 @@ namespace HuellitasFelices.Services
                     Costo = costo,
                     FechaConsulta = fecha,
                     MascotaId = faker.Random.ListItem(mascotaIds),
+                    SucursalId = sucursalId,
                     Activo = faker.Random.Number(100) > 2,
                     FechaCreacion = fecha,
                     FechaActualizacion = DateTime.UtcNow
@@ -699,7 +716,7 @@ namespace HuellitasFelices.Services
         }
 
         // ── 10. 50.000 Inventarios ────────────────────────────────────────────
-        private static async Task GenerarInventarios(AppDbContext context, Faker faker)
+        private static async Task GenerarInventarios(AppDbContext context, Faker faker, int sucursalId)
         {
             int actual = await context.Inventarios.CountAsync();
             if (actual >= MetaInventarios) return;
@@ -707,7 +724,8 @@ namespace HuellitasFelices.Services
             var productoIds = await context.Productos.AsNoTracking().Select(p => p.Id).ToListAsync();
             if (productoIds.Count == 0) return;
 
-            var inventarioExistente = await context.Inventarios.AsNoTracking().Select(i => i.ProductoId).ToHashSetAsync();
+            var inventarioExistente = await context.Inventarios.AsNoTracking()
+                .Select(i => new { i.ProductoId, i.SucursalId }).ToHashSetAsync();
 
             var lote = new List<Inventario>();
             int generados = 0;
@@ -715,16 +733,17 @@ namespace HuellitasFelices.Services
             foreach (var productoId in productoIds)
             {
                 if (generados >= MetaInventarios - actual) break;
-                if (inventarioExistente.Contains(productoId)) continue;
+                if (inventarioExistente.Contains(new { ProductoId = productoId, SucursalId = sucursalId })) continue;
 
                 lote.Add(new Inventario
                 {
                     ProductoId = productoId,
+                    SucursalId = sucursalId,
                     StockActual = faker.Random.Number(0, 200),
                     FechaActualizacion = DateTime.UtcNow
                 });
 
-                inventarioExistente.Add(productoId);
+                inventarioExistente.Add(new { ProductoId = productoId, SucursalId = sucursalId });
                 generados++;
 
                 if (lote.Count == 1000)
@@ -739,6 +758,293 @@ namespace HuellitasFelices.Services
             if (lote.Count > 0)
             {
                 context.Inventarios.AddRange(lote);
+                await context.SaveChangesAsync();
+                context.ChangeTracker.Clear();
+            }
+        }
+
+        // ── 11. 5.000 Compras ────────────────────────────────────────────────
+        private static async Task GenerarCompras(AppDbContext context, Faker faker, int sucursalId)
+        {
+            int actual = await context.Compras.CountAsync();
+            if (actual >= MetaCompras) return;
+
+            var proveedorIds = await context.Proveedores.AsNoTracking().Select(p => p.Id).ToListAsync();
+            if (proveedorIds.Count == 0) return;
+
+            var productoIds = await context.Productos.AsNoTracking().Select(p => p.Id).ToListAsync();
+            if (productoIds.Count == 0) return;
+
+            var lote = new List<Compra>();
+            var detalleLote = new List<DetalleCompra>();
+            int faltantes = MetaCompras - actual;
+            string[] estados = { "Pendiente", "Recibida", "Cancelada" };
+            int contador = 0;
+
+            for (int i = 1; i <= faltantes; i++)
+            {
+                contador++;
+                var numDetalles = faker.Random.Number(1, 5);
+                var subtotalCompra = 0m;
+
+                var compra = new Compra
+                {
+                    NumeroCompra = $"CMP-{DateTime.UtcNow.Year}-{contador:D6}",
+                    Estado = faker.Random.ListItem(estados),
+                    FechaCompra = DateTime.UtcNow.AddDays(-faker.Random.Number(1, 730)),
+                    Observacion = faker.Commerce.ProductAdjective(),
+                    ProveedorId = faker.Random.ListItem(proveedorIds),
+                    SucursalId = sucursalId,
+                    Activo = true,
+                    FechaCreacion = DateTime.UtcNow.AddDays(-faker.Random.Number(1, 730)),
+                    FechaActualizacion = DateTime.UtcNow
+                };
+
+                for (int j = 0; j < numDetalles; j++)
+                {
+                    var cantidad = faker.Random.Number(5, 100);
+                    var precio = Math.Round(faker.Random.Decimal(2m, 80m), 2);
+                    subtotalCompra += cantidad * precio;
+
+                    detalleLote.Add(new DetalleCompra
+                    {
+                        Cantidad = cantidad,
+                        PrecioUnitario = precio,
+                        ProductoId = faker.Random.ListItem(productoIds),
+                        Compra = compra
+                    });
+                }
+
+                compra.Total = Math.Round(subtotalCompra, 2);
+                lote.Add(compra);
+
+                if (lote.Count == 500)
+                {
+                    context.Compras.AddRange(lote);
+                    context.DetallesCompra.AddRange(detalleLote);
+                    await context.SaveChangesAsync();
+                    context.ChangeTracker.Clear();
+                    lote.Clear();
+                    detalleLote.Clear();
+                }
+            }
+
+            if (lote.Count > 0)
+            {
+                context.Compras.AddRange(lote);
+                context.DetallesCompra.AddRange(detalleLote);
+                await context.SaveChangesAsync();
+                context.ChangeTracker.Clear();
+            }
+        }
+
+        // ── 12. 2.000 Ventas ───────────────────────────────────────────────
+        private static async Task GenerarVentas(AppDbContext context, Faker faker, int sucursalId)
+        {
+            int actual = await context.Ventas.CountAsync();
+            if (actual >= MetaVentas) return;
+
+            var consultaIds = await context.Consultas.AsNoTracking()
+                .Where(c => c.Activo).Select(c => c.Id).ToListAsync();
+            var duenoIds = await context.Duenos.AsNoTracking()
+                .Where(d => d.Activo).Select(d => d.Id).ToListAsync();
+            var productoIds = await context.Productos.AsNoTracking()
+                .Where(p => p.Activo).Select(p => p.Id).ToListAsync();
+
+            if (consultaIds.Count == 0 || duenoIds.Count == 0) return;
+
+            var lote = new List<Venta>();
+            var detalleLote = new List<DetalleVenta>();
+            int faltantes = MetaVentas - actual;
+            string[] estados = { "Pendiente", "Pagada", "Anulada" };
+            int contador = 0;
+
+            // Shuffle consultation IDs to assign unique ones (ConsultaId has UNIQUE constraint)
+            var shuffledConsultas = consultaIds.OrderBy(_ => Guid.NewGuid()).ToList();
+            int consultaIndex = 0;
+
+            for (int i = 1; i <= faltantes; i++)
+            {
+                contador++;
+                var totalConsulta = Math.Round((decimal)(faker.Random.Double() * 90 + 10), 2);
+                var numDetalles = faker.Random.Number(1, 4);
+                var totalMedicamentos = 0m;
+
+                int? assignedConsultaId = null;
+                if (consultaIndex < shuffledConsultas.Count)
+                {
+                    assignedConsultaId = shuffledConsultas[consultaIndex];
+                    consultaIndex++;
+                }
+
+                var venta = new Venta
+                {
+                    NumeroVenta = $"VTA-{DateTime.UtcNow.Year}-{contador:D6}",
+                    TotalConsulta = totalConsulta,
+                    TotalMedicamentos = 0,
+                    Estado = faker.Random.ListItem(estados),
+                    MetodoPago = faker.Random.ListItem(new[] { "PayPal", "PayPhone", "Efectivo" }),
+                    FechaVenta = DateTime.UtcNow.AddDays(-faker.Random.Number(1, 365)),
+                    DuenoId = faker.Random.ListItem(duenoIds),
+                    SucursalId = sucursalId,
+                    ConsultaId = assignedConsultaId,
+                    Activo = true
+                };
+
+                if (productoIds.Count > 0)
+                {
+                    for (int j = 0; j < numDetalles; j++)
+                    {
+                        var cantidad = faker.Random.Number(1, 10);
+                        var precio = Math.Round(faker.Random.Decimal(3m, 60m), 2);
+                        totalMedicamentos += cantidad * precio;
+
+                        detalleLote.Add(new DetalleVenta
+                        {
+                            Cantidad = cantidad,
+                            PrecioUnitario = precio,
+                            ProductoId = faker.Random.ListItem(productoIds),
+                            Venta = venta
+                        });
+                    }
+                }
+
+                venta.TotalMedicamentos = Math.Round(totalMedicamentos, 2);
+                lote.Add(venta);
+
+                if (lote.Count == 500)
+                {
+                    context.Ventas.AddRange(lote);
+                    context.DetallesVenta.AddRange(detalleLote);
+                    await context.SaveChangesAsync();
+                    context.ChangeTracker.Clear();
+                    lote.Clear();
+                    detalleLote.Clear();
+                }
+            }
+
+            if (lote.Count > 0)
+            {
+                context.Ventas.AddRange(lote);
+                context.DetallesVenta.AddRange(detalleLote);
+                await context.SaveChangesAsync();
+                context.ChangeTracker.Clear();
+            }
+        }
+
+        // ── 13. 2.000 Pagos ────────────────────────────────────────────────
+        private static async Task GenerarPagos(AppDbContext context, Faker faker)
+        {
+            int actual = await context.Pagos.CountAsync();
+            if (actual >= MetaPagos) return;
+
+            var ventaIds = await context.Ventas.AsNoTracking()
+                .Where(v => v.Activo).Select(v => v.Id).ToListAsync();
+            var duenoIds = await context.Duenos.AsNoTracking()
+                .Where(d => d.Activo).Select(d => d.Id).ToListAsync();
+
+            if (ventaIds.Count == 0 || duenoIds.Count == 0) return;
+
+            var lote = new List<Pago>();
+            int faltantes = MetaPagos - actual;
+            string[] estados = { "Pendiente", "Aprobado", "Cancelado", "Fallido" };
+            string[] proveedores = { "PayPal", "PayPhone" };
+            int contador = 0;
+
+            for (int i = 1; i <= faltantes; i++)
+            {
+                contador++;
+                var estado = faker.Random.ListItem(estados);
+                var fechaCreacion = DateTime.UtcNow.AddDays(-faker.Random.Number(1, 365));
+
+                lote.Add(new Pago
+                {
+                    NumeroPago = $"PAG-{DateTime.UtcNow.Year}-{contador:D6}",
+                    Monto = Math.Round(faker.Random.Decimal(10m, 200m), 2),
+                    Moneda = "USD",
+                    MetodoPago = faker.Random.ListItem(new[] { "PayPal", "PayPhone", "Efectivo" }),
+                    Estado = estado,
+                    ProveedorPago = faker.Random.ListItem(proveedores),
+                    IdentificadorExterno = $"EXT-{faker.Random.Number(100000, 999999)}",
+                    FechaConfirmacion = estado == "Aprobado" ? fechaCreacion.AddMinutes(faker.Random.Number(1, 30)) : (DateTime?)null,
+                    IntentosVerificacion = estado == "Aprobado" ? 1 : faker.Random.Number(0, 3),
+                    MensajeRespuesta = estado == "Aprobado" ? "Transaction approved" : "Processing",
+                    FechaPago = fechaCreacion,
+                    VentaId = faker.Random.ListItem(ventaIds),
+                    DuenoId = faker.Random.ListItem(duenoIds),
+                    ConsultaId = (int?)null,
+                    Activo = true,
+                    FechaCreacion = fechaCreacion,
+                    FechaActualizacion = DateTime.UtcNow
+                });
+
+                if (lote.Count == 500)
+                {
+                    context.Pagos.AddRange(lote);
+                    await context.SaveChangesAsync();
+                    context.ChangeTracker.Clear();
+                    lote.Clear();
+                }
+            }
+
+            if (lote.Count > 0)
+            {
+                context.Pagos.AddRange(lote);
+                await context.SaveChangesAsync();
+                context.ChangeTracker.Clear();
+            }
+        }
+
+        // ── 14. 13.000 Movimientos de Inventario ────────────────────────────
+        private static async Task GenerarMovimientosInventario(AppDbContext context, Faker faker, int sucursalId)
+        {
+            int actual = await context.MovimientosInventario.CountAsync();
+            if (actual >= MetaMovimientosInventario) return;
+
+            var productoIds = await context.Productos.AsNoTracking().Select(p => p.Id).ToListAsync();
+            if (productoIds.Count == 0) return;
+
+            var lote = new List<MovimientoInventario>();
+            int faltantes = MetaMovimientosInventario - actual;
+            string[] tipos = { "Compra", "Venta", "Ajuste", "Devolucion", "Reserva", "Revertido", "Transferencia" };
+
+            for (int i = 1; i <= faltantes; i++)
+            {
+                var tipo = faker.Random.ListItem(tipos);
+                var cantidad = faker.Random.Number(1, 50);
+                var stockAnterior = faker.Random.Number(10, 200);
+                var stockPosterior = tipo switch
+                {
+                    "Compra" or "Devolucion" => stockAnterior + cantidad,
+                    "Venta" or "Reserva" or "Transferencia" => Math.Max(0, stockAnterior - cantidad),
+                    _ => stockAnterior + faker.Random.Number(-10, 10)
+                };
+
+                lote.Add(new MovimientoInventario
+                {
+                    TipoMovimiento = tipo,
+                    Cantidad = cantidad,
+                    StockAnterior = stockAnterior,
+                    StockPosterior = stockPosterior,
+                    Referencia = $"{tipo}-{faker.Random.Number(1000, 9999)}",
+                    FechaMovimiento = DateTime.UtcNow.AddDays(-faker.Random.Number(1, 365)),
+                    ProductoId = faker.Random.ListItem(productoIds),
+                    SucursalId = sucursalId,
+                    Observacion = $"Movimiento de tipo {tipo} generado automáticamente"
+                });
+
+                if (lote.Count == 1000)
+                {
+                    context.MovimientosInventario.AddRange(lote);
+                    await context.SaveChangesAsync();
+                    context.ChangeTracker.Clear();
+                    lote.Clear();
+                }
+            }
+
+            if (lote.Count > 0)
+            {
+                context.MovimientosInventario.AddRange(lote);
                 await context.SaveChangesAsync();
                 context.ChangeTracker.Clear();
             }

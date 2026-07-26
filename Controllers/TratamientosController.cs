@@ -4,18 +4,21 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador,Doctor")]
-    public class TratamientosController : Controller
+[Authorize(Roles = "Administrador,Doctor,Operador")]
+public class TratamientosController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IAuditService _auditService;
         private const int TamanioPagina = 20;
 
-        public TratamientosController(AppDbContext context)
+        public TratamientosController(AppDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Tratamientos
@@ -30,8 +33,7 @@ namespace HuellitasFelices.Controllers
 
             if (!string.IsNullOrEmpty(busqueda))
             {
-                var busquedaLower = busqueda.ToLower();
-                consulta = consulta.Where(t => t.Nombre.ToLower().Contains(busquedaLower) || (t.Medicamento != null && t.Medicamento.ToLower().Contains(busquedaLower)));
+                consulta = consulta.Where(t => EF.Functions.ILike(t.Nombre, $"%{busqueda}%") || (t.Medicamento != null && EF.Functions.ILike(t.Medicamento, $"%{busqueda}%")));
             }
 
             var totalRegistros = await consulta.CountAsync();
@@ -164,9 +166,15 @@ namespace HuellitasFelices.Controllers
             {
                 tratamiento.Activo = false;
                 tratamiento.FechaEliminacion = DateTime.UtcNow;
+                tratamiento.EliminadoPor = User.Identity?.Name;
                 tratamiento.FechaActualizacion = DateTime.UtcNow;
                 _context.Update(tratamiento);
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("EliminacionLogica", "Tratamiento", tratamiento.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorAnterior: "Registro activo",
+                    valorNuevo: "Registro eliminado lógicamente");
             }
             return RedirectToAction(nameof(Index));
         }

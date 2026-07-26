@@ -13,12 +13,14 @@ namespace HuellitasFelices.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly IAuditService _auditService;
         private const int TamanioPagina = 20;
 
-        public SolicitudesAdopcionController(AppDbContext context, IEmailService emailService)
+        public SolicitudesAdopcionController(AppDbContext context, IEmailService emailService, IAuditService auditService)
         {
             _context = context;
             _emailService = emailService;
+            _auditService = auditService;
         }
 
         // GET: SolicitudesAdopcion
@@ -32,7 +34,7 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(busqueda))
-                consulta = consulta.Where(s => s.NombreSolicitante.Contains(busqueda) || s.Estado.Contains(busqueda));
+                consulta = consulta.Where(s => EF.Functions.ILike(s.NombreSolicitante, $"%{busqueda}%") || EF.Functions.ILike(s.Estado, $"%{busqueda}%"));
 
             var totalRegistros = await consulta.CountAsync();
             var solicitudes = await consulta
@@ -307,7 +309,13 @@ namespace HuellitasFelices.Controllers
             {
                 solicitudAdopcion.Activo = false;
                 solicitudAdopcion.FechaEliminacion = DateTime.UtcNow;
+                solicitudAdopcion.EliminadoPor = User.Identity?.Name;
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("EliminacionLogica", "SolicitudAdopcion", solicitudAdopcion.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorAnterior: "Registro activo",
+                    valorNuevo: "Registro eliminado lógicamente");
             }
             return RedirectToAction(nameof(Index));
         }

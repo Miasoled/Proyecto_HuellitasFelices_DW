@@ -13,13 +13,15 @@ public class IAController : Controller
     private readonly IContextProviderService _contextProvider;
     private readonly AiSettings _aiSettings;
     private readonly ILogger<IAController> _logger;
+    private readonly IAuditService _auditService;
 
-    public IAController(IAIService ai, IContextProviderService contextProvider, IOptions<AiSettings> aiSettings, ILogger<IAController> logger)
+    public IAController(IAIService ai, IContextProviderService contextProvider, IOptions<AiSettings> aiSettings, ILogger<IAController> logger, IAuditService auditService)
     {
         _ai = ai;
         _contextProvider = contextProvider;
         _aiSettings = aiSettings.Value;
         _logger = logger;
+        _auditService = auditService;
     }
 
     [HttpGet]
@@ -61,6 +63,11 @@ Respuesta:";
             {
                 return Ok(new { respuesta = "No pude generar una respuesta. Verifique que Ollama este corriendo." });
             }
+
+            await _auditService.LogAsync("EjecucionIA", "IA", null,
+                usuarioEmail: User.Identity?.Name,
+                direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                valorNuevo: $"Prompt: {peticion.Prompt.Substring(0, Math.Min(peticion.Prompt.Length, 200))}");
 
             return Ok(new { respuesta, contexto });
         }

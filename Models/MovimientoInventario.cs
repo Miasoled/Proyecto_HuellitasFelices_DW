@@ -36,5 +36,13 @@ namespace HuellitasFelices.Models
         [Display(Name = "Compra")]
         public int? CompraId { get; set; }
         public Compra? Compra { get; set; }
+
+        [Display(Name = "Sucursal")]
+        public int? SucursalId { get; set; }
+        public Sucursal? Sucursal { get; set; }
+
+        [Display(Name = "Sucursal destino")]
+        public int? SucursalDestinoId { get; set; }
+        public Sucursal? SucursalDestino { get; set; }
     }
 }

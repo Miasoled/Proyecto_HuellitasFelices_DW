@@ -22,7 +22,12 @@ namespace HuellitasFelices.Models
         public string? Observacion { get; set; }
         
         public bool Activo { get; set; } = true;
-        
+
+        public DateTime? FechaEliminacion { get; set; }
+
+        [StringLength(100)]
+        public string? EliminadoPor { get; set; }
+
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
         public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
         
@@ -30,6 +35,10 @@ namespace HuellitasFelices.Models
         [Display(Name = "Proveedor")]
         public int ProveedorId { get; set; }
         public Proveedor? Proveedor { get; set; }
+
+        [Display(Name = "Sucursal")]
+        public int? SucursalId { get; set; }
+        public Sucursal? Sucursal { get; set; }
         
         // Navegación
         public ICollection<DetalleCompra> Detalles { get; set; } = new List<DetalleCompra>();

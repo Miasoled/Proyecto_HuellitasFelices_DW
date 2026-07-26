@@ -1,0 +1,48 @@
+<svg width="720" height="720" viewBox="0 0 720 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Perro y gato de Huellitas Felices</title>
+  <desc id="desc">Ilustración de un perro y un gato sentados juntos</desc>
+  <defs>
+    <linearGradient id="background" x1="52" y1="38" x2="679" y2="693" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D2F1FA"/>
+      <stop offset="1" stop-color="#8FDDF0"/>
+    </linearGradient>
+    <linearGradient id="dog" x1="228" y1="245" x2="408" y2="556" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF9FD"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="720" rx="44" fill="url(#background)"/>
+  <circle cx="108" cy="118" r="64" fill="white" fill-opacity=".28"/>
+  <circle cx="626" cy="590" r="90" fill="#0074B7" fill-opacity=".12"/>
+  <path d="M117 472c18-38 77-38 95 0 18-38 77-38 95 0-1 47-43 79-95 111-52-32-94-64-95-111Z" fill="#00BCE1" fill-opacity=".22"/>
+  <g fill="#0074B7" fill-opacity=".22">
+    <ellipse cx="584" cy="152" rx="16" ry="24" transform="rotate(27 584 152)"/>
+    <ellipse cx="622" cy="130" rx="16" ry="24" transform="rotate(52 622 130)"/>
+    <ellipse cx="649" cy="168" rx="16" ry="24" transform="rotate(77 649 168)"/>
+    <path d="M585 190c9-35 55-32 60 3 4 25-20 41-39 35-16-5-25-20-21-38Z"/>
+  </g>
+  <ellipse cx="365" cy="596" rx="224" ry="34" fill="#0A0A64" fill-opacity=".12"/>
+  <path d="M434 304c40-41 100-22 113 25 10 35-7 91-50 119l-38-44-25-100Z" fill="#0A0A64"/>
+  <path d="M451 342c29-34 68-21 74 13 5 26-11 53-37 68l-37-81Z" fill="#0074B7"/>
+  <path d="M263 310c-23-27-65-15-79 19-12 30-1 86 30 117l39-39 10-97Z" fill="#0A0A64"/>
+  <path d="M243 345c-19-25-48-16-52 12-3 22 10 46 31 59l21-71Z" fill="#0074B7"/>
+  <path d="M221 398c0-101 61-166 143-166 94 0 148 68 148 174v180H221V398Z" fill="url(#dog)"/>
+  <path d="M272 304c23-43 57-62 95-62 41 0 79 20 103 62-29-13-58-19-98-19-39 0-70 6-100 19Z" fill="#F6FDFF"/>
+  <ellipse cx="306" cy="378" rx="10" ry="13" fill="#0A0A64"/>
+  <ellipse cx="427" cy="378" rx="10" ry="13" fill="#0A0A64"/>
+  <path d="M351 404c8-8 19-8 27 0-5 10-10 14-14 14-5 0-10-4-13-14Z" fill="#00BCE1"/>
+  <path d="M364 419c-2 19-14 29-30 29M364 419c2 19 14 29 30 29" stroke="#0A0A64" stroke-width="6" stroke-linecap="round"/>
+  <path d="M286 355c12-13 27-15 41-6M408 349c14-9 29-7 41 6" stroke="#0A0A64" stroke-width="8" stroke-linecap="round"/>
+  <path d="M344 489c13 11 27 11 40 0" stroke="#00BCE1" stroke-width="8" stroke-linecap="round"/>
+  <path d="M451 457c58-3 91 33 91 77 0 40-23 60-58 60-28 0-50-19-58-41" stroke="#C2F1FC" stroke-width="27" stroke-linecap="round"/>
+  <path d="M389 480c-3-98 36-153 94-153 66 0 107 45 107 124v135H381l8-106Z" fill="#0A0A64"/>
+  <path d="M414 354l11-73 58 48 57-48 12 76" fill="#0A0A64"/>
+  <path d="M425 294l58 35-58 25V294ZM540 294l-57 35 57 25V294Z" fill="#0074B7"/>
+  <ellipse cx="450" cy="408" rx="8" ry="11" fill="white"/>
+  <ellipse cx="516" cy="408" rx="8" ry="11" fill="white"/>
+  <path d="M474 428c7-7 16-7 23 0-5 8-9 11-12 11-4 0-8-3-11-11Z" fill="#00BCE1"/>
+  <path d="M485 440v19M485 459c-10 10-22 11-31 4M485 459c10 10 22 11 31 4" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M428 468l-67-16M430 482l-70 4M541 468l67-16M540 482l70 4" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M408 520c20 20 44 30 76 30s59-10 83-30" stroke="#0074B7" stroke-width="8" stroke-linecap="round"/>
+  <rect x="220" y="613" width="280" height="36" rx="18" fill="#0074B7" fill-opacity=".14"/>
+</svg>

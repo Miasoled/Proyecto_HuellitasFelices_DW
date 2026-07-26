@@ -6,8 +6,8 @@ using HuellitasFelices.Models;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador")]
-    public class ProveedoresController : Controller
+[Authorize(Roles = "Administrador,Supervisor")]
+public class ProveedoresController : Controller
     {
         private readonly AppDbContext _context;
         private const int TamanioPagina = 20;
@@ -28,7 +28,7 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(busqueda))
-                query = query.Where(p => p.Nombre.Contains(busqueda) || p.RUC.Contains(busqueda));
+                query = query.Where(p => EF.Functions.ILike(p.Nombre, $"%{busqueda}%") || (p.RUC != null && EF.Functions.ILike(p.RUC, $"%{busqueda}%")));
 
             var totalRegistros = await query.CountAsync();
             var proveedores = await query

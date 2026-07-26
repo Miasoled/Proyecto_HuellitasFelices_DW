@@ -5,7 +5,7 @@
     var relacionados = ViewBag.ProductosRelacionados as List<HuellitasFelices.Models.Producto> ?? new();
     var disponible = stock > 0;
     var catColor = Model.Categoria?.Nombre?.ToLower() switch {
-        "alimento" => "#16a34a",
+        "alimento" => "#00BCE1",
         "medicamento" => "#2563eb",
         "accesorio" => "#d97706",
         "higiene" => "#7c3aed",

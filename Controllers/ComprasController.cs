@@ -4,18 +4,23 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = "Administrador,Supervisor,Operador")]
     public class ComprasController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IInventoryService _inventoryService;
+        private readonly IAuditService _auditService;
         private const int TamanioPagina = 20;
 
-        public ComprasController(AppDbContext context)
+        public ComprasController(AppDbContext context, IInventoryService inventoryService, IAuditService auditService)
         {
             _context = context;
+            _inventoryService = inventoryService;
+            _auditService = auditService;
         }
 
         // GET: Compras
@@ -29,7 +34,7 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(busqueda))
-                query = query.Where(c => c.NumeroCompra.Contains(busqueda) || (c.Observacion != null && c.Observacion.Contains(busqueda)));
+                query = query.Where(c => EF.Functions.ILike(c.NumeroCompra, $"%{busqueda}%") || (c.Observacion != null && EF.Functions.ILike(c.Observacion, $"%{busqueda}%")));
 
             if (!string.IsNullOrEmpty(estado))
                 query = query.Where(c => c.Estado == estado);
@@ -80,24 +85,58 @@ namespace HuellitasFelices.Controllers
         public async Task<IActionResult> Create()
         {
             ViewBag.ProveedorId = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "Nombre");
+            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre");
             return View();
         }
 
         // POST: Compras/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("NumeroCompra,Total,Estado,FechaCompra,Observacion,ProveedorId")] Compra compra)
+        public async Task<IActionResult> Create([Bind("NumeroCompra,Total,Estado,FechaCompra,Observacion,ProveedorId,SucursalId")] Compra compra)
         {
             if (ModelState.IsValid)
             {
-                compra.Activo = true;
-                compra.FechaCreacion = DateTime.UtcNow;
-                compra.FechaActualizacion = DateTime.UtcNow;
-                _context.Compras.Add(compra);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    compra.Activo = true;
+                    compra.FechaCreacion = DateTime.UtcNow;
+                    compra.FechaActualizacion = DateTime.UtcNow;
+                    _context.Compras.Add(compra);
+                    await _context.SaveChangesAsync();
+
+                    if (compra.Estado == "Recibida")
+                    {
+                        var detalles = await _context.DetallesCompra
+                            .Where(d => d.CompraId == compra.Id)
+                            .ToListAsync();
+
+                        foreach (var detalle in detalles)
+                        {
+                            await _inventoryService.RegistrarCompraAsync(
+                                compra.Id, detalle.ProductoId, detalle.Cantidad,
+                                User.Identity?.Name, compra.SucursalId);
+                        }
+                    }
+
+                    await transaction.CommitAsync();
+
+                    await _auditService.LogAsync("Creacion", "Compra", compra.Id,
+                        usuarioEmail: User.Identity?.Name,
+                        direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        valorNuevo: $"Compra {compra.NumeroCompra} creada. Total: {compra.Total}");
+
+                    TempData["Mensaje"] = "Compra registrada correctamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
             ViewBag.ProveedorId = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "Nombre", compra.ProveedorId);
+            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", compra.SucursalId);
             return View(compra);
         }
 
@@ -108,13 +147,14 @@ namespace HuellitasFelices.Controllers
             var compra = await _context.Compras.FindAsync(id);
             if (compra == null || !compra.Activo) return NotFound();
             ViewBag.ProveedorId = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "Nombre", compra.ProveedorId);
+            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", compra.SucursalId);
             return View(compra);
         }
 
         // POST: Compras/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,NumeroCompra,Total,Estado,FechaCompra,Observacion,ProveedorId")] Compra compra)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,NumeroCompra,Total,Estado,FechaCompra,Observacion,ProveedorId,SucursalId")] Compra compra)
         {
             if (id != compra.Id) return NotFound();
             if (ModelState.IsValid)
@@ -132,6 +172,7 @@ namespace HuellitasFelices.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewBag.ProveedorId = new SelectList(await _context.Proveedores.Where(p => p.Activo).ToListAsync(), "Id", "Nombre", compra.ProveedorId);
+            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", compra.SucursalId);
             return View(compra);
         }
 
@@ -155,8 +196,18 @@ namespace HuellitasFelices.Controllers
             if (compra != null)
             {
                 compra.Activo = false;
+                compra.FechaEliminacion = DateTime.UtcNow;
+                compra.EliminadoPor = User.Identity?.Name;
                 compra.FechaActualizacion = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
+
+                await _auditService.LogAsync("EliminacionLogica", "Compra", compra.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorAnterior: $"Compra {compra.NumeroCompra} activa",
+                    valorNuevo: $"Compra {compra.NumeroCompra} eliminada lógicamente");
+
+                TempData["Mensaje"] = "Compra eliminada correctamente.";
             }
             return RedirectToAction(nameof(Index));
         }

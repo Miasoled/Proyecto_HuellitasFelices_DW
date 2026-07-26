@@ -18,5 +18,9 @@ namespace HuellitasFelices.Models
         [Display(Name = "Producto")]
         public int ProductoId { get; set; }
         public Producto? Producto { get; set; }
+
+        [Display(Name = "Sucursal")]
+        public int SucursalId { get; set; }
+        public Sucursal? Sucursal { get; set; }
     }
 }

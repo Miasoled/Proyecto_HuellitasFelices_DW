@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador")]
-    public class ReportesController : Controller
+[Authorize(Roles = "Administrador,Supervisor,Auditor")]
+public class ReportesController : Controller
     {
         private readonly AppDbContext _context;
 
@@ -249,8 +249,8 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(busqueda))
-                query = query.Where(p => p.NumeroPago.Contains(busqueda) ||
-                    (p.Dueno != null && p.Dueno.Nombre.Contains(busqueda)));
+                query = query.Where(p => EF.Functions.ILike(p.NumeroPago, $"%{busqueda}%") ||
+                    (p.Dueno != null && EF.Functions.ILike(p.Dueno.Nombre, $"%{busqueda}%")));
 
             if (!string.IsNullOrWhiteSpace(estado))
                 query = query.Where(p => p.Estado == estado);
@@ -295,6 +295,157 @@ namespace HuellitasFelices.Controllers
             ViewBag.Resumen = resumen;
 
             return View(pagos);
+        }
+
+        // ── Reportes adicionales para el tercer parcial ──────────────────
+
+        public async Task<IActionResult> ReporteVentas(DateTime? desde, DateTime? hasta, string? sucursal)
+        {
+            var d = desde ?? DateTime.UtcNow.AddMonths(-6);
+            var h = hasta ?? DateTime.UtcNow;
+
+            var query = _context.Ventas
+                .AsNoTracking()
+                .Include(v => v.Dueno)
+                .Include(v => v.Sucursal)
+                .Where(v => v.Activo && v.FechaVenta >= d && v.FechaVenta <= h)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(sucursal))
+                query = query.Where(v => v.Sucursal != null && v.Sucursal.Nombre == sucursal);
+
+            var ventas = await query.OrderByDescending(v => v.FechaVenta).ToListAsync();
+
+            ViewBag.Desde = d.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = h.ToString("yyyy-MM-dd");
+            ViewBag.TotalVentas = ventas.Count;
+            ViewBag.MontoTotal = ventas.Sum(v => v.Total);
+            ViewBag.Sucursales = await _context.Sucursales.Where(s => s.Activo).Select(s => s.Nombre).ToListAsync();
+            ViewBag.SucursalSeleccionada = sucursal;
+
+            return View(ventas);
+        }
+
+        public async Task<IActionResult> ReporteProductosMasVendidos()
+        {
+            var productos = await _context.DetallesVenta
+                .AsNoTracking()
+                .Include(dv => dv.Producto).ThenInclude(p => p!.Categoria)
+                .Where(dv => dv.Venta != null && dv.Venta.Activo)
+                .GroupBy(dv => new { dv.ProductoId, dv.Producto!.Nombre, Categoria = dv.Producto.Categoria!.Nombre })
+                .Select(g => new
+                {
+                    ProductoId = g.Key.ProductoId,
+                    Nombre = g.Key.Nombre,
+                    Categoria = g.Key.Categoria,
+                    TotalVendido = g.Sum(dv => dv.Cantidad),
+                    IngresosTotales = g.Sum(dv => dv.Cantidad * dv.PrecioUnitario)
+                })
+                .OrderByDescending(x => x.TotalVendido)
+                .Take(50)
+                .ToListAsync();
+
+            ViewBag.Total = productos.Count;
+            return View(productos);
+        }
+
+        public async Task<IActionResult> ReporteBajoInventario()
+        {
+            var productos = await _context.Productos
+                .AsNoTracking()
+                .Include(p => p.Categoria)
+                .Include(p => p.Inventarios)
+                .Where(p => p.Activo)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Nombre,
+                    Categoria = p.Categoria!.Nombre,
+                    StockMinimo = p.StockMinimo,
+                    StockActual = p.Inventarios.Sum(i => i.StockActual),
+                    p.PrecioVenta
+                })
+                .Where(x => x.StockActual <= x.StockMinimo)
+                .OrderBy(x => x.StockActual)
+                .ToListAsync();
+
+            ViewBag.Total = productos.Count;
+            return View(productos);
+        }
+
+        public async Task<IActionResult> ReporteClientesCompras()
+        {
+            var clientes = await _context.Duenos
+                .AsNoTracking()
+                .Where(d => d.Activo)
+                .Select(d => new
+                {
+                    d.Nombre,
+                    d.Email,
+                    TotalConsultas = d.Mascotas.SelectMany(m => m.Consultas).Count(c => c.Activo),
+                    TotalMascotas = d.Mascotas.Count(m => m.Activo),
+                    MontoTotal = d.Mascotas.SelectMany(m => m.Consultas).Where(c => c.Activo).Sum(c => c.Costo)
+                })
+                .Where(x => x.TotalConsultas > 0)
+                .OrderByDescending(x => x.MontoTotal)
+                .Take(50)
+                .ToListAsync();
+
+            ViewBag.Total = clientes.Count;
+            return View(clientes);
+        }
+
+        public async Task<IActionResult> ReporteMFA()
+        {
+            if (!User.Identity?.IsAuthenticated ?? true) return Forbid();
+
+            var userManager = HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<Microsoft.AspNetCore.Identity.IdentityUser>>();
+            var users = await userManager.Users.ToListAsync();
+
+            var resultado = new List<object>();
+            int conMFA = 0;
+            foreach (var user in users)
+            {
+                var mfaEnabled = await userManager.GetTwoFactorEnabledAsync(user);
+                var roles = await userManager.GetRolesAsync(user);
+                if (mfaEnabled) conMFA++;
+                resultado.Add(new
+                {
+                    user.Email,
+                    MFAHabilitado = mfaEnabled,
+                    Rol = roles.FirstOrDefault() ?? "Sin rol"
+                });
+            }
+
+            ViewBag.Total = resultado.Count;
+            ViewBag.ConMFA = conMFA;
+            ViewBag.SinMFA = resultado.Count - conMFA;
+
+            return View(resultado);
+        }
+
+        public async Task<IActionResult> ReporteAccesosFallidos(DateTime? desde, DateTime? hasta)
+        {
+            var d = desde ?? DateTime.UtcNow.AddMonths(-1);
+            var h = hasta ?? DateTime.UtcNow;
+
+            var query = _context.AuditLogs
+                .AsNoTracking()
+                .Where(a => a.Accion == "LoginFallido" || a.Accion == "CuentaBloqueada")
+                .Where(a => a.FechaCreacion >= d && a.FechaCreacion <= h)
+                .AsQueryable();
+
+            var total = await query.CountAsync();
+            var logs = await query
+                .OrderByDescending(a => a.FechaCreacion)
+                .Take(200)
+                .ToListAsync();
+
+            ViewBag.Total = total;
+            ViewBag.Desde = d.ToString("yyyy-MM-dd");
+            ViewBag.Hasta = h.ToString("yyyy-MM-dd");
+
+            return View(logs);
         }
     }
 }

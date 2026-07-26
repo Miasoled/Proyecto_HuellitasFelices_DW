@@ -4,70 +4,68 @@
     ViewData["Title"] = "Confirmación de correo electrónico";
 }
 
-<div style="background:var(--gray-50); min-height:calc(100vh - 120px); display:flex; align-items:center; padding:40px 16px">
-    <div style="width:100%; max-width:480px; margin:0 auto">
-        <div class="login-card text-center">
+<div class="login-wrapper">
+    <section class="login-card login-card-compact">
+    <div class="login-left">
+        <div class="login-left-content">
+            <div class="login-logo"><i class="bi bi-patch-check-fill"></i></div>
             @if (Model.Succeeded)
             {
-                <div class="login-card-header" style="background:linear-gradient(135deg, var(--primary-dark), var(--primary))">
-                    <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
-                        <i class="bi bi-patch-check-fill" style="font-size:1.6rem; color:white"></i>
-                    </div>
-                    <h4>¡Correo verificado!</h4>
-                    <p>Cuenta activa con éxito</p>
+                <div class="login-tagline">¡Correo verificado!</div>
+                <p class="login-sub">Tu cuenta ha sido activada con éxito. Ya puedes acceder a todos los servicios.</p>
+            }
+            else
+            {
+                <div class="login-tagline">Error de verificación</div>
+                <p class="login-sub">No se pudo confirmar tu correo electrónico. Intenta nuevamente.</p>
+            }
+        </div>
+    </div>
+    <div class="login-right">
+        <div class="login-form-container" style="text-align:center">
+            @if (Model.Succeeded)
+            {
+                <div style="width:64px;height:64px;background:var(--color-success-bg);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+                    <i class="bi bi-check-circle-fill" style="font-size:2rem;color:var(--color-success)"></i>
                 </div>
-                <div class="card-body" style="padding: 32px 24px;">
-                    <div class="alert alert-success d-flex align-items-center gap-2 mb-4 justify-content-center">
-                        <i class="bi bi-check-circle-fill" style="font-size:1.2rem"></i>
-                        <span>¡Tu cuenta ha sido activada!</span>
-                    </div>
+                <div class="login-form-title">¡Cuenta activada!</div>
+                <p class="login-form-sub">Tu dirección de correo ha sido confirmada exitosamente</p>
 
-                    <p style="color:var(--text-mid); font-size:0.95rem; line-height:1.6; margin-bottom:24px">
-                        Tu dirección de correo electrónico ha sido confirmada exitosamente. Ya puedes iniciar sesión para acceder a tu panel, agendar consultas médicas y gestionar tus solicitudes de adopción.
-                    </p>
+                <p style="color:var(--color-text-secondary); font-size:0.95rem; line-height:1.6; margin-bottom:28px">
+                    Ya puedes iniciar sesión para acceder a tu panel, agendar consultas médicas y gestionar tus solicitudes de adopción.
+                </p>
 
-                    <hr style="border-color:var(--border); margin:20px 0" />
-
-                    <div class="d-flex justify-content-center">
-                        <a asp-page="./Login" class="btn-primary-hf w-100 justify-content-center" style="padding:12px; font-size:0.95rem; text-decoration:none; display:inline-flex; align-items:center; gap:8px">
-                            <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión ahora
-                        </a>
-                    </div>
+                <div style="padding-top:20px; border-top:1px solid var(--color-border)">
+                    <a asp-page="./Login" class="btn-hf-primary w-100 justify-content-center" style="padding:12px; text-decoration:none; display:inline-flex; align-items:center; gap:8px">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión ahora
+                    </a>
                 </div>
             }
             else
             {
-                <div class="login-card-header" style="background:linear-gradient(135deg, #991b1b, #ef4444)">
-                    <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
-                        <i class="bi bi-exclamation-triangle-fill" style="font-size:1.6rem; color:white"></i>
-                    </div>
-                    <h4>Error de verificación</h4>
-                    <p>No se pudo confirmar el correo</p>
+                <div style="width:64px;height:64px;background:var(--color-danger-bg);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+                    <i class="bi bi-x-circle-fill" style="font-size:2rem;color:var(--color-danger)"></i>
                 </div>
-                <div class="card-body" style="padding: 32px 24px;">
-                    <div class="alert alert-danger d-flex align-items-center gap-2 mb-4 justify-content-center">
-                        <i class="bi bi-x-circle-fill" style="font-size:1.2rem"></i>
-                        <span>Ha ocurrido un problema.</span>
-                    </div>
+                <div class="login-form-title">Error de verificación</div>
+                <p class="login-form-sub">No se pudo confirmar tu correo electrónico</p>
 
-                    <p style="color:var(--text-mid); font-size:0.95rem; line-height:1.6; margin-bottom:24px">
-                        @Model.Message
-                        <br />
-                        <span style="color:var(--text-soft); font-size:0.85rem">El enlace de confirmación puede haber expirado o ser inválido. Intenta registrarte nuevamente o contáctanos si el problema persiste.</span>
-                    </p>
+                <p style="color:var(--color-text-secondary); font-size:0.95rem; line-height:1.6; margin-bottom:20px">
+                    @Model.Message
+                </p>
+                <p style="color:var(--color-text-secondary); font-size:0.85rem; line-height:1.5; margin-bottom:24px">
+                    El enlace de confirmación puede haber expirado o ser inválido. Intenta registrarte nuevamente.
+                </p>
 
-                    <hr style="border-color:var(--border); margin:20px 0" />
-
-                    <div class="d-flex justify-content-center gap-3">
-                        <a asp-page="./Register" class="btn-primary-hf" style="padding:10px 20px; font-size:0.9rem; text-decoration:none; display:inline-flex; align-items:center; gap:8px; background-color:#dc2626">
-                            <i class="bi bi-person-plus-fill"></i> Ir al Registro
-                        </a>
-                        <a asp-area="" asp-controller="Home" asp-action="Index" class="btn-outline-hf" style="padding:10px 20px; font-size:0.9rem; text-decoration:none; display:inline-flex; align-items:center; gap:8px">
-                            <i class="bi bi-house"></i> Inicio
-                        </a>
-                    </div>
+                <div style="padding-top:20px; border-top:1px solid var(--color-border); display:flex; gap:12px; justify-content:center">
+                    <a asp-page="./Register" class="btn-hf-danger" style="padding:10px 20px; text-decoration:none; display:inline-flex; align-items:center; gap:8px">
+                        <i class="bi bi-person-plus-fill"></i> Ir al registro
+                    </a>
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="btn-hf-outline" style="padding:10px 20px; text-decoration:none; display:inline-flex; align-items:center; gap:8px">
+                        <i class="bi bi-house"></i> Inicio
+                    </a>
                 </div>
             }
         </div>
     </div>
+    </section>
 </div>

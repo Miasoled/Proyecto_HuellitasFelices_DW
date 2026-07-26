@@ -1,4 +1,5 @@
 @model HuellitasFelices.Models.Empleado
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{ ViewData["Title"] = "Editar empleado"; }
 <div class="page-header"><div class="container">
     <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
@@ -37,6 +38,12 @@
                     <div class="col-md-6">
                         <label asp-for="Salario" class="form-label"><i class="bi bi-cash-stack me-1"></i>Salario ($)</label>
                         <input asp-for="Salario" class="form-control" type="number" step="0.01" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="SucursalId" class="form-label"><i class="bi bi-building me-1"></i>Sucursal</label>
+                        <select asp-for="SucursalId" class="form-select" asp-items="ViewBag.SucursalId">
+                            <option value="">-- Seleccione --</option>
+                        </select>
                     </div>
                     <div class="col-12 d-flex gap-3 pt-2">
                         <button type="submit" class="btn-primary-hf"><i class="bi bi-check-lg"></i> Guardar cambios</button>

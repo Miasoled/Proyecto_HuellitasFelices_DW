@@ -15,9 +15,6 @@
                 <h1><i class="bi bi-grid-1x2-fill me-2"></i>Mi panel</h1>
                 <small style="opacity:.8">Bienvenido, <strong>@dueno?.Nombre</strong></small>
             </div>
-            <a asp-controller="Consultas" asp-action="Create" class="btn-hero-primary">
-                <i class="bi bi-calendar-plus-fill"></i> Agendar cita
-            </a>
         </div>
     </div>
 </div>
@@ -28,28 +25,28 @@
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="stat-item">
-                <div class="stat-icon" style="background:#dcfce7"><i class="bi bi-patch-heart-fill text-success fs-4"></i></div>
-                <h3 class="text-success">@mascotas.Count</h3>
+                <div class="stat-icon" style="background:var(--color-success-bg)"><i class="bi bi-patch-heart-fill" style="color:var(--color-success); font-size:1.4rem"></i></div>
+                <h3 style="color:var(--color-success)">@mascotas.Count</h3>
                 <p>Mis mascotas</p>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="stat-item">
-                <div class="stat-icon" style="background:#dbeafe"><i class="bi bi-clipboard2-pulse-fill text-primary fs-4"></i></div>
-                <h3 class="text-primary">@consultas.Count</h3>
+                <div class="stat-icon" style="background:var(--color-accent-lighter)"><i class="bi bi-clipboard2-pulse-fill" style="color:var(--color-primary); font-size:1.4rem"></i></div>
+                <h3 style="color:var(--color-primary)">@consultas.Count</h3>
                 <p>Consultas</p>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="stat-item">
-                <div class="stat-icon" style="background:#fef9c3"><i class="bi bi-file-earmark-check-fill text-warning fs-4"></i></div>
-                <h3 class="text-warning">@solicitudes.Count</h3>
+                <div class="stat-icon" style="background:var(--color-warning-bg)"><i class="bi bi-file-earmark-check-fill" style="color:var(--color-warning); font-size:1.4rem"></i></div>
+                <h3 style="color:var(--color-warning)">@solicitudes.Count</h3>
                 <p>Solicitudes</p>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="stat-item">
-                <div class="stat-icon" style="background:#ede9fe"><i class="bi bi-bag-heart-fill fs-4" style="color:#7c3aed"></i></div>
+                <div class="stat-icon" style="background:#ede9fe"><i class="bi bi-bag-heart-fill" style="color:#7c3aed; font-size:1.4rem"></i></div>
                 <h3 style="color:#7c3aed">@productos.Count</h3>
                 <p>Productos</p>
             </div>
@@ -60,15 +57,12 @@
         <!-- Mascotas -->
         <div class="col-lg-7">
             <div class="hf-card">
-                <div class="hf-card-header d-flex justify-content-between align-items-center">
+                <div class="hf-card-header">
                     <span><i class="bi bi-patch-heart-fill me-2"></i>Mis mascotas</span>
-                    <a asp-controller="Mascotas" asp-action="Create" class="btn-hero-primary" style="padding:6px 14px; font-size:.82rem">
-                        <i class="bi bi-plus-lg"></i> Agregar
-                    </a>
                 </div>
                 @if (mascotas.Count == 0)
                 {
-                    <div style="padding:32px; text-align:center; color:var(--text-soft)">
+                    <div style="padding:32px; text-align:center; color:var(--color-text-secondary)">
                         <i class="bi bi-patch-heart" style="font-size:2.5rem; opacity:.3; display:block; margin-bottom:12px"></i>
                         No tienes mascotas registradas aún.
                     </div>
@@ -83,14 +77,10 @@
                                 {
                                     <tr>
                                         <td><strong>@m.Nombre</strong></td>
-                                        <td><span class="badge-@(m.Especie=="Perro"?"success":"info")-hf">@m.Especie</span></td>
+                                        <td><span class="@(m.Especie=="Perro"?"badge-success":"badge-info")">@m.Especie</span></td>
                                         <td style="font-size:.88rem">@m.Raza</td>
                                         <td style="font-size:.88rem">@m.Edad años</td>
-                                        <td>
-                                            <a asp-controller="Mascotas" asp-action="Details" asp-route-id="@m.Id" class="btn-action btn-view">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                        </td>
+                                        <td><a asp-controller="Mascotas" asp-action="Details" asp-route-id="@m.Id" class="btn-action btn-view"><i class="bi bi-eye"></i></a></td>
                                     </tr>
                                 }
                             </tbody>
@@ -105,23 +95,23 @@
             <div class="hf-card mb-4">
                 <div class="hf-card-header"><i class="bi bi-lightning-charge-fill me-2"></i>Acciones rápidas</div>
                 <div style="padding:16px; display:flex; flex-direction:column; gap:10px">
-                    <a asp-controller="Consultas" asp-action="Create" class="btn-primary-hf justify-content-start">
+                    <a asp-controller="Consultas" asp-action="Create" class="btn-hf-primary justify-content-start">
                         <i class="bi bi-calendar-plus"></i> Agendar consulta veterinaria
                     </a>
-                    <a asp-controller="AnimalesAdopcion" asp-action="Index" class="btn-outline-hf justify-content-start">
+                    <a asp-controller="AnimalesAdopcion" asp-action="Index" class="btn-hf-outline justify-content-start">
                         <i class="bi bi-house-heart"></i> Ver animales en adopción
                     </a>
-                    <a asp-controller="SolicitudesAdopcion" asp-action="Create" class="btn-outline-hf justify-content-start">
+                    <a asp-controller="SolicitudesAdopcion" asp-action="Create" class="btn-hf-outline justify-content-start">
                         <i class="bi bi-file-earmark-plus"></i> Solicitar adopción
                     </a>
-                    <a asp-controller="Mascotas" asp-action="Create" class="btn-outline-hf justify-content-start">
+                    <a asp-controller="Mascotas" asp-action="Create" class="btn-hf-outline justify-content-start">
                         <i class="bi bi-plus-circle"></i> Registrar nueva mascota
                     </a>
-                    <a asp-controller="Tienda" asp-action="Index" class="btn-outline-hf justify-content-start">
+                    <a asp-controller="Tienda" asp-action="Index" class="btn-hf-outline justify-content-start">
                         <i class="bi bi-bag-heart"></i> Ir a la tienda
                     </a>
-                    <hr style="margin:4px 0; border-color:var(--border)">
-                    <a asp-controller="Account" asp-action="CambiarPassword" class="btn-outline-hf justify-content-start">
+                    <hr style="margin:4px 0; border-color:var(--color-border)">
+                    <a asp-controller="Account" asp-action="CambiarPassword" class="btn-hf-outline justify-content-start">
                         <i class="bi bi-key"></i> Cambiar contraseña
                     </a>
                 </div>
@@ -140,15 +130,15 @@
             {
                 var totalMed = c.Medicamentos?.Sum(m => m.Subtotal) ?? 0;
                 var totalGeneral = c.Costo + totalMed;
-                <div class="p-3 border-bottom" style="border-color: var(--border) !important;">
+                <div class="p-3 border-bottom" style="border-color: var(--color-border) !important;">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
                             <strong><i class="bi bi-patch-heart me-1"></i>@c.Mascota?.Nombre</strong>
                             <span class="text-muted ms-2" style="font-size:.82rem">@c.Motivo</span>
                         </div>
-                        <span class="badge bg-warning text-dark">Pendiente de pago</span>
+                        <span class="badge-warning">Pendiente de pago</span>
                     </div>
-                    <div style="font-size:.85rem; color: var(--text-soft);">
+                    <div style="font-size:.85rem; color: var(--color-text-secondary);">
                         <i class="bi bi-clipboard2-check me-1"></i>Diagnostico: @(c.Diagnostico ?? "Sin diagnostico")
                     </div>
                     @if (c.Medicamentos != null && c.Medicamentos.Any())
@@ -165,13 +155,13 @@
                             </ul>
                         </div>
                     }
-                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="border-color: var(--border) !important;">
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="border-color: var(--color-border) !important;">
                         <div style="font-size:.9rem;">
                             Consulta: <strong>$@c.Costo.ToString("F2")</strong>
                             @if (totalMed > 0) { <span class="ms-2">Medicamentos: <strong>$@totalMed.ToString("F2")</strong></span> }
-                            <span class="ms-2 fw-bold" style="color: var(--primary);">Total: $@totalGeneral.ToString("F2")</span>
+                            <span class="ms-2 fw-bold" style="color: var(--color-primary);">Total: $@totalGeneral.ToString("F2")</span>
                         </div>
-                        <a asp-controller="Ventas" asp-action="Pagar" asp-route-consultaId="@c.Id" class="btn-primary-hf" style="padding:8px 18px; font-size:.85rem;">
+                        <a asp-controller="Ventas" asp-action="Pagar" asp-route-consultaId="@c.Id" class="btn-hf-primary" style="padding:8px 18px; font-size:.85rem;">
                             <i class="bi bi-credit-card me-1"></i>Proceder al pago
                         </a>
                     </div>
@@ -192,20 +182,16 @@
                         @foreach (var c in consultas)
                         {
                              var badgeClass = c.Estado switch {
-                                 "Pendiente"   => "badge-warning-hf",
-                                 "EnRevision"  => "badge-info-hf",
-                                 "Completada"  => "badge-success-hf",
-                                 _             => "badge-warning-hf"
+                                 "Pendiente"   => "badge-warning",
+                                 "EnRevision"  => "badge-info",
+                                 "Completada"  => "badge-success",
+                                 _             => "badge-warning"
                              };
                             <tr>
                                 <td><strong style="font-size:.9rem">@c.Motivo</strong></td>
                                 <td><span class="@badgeClass" style="font-size:.78rem">@c.Estado</span></td>
-                                <td style="font-size:.85rem; color:var(--text-soft)">@c.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                                <td>
-                                    <a asp-controller="Consultas" asp-action="Details" asp-route-id="@c.Id" class="btn-action btn-view">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                </td>
+                                <td style="font-size:.85rem; color:var(--color-text-secondary)">@c.FechaConsulta.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                                <td><a asp-controller="Consultas" asp-action="Details" asp-route-id="@c.Id" class="btn-action btn-view"><i class="bi bi-eye"></i></a></td>
                             </tr>
                         }
                     </tbody>
@@ -220,7 +206,7 @@
         <div class="hf-card mt-4">
             <div class="hf-card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-bag-heart-fill me-2"></i>Tienda — Productos destacados</span>
-                <a asp-controller="Tienda" asp-action="Index" class="btn-hero-primary" style="padding:6px 14px;font-size:.82rem">
+                <a asp-controller="Tienda" asp-action="Index" class="btn-hf-primary" style="padding:6px 14px;font-size:.82rem">
                     <i class="bi bi-grid-3x3-gap"></i> Ver todo
                 </a>
             </div>
@@ -237,7 +223,7 @@
                             _ => "bi-box-seam"
                         };
                         var catColor = item.Categoria?.Nombre?.ToLower() switch {
-                            "alimento" => "#16a34a",
+                            "alimento" => "#00BCE1",
                             "medicamento" => "#2563eb",
                             "accesorio" => "#d97706",
                             "higiene" => "#7c3aed",
@@ -245,16 +231,16 @@
                         };
 
                         <div class="col-6 col-md-4">
-                            <div style="background:var(--gray-50);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;transition:transform .2s,box-shadow .2s;height:100%;display:flex;flex-direction:column;align-items:center"
+                            <div style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:12px;padding:14px;text-align:center;transition:transform .2s,box-shadow .2s;height:100%;display:flex;flex-direction:column;align-items-center"
                                  onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,.1)'"
                                  onmouseout="this.style.transform='';this.style.boxShadow=''">
                                 <div style="width:52px;height:52px;background:@(catColor)15;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:10px">
                                     <i class="bi @catIcon" style="font-size:1.4rem;color:@catColor"></i>
                                 </div>
                                 <h6 style="font-weight:700;font-size:.88rem;margin:0 0 4px;line-height:1.2">@item.Nombre</h6>
-                                <small style="color:var(--text-soft);font-size:.75rem;margin-bottom:8px">@(item.Categoria?.Nombre ?? "General")</small>
-                                <div style="font-weight:800;color:var(--primary);font-size:1.1rem;margin-top:auto">$@item.PrecioVenta.ToString("F2")</div>
-                                <a asp-controller="Tienda" asp-action="Detalle" asp-route-id="@item.Id" class="btn-outline-hf mt-2" style="padding:5px 12px;font-size:.78rem">
+                                <small style="color:var(--color-text-secondary);font-size:.75rem;margin-bottom:8px">@(item.Categoria?.Nombre ?? "General")</small>
+                                <div style="font-weight:800;color:var(--color-primary);font-size:1.1rem;margin-top:auto">$@item.PrecioVenta.ToString("F2")</div>
+                                <a asp-controller="Tienda" asp-action="Detalle" asp-route-id="@item.Id" class="btn-hf-outline mt-2" style="padding:5px 12px;font-size:.78rem">
                                     <i class="bi bi-eye"></i> Ver
                                 </a>
                             </div>

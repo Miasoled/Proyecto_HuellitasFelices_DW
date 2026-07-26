@@ -4,43 +4,42 @@
     ViewData["Title"] = "Confirmación de registro";
 }
 
-<div style="background:var(--gray-50); min-height:calc(100vh - 120px); display:flex; align-items:center; padding:40px 16px">
-    <div style="width:100%; max-width:480px; margin:0 auto">
-        <div class="login-card text-center">
-            <div class="login-card-header">
-                <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
-                    <i class="bi bi-envelope-check-fill" style="font-size:1.6rem; color:white"></i>
-                </div>
-                <h4>¡Verifica tu correo!</h4>
-                <p>Casi hemos terminado</p>
+<div class="login-wrapper">
+    <section class="login-card login-card-compact">
+    <div class="login-left">
+        <div class="login-left-content">
+            <div class="login-logo"><i class="bi bi-envelope-check-fill"></i></div>
+            <div class="login-tagline">¡Verifica tu correo!</div>
+            <p class="login-sub">Casi hemos terminado. Revisa tu bandeja de entrada para activar tu cuenta.</p>
+        </div>
+    </div>
+    <div class="login-right">
+        <div class="login-form-container" style="text-align:center">
+            <div style="width:64px;height:64px;background:var(--color-success-bg);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+                <i class="bi bi-check-circle-fill" style="font-size:2rem;color:var(--color-success)"></i>
             </div>
-            <div class="card-body" style="padding: 28px 32px 32px;">
-                <div class="alert alert-success d-flex align-items-center gap-2 mb-4 justify-content-center">
-                    <i class="bi bi-check-circle-fill" style="font-size:1.2rem"></i>
-                    <span>Hemos enviado un correo de confirmación.</span>
-                </div>
+            <div class="login-form-title">Casi listo</div>
+            <p class="login-form-sub">Hemos enviado un correo de confirmación</p>
 
-                <p style="color:var(--text-mid); font-size:0.95rem; line-height:1.6; margin-bottom:24px">
-                    Para activar tu cuenta y poder agendar citas y solicitar adopciones, por favor haz clic en el enlace de verificación que enviamos a:
-                    <br />
-                    <strong style="color:var(--primary-mid); font-size:1.05rem; word-break:break-all">@Model.Email</strong>
-                </p>
+            <p style="color:var(--color-text-secondary); font-size:0.95rem; line-height:1.6; margin-bottom:20px">
+                Para activar tu cuenta y poder agendar citas y solicitar adopciones,
+                por favor haz clic en el enlace de verificación que enviamos a:
+            </p>
+            <p style="font-weight:700; color:var(--color-primary); font-size:1.05rem; word-break:break-all; margin-bottom:20px">@Model.Email</p>
 
-                <p style="color:var(--text-soft); font-size:0.85rem; line-height:1.5; margin-bottom:24px">
-                    Si no encuentras el correo en unos minutos, asegúrate de revisar la carpeta de <strong>correo no deseado (spam)</strong>.
-                </p>
+            <p style="color:var(--color-text-secondary); font-size:0.85rem; line-height:1.5; margin-bottom:24px">
+                Si no encuentras el correo en unos minutos, asegúrate de revisar la carpeta de <strong>correo no deseado (spam)</strong>.
+            </p>
 
-                <hr style="border-color:var(--border); margin:20px 0" />
-
-                <div class="d-flex justify-content-center gap-3">
-                    <a asp-page="./Login" class="btn-primary-hf" style="padding:10px 20px; font-size:0.9rem; text-decoration:none; display:inline-flex; align-items:center; gap:8px">
-                        <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
-                    </a>
-                    <a asp-area="" asp-controller="Home" asp-action="Index" class="btn-outline-hf" style="padding:10px 20px; font-size:0.9rem; text-decoration:none; display:inline-flex; align-items:center; gap:8px">
-                        <i class="bi bi-house"></i> Inicio
-                    </a>
-                </div>
+            <div style="padding-top:20px; border-top:1px solid var(--color-border); display:flex; gap:12px; justify-content:center">
+                <a asp-page="./Login" class="btn-hf-primary" style="padding:10px 20px; text-decoration:none; display:inline-flex; align-items:center; gap:8px">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+                </a>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="btn-hf-outline" style="padding:10px 20px; text-decoration:none; display:inline-flex; align-items:center; gap:8px">
+                    <i class="bi bi-house"></i> Inicio
+                </a>
             </div>
         </div>
     </div>
+    </section>
 </div>

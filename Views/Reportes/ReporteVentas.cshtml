@@ -1,0 +1,88 @@
+@model IEnumerable<HuellitasFelices.Models.Venta>
+@{ ViewData["Title"] = "Reporte de Ventas"; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Reportes</a></li>
+            <li class="breadcrumb-item active">Ventas</li>
+        </ol></nav>
+        <h1><i class="bi bi-receipt me-2"></i>Reporte de Ventas</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+
+    <form method="get" class="row g-2 mb-4">
+        <div class="col-auto">
+            <label class="form-label">Desde</label>
+            <input type="date" name="desde" value="@ViewBag.Desde" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <label class="form-label">Hasta</label>
+            <input type="date" name="hasta" value="@ViewBag.Hasta" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <label class="form-label">Sucursal</label>
+            <select name="sucursal" class="form-select">
+                <option value="">Todas</option>
+                @foreach (var s in (IEnumerable<string>)ViewBag.Sucursales)
+                {
+                    <option value="@s" selected="@(ViewBag.SucursalSeleccionada == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto align-self-end">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Filtrar</button>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="hf-card text-center p-3">
+                <i class="bi bi-receipt text-primary fs-3"></i>
+                <p class="fw-bold fs-4 mb-0">@ViewBag.TotalVentas</p>
+                <small class="text-muted">Total ventas</small>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="hf-card text-center p-3">
+                <i class="bi bi-cash-stack text-success fs-3"></i>
+                <p class="fw-bold fs-4 mb-0">$@(((decimal)ViewBag.MontoTotal).ToString("N2"))</p>
+                <small class="text-muted">Monto total</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="hf-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr>
+                    <th>#</th><th>Número</th><th>Cliente</th><th>Sucursal</th>
+                    <th>Consulta</th><th>Medicamentos</th><th>Total</th><th>Estado</th><th>Fecha</th>
+                </tr></thead>
+                <tbody>
+                @foreach (var v in Model)
+                {
+                    <tr>
+                        <td>@v.Id</td>
+                        <td>@v.NumeroVenta</td>
+                        <td>@(v.Dueno?.Nombre ?? "N/A")</td>
+                        <td>@(v.Sucursal?.Nombre ?? "N/A")</td>
+                        <td>$@v.TotalConsulta.ToString("N2")</td>
+                        <td>$@v.TotalMedicamentos.ToString("N2")</td>
+                        <td><strong>$@v.Total.ToString("N2")</strong></td>
+                        <td><span class="badge bg-@(v.Estado == "Pagada" ? "success" : v.Estado == "Anulada" ? "danger" : "warning")">@v.Estado</span></td>
+                        <td>@v.FechaVenta.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+    </div>
+</div></div>

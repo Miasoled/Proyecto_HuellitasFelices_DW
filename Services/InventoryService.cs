@@ -24,19 +24,27 @@ namespace HuellitasFelices.Services
         public async Task<int> GetTotalStockAsync(int productoId)
             => await _context.Inventarios.Where(i => i.ProductoId == productoId).SumAsync(i => i.StockActual);
 
-        public async Task<MovimientoInventario> RegistrarCompraAsync(int productoId, int cantidad, decimal precioUnitario, string? usuarioId, string? observacion)
+        public async Task<MovimientoInventario> RegistrarCompraAsync(int compraId, int productoId, int cantidad, string? usuarioId, int? sucursalId)
         {
             for (int attempt = 0; attempt < MaxRetries; attempt++)
             {
                 await using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    var inventario = await _context.Inventarios.FirstOrDefaultAsync(i => i.ProductoId == productoId);
+                    var inventario = sucursalId.HasValue
+                        ? await _context.Inventarios.FirstOrDefaultAsync(i => i.ProductoId == productoId && i.SucursalId == sucursalId.Value)
+                        : await _context.Inventarios.FirstOrDefaultAsync(i => i.ProductoId == productoId);
                     var stockAnterior = inventario?.StockActual ?? 0;
 
                     if (inventario == null)
                     {
-                        inventario = new Inventario { ProductoId = productoId, StockActual = 0 };
+                        inventario = new Inventario
+                        {
+                            ProductoId = productoId,
+                            SucursalId = sucursalId ?? (await _context.Sucursales.FirstOrDefaultAsync(s => s.Activo))?.Id ?? 1,
+                            StockActual = 0,
+                            FechaActualizacion = DateTime.UtcNow
+                        };
                         _context.Inventarios.Add(inventario);
                     }
 
@@ -49,8 +57,10 @@ namespace HuellitasFelices.Services
                         Cantidad = cantidad,
                         StockAnterior = stockAnterior,
                         StockPosterior = inventario.StockActual,
-                        Observacion = observacion,
+                        Referencia = $"Compra-{compraId}",
+                        Observacion = $"Compra #{compraId} - {cantidad} unidades",
                         ProductoId = productoId,
+                        SucursalId = sucursalId,
                         UsuarioId = usuarioId,
                         FechaMovimiento = DateTime.UtcNow
                     };
@@ -151,7 +161,7 @@ namespace HuellitasFelices.Services
             return null;
         }
 
-        public async Task<MovimientoInventario?> AjustarAsync(int productoId, int nuevoStock, string motivo, string? usuarioId)
+        public async Task<MovimientoInventario?> AjustarAsync(int productoId, int? sucursalId, int nuevoStock, string? usuarioId, string? motivo)
         {
             for (int attempt = 0; attempt < MaxRetries; attempt++)
             {
@@ -209,6 +219,80 @@ namespace HuellitasFelices.Services
             }
 
             return null;
+        }
+
+        public async Task<bool> RegistrarDevolucionAsync(int productoId, int sucursalId, int cantidad, int? ventaId, string? usuarioId, string? motivo)
+        {
+            for (int attempt = 0; attempt < MaxRetries; attempt++)
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    var inventario = await _context.Inventarios
+                        .FirstOrDefaultAsync(i => i.ProductoId == productoId && i.SucursalId == sucursalId);
+
+                    if (inventario == null)
+                    {
+                        inventario = new Inventario
+                        {
+                            ProductoId = productoId,
+                            SucursalId = sucursalId,
+                            StockActual = 0,
+                            FechaActualizacion = DateTime.UtcNow
+                        };
+                        _context.Inventarios.Add(inventario);
+                    }
+
+                    var stockAnterior = inventario.StockActual;
+                    inventario.StockActual += cantidad;
+                    inventario.FechaActualizacion = DateTime.UtcNow;
+
+                    var movimiento = new MovimientoInventario
+                    {
+                        TipoMovimiento = "Devolucion",
+                        Cantidad = cantidad,
+                        StockAnterior = stockAnterior,
+                        StockPosterior = inventario.StockActual,
+                        Referencia = ventaId.HasValue ? $"Venta-{ventaId}" : "Devolucion manual",
+                        Observacion = motivo ?? "Devolución de producto",
+                        ProductoId = productoId,
+                        SucursalId = sucursalId,
+                        UsuarioId = usuarioId,
+                        FechaMovimiento = DateTime.UtcNow
+                    };
+                    _context.MovimientosInventario.Add(movimiento);
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    await _auditService.LogAsync("InventarioDevolucion", "Producto", productoId, usuarioId: usuarioId,
+                        valorAnterior: $"Stock: {stockAnterior}",
+                        valorNuevo: $"Devolución +{cantidad} unidades. Stock: {inventario.StockActual}. Motivo: {motivo}");
+
+                    _logger.LogInformation("[InventoryService] Devolución registrada: Producto={ProductoId}, Cantidad={Cantidad}, Stock={Stock}",
+                        productoId, cantidad, inventario.StockActual);
+
+                    return true;
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogWarning(ex, "Conflicto de concurrencia al registrar devolución. Intento {Intento}/{MaxRetries}", attempt + 1, MaxRetries);
+                    foreach (var entry in _context.ChangeTracker.Entries())
+                    {
+                        if (entry.State == EntityState.Modified || entry.State == EntityState.Deleted)
+                            entry.State = EntityState.Unchanged;
+                    }
+                    if (attempt == MaxRetries - 1) throw;
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+
+            return false;
         }
 
         public async Task<List<MovimientoInventario>> ReservarStockParaVentaAsync(
@@ -365,6 +449,114 @@ namespace HuellitasFelices.Services
                     throw;
                 }
             }
+        }
+
+        public async Task<bool> TransferirStockAsync(
+            int productoId, int sucursalOrigenId, int sucursalDestinoId,
+            int cantidad, string? usuarioId, string? observacion)
+        {
+            for (int attempt = 0; attempt < MaxRetries; attempt++)
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    var origen = await _context.Inventarios
+                        .FirstOrDefaultAsync(i => i.ProductoId == productoId && i.SucursalId == sucursalOrigenId);
+
+                    if (origen == null || origen.StockActual < cantidad)
+                    {
+                        await transaction.RollbackAsync();
+                        _logger.LogWarning(
+                            "[InventoryService] Stock insuficiente para transferencia: Producto={ProductoId}, SucursalOrigen={SucursalOrigen}, Stock={Stock}, Solicitado={Solicitado}",
+                            productoId, sucursalOrigenId, origen?.StockActual ?? 0, cantidad);
+                        return false;
+                    }
+
+                    var destino = await _context.Inventarios
+                        .FirstOrDefaultAsync(i => i.ProductoId == productoId && i.SucursalId == sucursalDestinoId);
+
+                    if (destino == null)
+                    {
+                        destino = new Inventario
+                        {
+                            ProductoId = productoId,
+                            SucursalId = sucursalDestinoId,
+                            StockActual = 0,
+                            FechaActualizacion = DateTime.UtcNow
+                        };
+                        _context.Inventarios.Add(destino);
+                    }
+
+                    var stockAnteriorOrigen = origen.StockActual;
+                    var stockAnteriorDestino = destino.StockActual;
+
+                    origen.StockActual -= cantidad;
+                    origen.FechaActualizacion = DateTime.UtcNow;
+                    destino.StockActual += cantidad;
+                    destino.FechaActualizacion = DateTime.UtcNow;
+
+                    _context.MovimientosInventario.Add(new MovimientoInventario
+                    {
+                        TipoMovimiento = "Transferencia",
+                        Cantidad = cantidad,
+                        StockAnterior = stockAnteriorOrigen,
+                        StockPosterior = origen.StockActual,
+                        Referencia = $"Transferencia a Sucursal {sucursalDestinoId}",
+                        Observacion = observacion,
+                        ProductoId = productoId,
+                        SucursalId = sucursalOrigenId,
+                        SucursalDestinoId = sucursalDestinoId,
+                        UsuarioId = usuarioId,
+                        FechaMovimiento = DateTime.UtcNow
+                    });
+
+                    _context.MovimientosInventario.Add(new MovimientoInventario
+                    {
+                        TipoMovimiento = "Transferencia",
+                        Cantidad = cantidad,
+                        StockAnterior = stockAnteriorDestino,
+                        StockPosterior = destino.StockActual,
+                        Referencia = $"Transferencia desde Sucursal {sucursalOrigenId}",
+                        Observacion = observacion,
+                        ProductoId = productoId,
+                        SucursalId = sucursalDestinoId,
+                        SucursalDestinoId = sucursalOrigenId,
+                        UsuarioId = usuarioId,
+                        FechaMovimiento = DateTime.UtcNow
+                    });
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    await _auditService.LogAsync("InventarioTransferencia", "Producto", productoId,
+                        usuarioId: usuarioId,
+                        valorNuevo: $"Transferencia {cantidad} unidades: Sucursal {sucursalOrigenId} → Sucursal {sucursalDestinoId}");
+
+                    _logger.LogInformation(
+                        "[InventoryService] Transferencia: Producto={ProductoId}, Cantidad={Cantidad}, Origen={Origen}, Destino={Destino}",
+                        productoId, cantidad, sucursalOrigenId, sucursalDestinoId);
+
+                    return true;
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogWarning(ex, "Conflicto de concurrencia al transferir stock. Intento {Intento}/{MaxRetries}", attempt + 1, MaxRetries);
+                    foreach (var entry in _context.ChangeTracker.Entries())
+                    {
+                        if (entry.State == EntityState.Modified || entry.State == EntityState.Deleted)
+                            entry.State = EntityState.Unchanged;
+                    }
+                    if (attempt == MaxRetries - 1) throw;
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+
+            return false;
         }
 
         public async Task<List<MovimientoInventario>> GetMovimientosAsync(

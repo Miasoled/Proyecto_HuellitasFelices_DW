@@ -32,6 +32,7 @@ namespace HuellitasFelices.Data
         public DbSet<DetalleVenta> DetallesVenta { get; set; }
         public DbSet<EmailLog> EmailLogs { get; set; }
         public DbSet<Pago> Pagos { get; set; }
+        public DbSet<Sucursal> Sucursales { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,6 +49,7 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<Categoria>().HasQueryFilter(e => e.Activo);
             modelBuilder.Entity<Proveedor>().HasQueryFilter(e => e.Activo);
             modelBuilder.Entity<Venta>().HasQueryFilter(e => e.Activo);
+            modelBuilder.Entity<Sucursal>().HasQueryFilter(e => e.Activo);
             // Producto and Compra intentionally lack query filters — they are
             // required ends of relationships (Inventario, Movimiento, DetalleCompra)
             // and EF warns when the principal is filtered but the dependent is not.
@@ -72,7 +74,7 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<Producto>().HasIndex(p => p.Nombre);
             modelBuilder.Entity<Producto>().HasIndex(p => p.CodigoBarras);
             modelBuilder.Entity<Producto>().HasIndex(p => p.CategoriaId);
-            modelBuilder.Entity<Inventario>().HasIndex(i => i.ProductoId).IsUnique();
+            modelBuilder.Entity<Inventario>().HasIndex(i => new { i.ProductoId, i.SucursalId }).IsUnique();
             modelBuilder.Entity<MovimientoInventario>().HasIndex(m => m.FechaMovimiento);
             modelBuilder.Entity<MovimientoInventario>().HasIndex(m => m.ProductoId);
             modelBuilder.Entity<MovimientoInventario>().HasIndex(m => m.TipoMovimiento);
@@ -94,6 +96,10 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<Pago>().HasIndex(p => p.VentaId);
             modelBuilder.Entity<Pago>().HasIndex(p => p.NumeroPago);
 
+            // ── Sucursal ─────────────────────────────────────────────────
+            modelBuilder.Entity<Sucursal>().HasIndex(s => s.Nombre);
+            modelBuilder.Entity<Sucursal>().HasIndex(s => s.Ciudad);
+
             // ── Mapeo de tablas ────────────────────────────────────────────
             modelBuilder.Entity<Tratamiento>().ToTable("Tratamientos");
             modelBuilder.Entity<AuditLog>().ToTable("AuditLogs");
@@ -109,6 +115,7 @@ namespace HuellitasFelices.Data
             modelBuilder.Entity<DetalleVenta>().ToTable("DetallesVenta");
             modelBuilder.Entity<EmailLog>().ToTable("EmailLogs");
             modelBuilder.Entity<Pago>().ToTable("Pagos");
+            modelBuilder.Entity<Sucursal>().ToTable("Sucursales");
 
             // ── Relaciones ─────────────────────────────────────────────────
 
@@ -259,6 +266,61 @@ namespace HuellitasFelices.Data
                 .WithMany()
                 .HasForeignKey(p => p.DuenoId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Inventario -> Sucursal
+            modelBuilder.Entity<Inventario>()
+                .HasOne(i => i.Sucursal)
+                .WithMany()
+                .HasForeignKey(i => i.SucursalId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // MovimientoInventario -> Sucursal (origen)
+            modelBuilder.Entity<MovimientoInventario>()
+                .HasOne(m => m.Sucursal)
+                .WithMany()
+                .HasForeignKey(m => m.SucursalId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // MovimientoInventario -> SucursalDestino
+            modelBuilder.Entity<MovimientoInventario>()
+                .HasOne(m => m.SucursalDestino)
+                .WithMany()
+                .HasForeignKey(m => m.SucursalDestinoId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // Empleado -> Sucursal
+            modelBuilder.Entity<Empleado>()
+                .HasOne(e => e.Sucursal)
+                .WithMany()
+                .HasForeignKey(e => e.SucursalId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            // Venta -> Sucursal
+            modelBuilder.Entity<Venta>()
+                .HasOne(v => v.Sucursal)
+                .WithMany()
+                .HasForeignKey(v => v.SucursalId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            // Compra -> Sucursal
+            modelBuilder.Entity<Compra>()
+                .HasOne(c => c.Sucursal)
+                .WithMany()
+                .HasForeignKey(c => c.SucursalId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            // Consulta -> Sucursal
+            modelBuilder.Entity<Consulta>()
+                .HasOne(c => c.Sucursal)
+                .WithMany()
+                .HasForeignKey(c => c.SucursalId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
         }
     }
 }

@@ -336,7 +336,6 @@ C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\a3ygkwa5zy-{
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\nezrqnk58p-{0}-muycvpuwrr-muycvpuwrr.gz
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\v0zgfp0y55-{0}-87fc7y1x7t-87fc7y1x7t.gz
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\yfc7ypekbg-{0}-mlv21k5csn-mlv21k5csn.gz
-C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\nqdo4othwe-{0}-2e936btlgn-2e936btlgn.gz
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\anpfmpw902-{0}-61n19gt1b8-61n19gt1b8.gz
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\gpaxlsdsti-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\cx7mv6hpbo-{0}-bqjiyaj88i-bqjiyaj88i.gz
@@ -413,5 +412,11 @@ C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\HuellitasFelices.genrun
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\ref\HuellitasFelices.dll
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\ww6nvqhcnk-{0}-26f9b7qkas-26f9b7qkas.gz
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\kt6pm48lsg-{0}-4phmia383g-4phmia383g.gz
-C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\zn3qo7sk8v-{0}-2488h09y07-2488h09y07.gz
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\dnjwv30uhl-{0}-xxk71pzqp9-xxk71pzqp9.gz
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Pipelines.Sockets.Unofficial.dll
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\StackExchange.Redis.dll
+C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\zn3qo7sk8v-{0}-tsooupij5e-tsooupij5e.gz
+C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.AspNetCore.DataProtection.StackExchangeRedis.dll
+C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\1okw5r3oty-{0}-mf5u78cbyc-mf5u78cbyc.gz
+C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\nqdo4othwe-{0}-lsi8z3dbjv-lsi8z3dbjv.gz

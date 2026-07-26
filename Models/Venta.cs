@@ -38,6 +38,10 @@ public class Venta
 
     public DateTime? FechaPago { get; set; }
 
+    [Display(Name = "Sucursal")]
+    public int? SucursalId { get; set; }
+    public Sucursal? Sucursal { get; set; }
+
     public bool Activo { get; set; } = true;
 
     public DateTime? FechaEliminacion { get; set; }

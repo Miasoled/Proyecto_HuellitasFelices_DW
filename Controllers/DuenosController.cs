@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
@@ -11,11 +12,13 @@ namespace HuellitasFelices.Controllers
     public class DuenosController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IAuditService _auditService;
         private const int TamanioPagina = 20;
 
-        public DuenosController(AppDbContext context)
+        public DuenosController(AppDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Duenos
@@ -28,7 +31,7 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(busqueda))
-                consulta = consulta.Where(d => d.Nombre.Contains(busqueda) || d.Email!.Contains(busqueda));
+                consulta = consulta.Where(d => EF.Functions.ILike(d.Nombre, $"%{busqueda}%") || EF.Functions.ILike(d.Email!, $"%{busqueda}%"));
 
             var totalRegistros = await consulta.CountAsync();
             var duenos = await consulta
@@ -83,6 +86,10 @@ namespace HuellitasFelices.Controllers
             {
                 _context.Add(dueno);
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("Creacion", "Dueno", dueno.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorNuevo: dueno.Nombre);
                 return RedirectToAction(nameof(Index));
             }
             return View(dueno);
@@ -120,8 +127,14 @@ namespace HuellitasFelices.Controllers
             {
                 try
                 {
+                    var anterior = await _context.Duenos.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);
                     _context.Update(dueno);
                     await _context.SaveChangesAsync();
+                    await _auditService.LogAsync("Edicion", "Dueno", dueno.Id,
+                        usuarioEmail: User.Identity?.Name,
+                        direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        valorAnterior: anterior?.Nombre,
+                        valorNuevo: dueno.Nombre);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -168,7 +181,13 @@ namespace HuellitasFelices.Controllers
             {
                 dueno.Activo = false;
                 dueno.FechaEliminacion = DateTime.UtcNow;
+                dueno.EliminadoPor = User.Identity?.Name;
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("EliminacionLogica", "Dueno", dueno.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorAnterior: "Registro activo",
+                    valorNuevo: "Registro eliminado lógicamente");
             }
             return RedirectToAction(nameof(Index));
         }

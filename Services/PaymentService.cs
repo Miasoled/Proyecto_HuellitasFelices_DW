@@ -140,6 +140,15 @@ public class PaymentService : IPaymentService
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                await _context.Entry(pago).ReloadAsync();
+
+                if (pago.Estado == "Aprobado")
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogInformation("Pago {PagoId} ya fue aprobado por otra transacción (idempotencia interna)", pagoId);
+                    return pago;
+                }
+
                 pago.Estado = "Aprobado";
                 pago.FechaConfirmacion = DateTime.UtcNow;
 
@@ -149,7 +158,11 @@ public class PaymentService : IPaymentService
                     pago.Venta.MetodoPago = pago.ProveedorPago;
                     pago.Venta.FechaPago = DateTime.UtcNow;
 
-                    if (pago.Venta.Consulta?.Medicamentos != null)
+                    var detallesExistentes = await _context.DetallesVenta
+                        .Where(dv => dv.VentaId == pago.Venta.Id)
+                        .CountAsync();
+
+                    if (detallesExistentes == 0 && pago.Venta.Consulta?.Medicamentos != null)
                     {
                         foreach (var med in pago.Venta.Consulta.Medicamentos)
                         {
@@ -314,8 +327,8 @@ public class PaymentService : IPaymentService
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(busqueda))
-            query = query.Where(p => p.NumeroPago.Contains(busqueda) ||
-                (p.Dueno != null && p.Dueno.Nombre.Contains(busqueda)));
+            query = query.Where(p => EF.Functions.ILike(p.NumeroPago, $"%{busqueda}%") ||
+                (p.Dueno != null && EF.Functions.ILike(p.Dueno.Nombre, $"%{busqueda}%")));
 
         if (!string.IsNullOrWhiteSpace(estado))
             query = query.Where(p => p.Estado == estado);
@@ -342,7 +355,7 @@ public class PaymentService : IPaymentService
         var query = _context.Pagos.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(busqueda))
-            query = query.Where(p => p.NumeroPago.Contains(busqueda));
+            query = query.Where(p => EF.Functions.ILike(p.NumeroPago, $"%{busqueda}%"));
 
         if (!string.IsNullOrWhiteSpace(estado))
             query = query.Where(p => p.Estado == estado);

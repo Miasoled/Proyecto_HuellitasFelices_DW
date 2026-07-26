@@ -11,7 +11,7 @@ namespace HuellitasFelices.Data
             RoleManager<IdentityRole> roleManager)
         {
             // ===== ROLES =====
-            string[] roles = { "Administrador", "Doctor", "Cliente" };
+            string[] roles = { "Administrador", "Doctor", "Cliente", "Supervisor", "Operador", "Auditor", "Consulta" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
@@ -36,6 +36,102 @@ namespace HuellitasFelices.Data
                     await userManager.AddToRoleAsync(admin, "Administrador");
                 }
             }
+
+            // ===== SUCURSAL PRINCIPAL =====
+            if (!context.Sucursales.Any())
+            {
+                context.Sucursales.Add(new Sucursal
+                {
+                    Nombre = "Huellitas Felices - Sede Principal",
+                    Direccion = "Av. Amazonas y Naciones Unidas, Quito",
+                    Telefono = "(02) 234-5678",
+                    Email = "sedeprincipal@huellitasfelices.com",
+                    Ciudad = "Quito",
+                    EsPrincipal = true,
+                    Activo = true,
+                    FechaCreacion = DateTime.UtcNow,
+                    FechaActualizacion = DateTime.UtcNow
+                });
+                context.SaveChanges();
+            }
+
+            var sucursalPrincipal = context.Sucursales.First(s => s.EsPrincipal);
+
+            // ===== USUARIOS INTERNOS (roles operativos) =====
+            var usuariosInternos = new (string Email, string Password, string Rol)[]
+            {
+                ("supervisor@huellitasfelices.com", "Supervisor1234*", "Supervisor"),
+                ("operador@huellitasfelices.com", "Operador1234*", "Operador"),
+                ("auditor@huellitasfelices.com", "Auditor1234*", "Auditor"),
+            };
+
+            Console.WriteLine("[SeedData] === Creando usuarios internos ===");
+            foreach (var (email, password, rol) in usuariosInternos)
+            {
+                var existingUser = await userManager.FindByEmailAsync(email);
+                if (existingUser != null)
+                {
+                    // Asegurar que tenga el rol correcto
+                    if (!await userManager.IsInRoleAsync(existingUser, rol))
+                    {
+                        await userManager.AddToRoleAsync(existingUser, rol);
+                        Console.WriteLine($"[SeedData] Rol '{rol}' asignado a {email}");
+                    }
+
+                    // Quitar lockout
+                    if (existingUser.LockoutEnd != null && existingUser.LockoutEnd > DateTimeOffset.UtcNow)
+                    {
+                        await userManager.SetLockoutEndDateAsync(existingUser, DateTimeOffset.UtcNow);
+                        Console.WriteLine($"[SeedData] Lockout REMOVIDO de {email}");
+                    }
+
+                    // Resetear contador de intentos fallidos
+                    if (existingUser.AccessFailedCount > 0)
+                    {
+                        await userManager.ResetAccessFailedCountAsync(existingUser);
+                        Console.WriteLine($"[SeedData] Contador de intentos reseteado para {email}");
+                    }
+
+                    // Forzar reset de contraseña para garantizar que sea la correcta
+                    var token = await userManager.GeneratePasswordResetTokenAsync(existingUser);
+                    var resetResult = await userManager.ResetPasswordAsync(existingUser, token, password);
+                    if (resetResult.Succeeded)
+                        Console.WriteLine($"[SeedData] Contraseña de {email} reseteada a la definida en el seeder");
+                    else
+                        Console.WriteLine($"[SeedData] No se pudo resetear contraseña de {email}: {string.Join(", ", resetResult.Errors.Select(e => e.Description))}");
+
+                    // Confirmar email si no está confirmado
+                    if (!existingUser.EmailConfirmed)
+                    {
+                        existingUser.EmailConfirmed = true;
+                        await userManager.UpdateAsync(existingUser);
+                        Console.WriteLine($"[SeedData] Email confirmado para {email}");
+                    }
+
+                    Console.WriteLine($"[SeedData] Usuario {email} ya existe con rol '{rol}'");
+                    continue;
+                }
+
+                var user = new IdentityUser
+                {
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(user, password);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(user, rol);
+                    Console.WriteLine($"[SeedData] Usuario {email} creado con rol '{rol}'");
+                }
+                else
+                {
+                    Console.WriteLine($"[SeedData] ERROR creando {email}:");
+                    foreach (var error in result.Errors)
+                        Console.WriteLine($"  - {error.Code}: {error.Description}");
+                }
+            }
+            Console.WriteLine("[SeedData] === Fin usuarios internos ===");
 
             // ===== USUARIOS DOCTORES =====
             var doctorAccounts = new (string Email, string Password)[]
@@ -69,11 +165,11 @@ namespace HuellitasFelices.Data
             if (!context.Empleados.Any())
             {
                 context.Empleados.AddRange(
-                    new Empleado { Nombre = "Dr. Carlos Ramírez", Cargo = "Veterinario", Email = "doctor@huellitasfelices.com", Telefono = "0991234567", Salario = 1800, Activo = true },
-                    new Empleado { Nombre = "Dra. Ana Torres", Cargo = "Veterinario", Email = "doctora.ana@huellitasfelices.com", Telefono = "0987654321", Salario = 1800, Activo = true },
-                    new Empleado { Nombre = "Dr. Luis Mendoza", Cargo = "Veterinario", Email = "doctor.luis@huellitasfelices.com", Telefono = "0976543210", Salario = 1800, Activo = true },
-                    new Empleado { Nombre = "María Suárez", Cargo = "Recepcionista", Email = "maria.suarez@huellitasfelices.com", Telefono = "0965432109", Salario = 800, Activo = true },
-                    new Empleado { Nombre = "Pedro Gómez", Cargo = "Asistente", Email = "pedro.gomez@huellitasfelices.com", Telefono = "0954321098", Salario = 900, Activo = true }
+                    new Empleado { Nombre = "Dr. Carlos Ramírez", Cargo = "Veterinario", Email = "doctor@huellitasfelices.com", Telefono = "0991234567", Salario = 1800, Activo = true, SucursalId = sucursalPrincipal.Id },
+                    new Empleado { Nombre = "Dra. Ana Torres", Cargo = "Veterinario", Email = "doctora.ana@huellitasfelices.com", Telefono = "0987654321", Salario = 1800, Activo = true, SucursalId = sucursalPrincipal.Id },
+                    new Empleado { Nombre = "Dr. Luis Mendoza", Cargo = "Veterinario", Email = "doctor.luis@huellitasfelices.com", Telefono = "0976543210", Salario = 1800, Activo = true, SucursalId = sucursalPrincipal.Id },
+                    new Empleado { Nombre = "María Suárez", Cargo = "Recepcionista", Email = "maria.suarez@huellitasfelices.com", Telefono = "0965432109", Salario = 800, Activo = true, SucursalId = sucursalPrincipal.Id },
+                    new Empleado { Nombre = "Pedro Gómez", Cargo = "Asistente", Email = "pedro.gomez@huellitasfelices.com", Telefono = "0954321098", Salario = 900, Activo = true, SucursalId = sucursalPrincipal.Id }
                 );
                 context.SaveChanges();
             }
@@ -238,7 +334,8 @@ namespace HuellitasFelices.Data
                     {
                         ProductoId = prod.Id,
                         StockActual = random.Next(5, 50),
-                        FechaActualizacion = DateTime.UtcNow
+                        FechaActualizacion = DateTime.UtcNow,
+                        SucursalId = sucursalPrincipal.Id
                     });
                 }
                 context.SaveChanges();

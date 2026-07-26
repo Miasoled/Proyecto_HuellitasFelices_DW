@@ -43,5 +43,9 @@ namespace HuellitasFelices.Models
 
         [Display(Name = "Fecha de actualización")]
         public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
+
+        [Display(Name = "Sucursal")]
+        public int? SucursalId { get; set; }
+        public Sucursal? Sucursal { get; set; }
     }
 }

@@ -16,8 +16,8 @@
 <div class="content-wrapper"><div class="container">
 <div class="row justify-content-center"><div class="col-lg-7">
 
-    <div class="hf-card" style="border: 2px solid #16a34a;">
-        <div class="hf-card-header" style="background: linear-gradient(135deg, #16a34a, #15803d); color: white;">
+    <div class="hf-card" style="border: 2px solid var(--accent);">
+        <div class="hf-card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-check-circle-fill me-2"></i>Pago confirmado</span>
                 <span style="font-size:.82rem; opacity:.9;">@Model.NumeroVenta</span>
@@ -108,7 +108,7 @@
             <!-- Total -->
             <div class="d-flex justify-content-between" style="font-size:1.2rem;">
                 <span class="fw-bold">Total pagado</span>
-                <span class="fw-bold" style="color: #16a34a;">$@Model.Total.ToString("F2")</span>
+                <span class="fw-bold" style="color: var(--accent);">$@Model.Total.ToString("F2")</span>
             </div>
 
             <div class="text-center mt-4">

@@ -32,8 +32,8 @@ namespace HuellitasFelices.Controllers
 
             if (!string.IsNullOrEmpty(busqueda))
                 consulta = consulta.Where(p =>
-                    p.Nombre.Contains(busqueda) ||
-                    (p.Descripcion != null && p.Descripcion.Contains(busqueda)));
+                    EF.Functions.ILike(p.Nombre, $"%{busqueda}%") ||
+                    (p.Descripcion != null && EF.Functions.ILike(p.Descripcion, $"%{busqueda}%")));
 
             var totalRegistros = await consulta.CountAsync();
             var productos = await consulta

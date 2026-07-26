@@ -4,18 +4,21 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador")]
-    public class EmpleadosController : Controller
+[Authorize(Roles = "Administrador,Supervisor")]
+public class EmpleadosController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IAuditService _auditService;
         private const int TamanioPagina = 20;
 
-        public EmpleadosController(AppDbContext context)
+        public EmpleadosController(AppDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Empleados
@@ -28,7 +31,7 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(busqueda))
-                consulta = consulta.Where(e => e.Nombre.Contains(busqueda) || e.Cargo.Contains(busqueda));
+                consulta = consulta.Where(e => EF.Functions.ILike(e.Nombre, $"%{busqueda}%") || EF.Functions.ILike(e.Cargo, $"%{busqueda}%"));
 
             var totalRegistros = await consulta.CountAsync();
             var empleados = await consulta
@@ -67,15 +70,16 @@ namespace HuellitasFelices.Controllers
         }
 
         // GET: Empleados/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre");
             return View();
         }
 
         // POST: Empleados/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Cargo,Email,Telefono,Salario,Activo,FechaCreacion")] Empleado empleado)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Cargo,Email,Telefono,Salario,Activo,FechaCreacion,SucursalId")] Empleado empleado)
         {
             if (empleado.Cargo == "Veterinario")
             {
@@ -93,8 +97,13 @@ namespace HuellitasFelices.Controllers
                 empleado.Activo = true;
                 _context.Add(empleado);
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("Creacion", "Empleado", empleado.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorNuevo: $"{empleado.Nombre} - {empleado.Cargo}");
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", empleado.SucursalId);
             return View(empleado);
         }
 
@@ -111,6 +120,7 @@ namespace HuellitasFelices.Controllers
             {
                 return NotFound();
             }
+            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", empleado.SucursalId);
             return View(empleado);
         }
 
@@ -119,7 +129,7 @@ namespace HuellitasFelices.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Cargo,Email,Telefono,Salario,Activo,FechaCreacion")] Empleado empleado)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Cargo,Email,Telefono,Salario,Activo,FechaCreacion,SucursalId")] Empleado empleado)
         {
             if (id != empleado.Id)
             {
@@ -130,8 +140,14 @@ namespace HuellitasFelices.Controllers
             {
                 try
                 {
+                    var anterior = await _context.Empleados.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
                     _context.Update(empleado);
                     await _context.SaveChangesAsync();
+                    await _auditService.LogAsync("Edicion", "Empleado", empleado.Id,
+                        usuarioEmail: User.Identity?.Name,
+                        direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        valorAnterior: anterior?.Nombre,
+                        valorNuevo: empleado.Nombre);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -146,6 +162,7 @@ namespace HuellitasFelices.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.SucursalId = new SelectList(await _context.Sucursales.Where(s => s.Activo).ToListAsync(), "Id", "Nombre", empleado.SucursalId);
             return View(empleado);
         }
 
@@ -178,7 +195,13 @@ namespace HuellitasFelices.Controllers
             {
                 empleado.Activo = false;
                 empleado.FechaEliminacion = DateTime.UtcNow;
+                empleado.EliminadoPor = User.Identity?.Name;
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("EliminacionLogica", "Empleado", empleado.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorAnterior: "Registro activo",
+                    valorNuevo: "Registro eliminado lógicamente");
             }
             return RedirectToAction(nameof(Index));
         }

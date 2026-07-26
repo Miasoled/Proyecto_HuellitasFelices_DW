@@ -12,9 +12,7 @@
                 <h1><i class="bi bi-people-fill me-2"></i>Usuarios del sistema</h1>
                 <small style="opacity:.8">@Model.Count usuarios registrados</small>
             </div>
-            <a asp-action="RegisterInterno" class="btn-hero-primary">
-                <i class="bi bi-person-plus-fill"></i> Nuevo usuario interno
-            </a>
+            <a asp-action="RegisterInterno" class="btn-hf-primary"><i class="bi bi-person-plus-fill"></i> Nuevo usuario interno</a>
         </div>
     </div>
 </div>
@@ -39,8 +37,8 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
-                                    <div style="width:36px;height:36px;background:var(--primary-bg);border-radius:50%;display:flex;align-items:center;justify-content:center">
-                                        <i class="bi bi-person-fill text-success"></i>
+                                    <div style="width:36px;height:36px;background:var(--color-accent-lighter);border-radius:50%;display:flex;align-items:center;justify-content:center">
+                                        <i class="bi bi-person-fill" style="color:var(--color-success)"></i>
                                     </div>
                                     <span style="font-weight:500">@usuario.Email</span>
                                 </div>
@@ -49,17 +47,17 @@
                                 @foreach (var rol in roles)
                                 {
                                     var cls = rol switch {
-                                        "Administrador" => "badge-danger-hf",
-                                        _               => "badge-success-hf"
+                                        "Administrador" => "badge-danger",
+                                        _               => "badge-success"
                                     };
                                     <span class="@cls me-1">@rol</span>
                                 }
                             </td>
                             <td>
                                 @if (usuario.EmailConfirmed)
-                                { <span class="badge-success-hf"><i class="bi bi-check2 me-1"></i>Activo</span> }
+                                { <span class="badge-success"><i class="bi bi-check2 me-1"></i>Activo</span> }
                                 else
-                                { <span class="badge-warning-hf"><i class="bi bi-clock me-1"></i>Pendiente</span> }
+                                { <span class="badge-warning"><i class="bi bi-clock me-1"></i>Pendiente</span> }
                             </td>
                         </tr>
                     }

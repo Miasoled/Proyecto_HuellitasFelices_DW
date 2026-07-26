@@ -6,324 +6,339 @@
     <title>@ViewData["Title"] - Huellitas Felices</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/css/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/css/bootstrap-icons.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/chatbot.css" asp-append-version="true" />
 </head>
 <body>
+
 @using HuellitasFelices.Services
 @inject ICarritoService Carrito
 
-<!-- ═══════════════ NAVBAR ═══════════════ -->
-<nav class="navbar navbar-expand-lg hf-nav">
-    <div class="container">
-        <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-            <span class="brand-icon"><i class="bi bi-heart-pulse-fill"></i></span>
-            Huellitas Felices
-        </a>
+@{
+    var isAuth = User.Identity?.IsAuthenticated == true;
+    var isCliente = User.IsInRole("Cliente");
+    var isAdmin = User.IsInRole("Administrador");
+    var isDoctor = User.IsInRole("Doctor");
+    var isSupervisor = User.IsInRole("Supervisor");
+    var isOperador = User.IsInRole("Operador");
+    var isAuditor = User.IsInRole("Auditor");
+}
 
-        <button class="navbar-toggler border-0" type="button"
-                data-bs-toggle="collapse" data-bs-target="#navMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+@if (isAuth)
+{
+    <!-- ═══════════ SIDEBAR LAYOUT (Authenticated Users) ═══════════ -->
+    <div class="app-wrapper">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-        <div class="collapse navbar-collapse" id="navMenu">
-            <ul class="navbar-nav me-auto align-items-lg-center">
+        <aside class="hf-sidebar" id="sidebar">
+            <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+                <div class="sidebar-brand-icon"><img src="~/images/logo_huellitas.png" alt="" /></div>
+                <div>
+                    <div class="sidebar-brand-text">Huellitas Felices</div>
+                    <span class="sidebar-brand-sub">Clínica veterinaria</span>
+                </div>
+            </a>
 
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-house"></i> Inicio
-                    </a>
-                </li>
-
-                @if (User.Identity != null && User.Identity.IsAuthenticated)
+            <nav class="sidebar-nav">
+                @if (isCliente)
                 {
-                    @if (User.IsInRole("Cliente"))
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Account" asp-action="MiPanel">
-                                <i class="bi bi-grid-1x2"></i> Mi panel
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="AnimalesAdopcion" asp-action="Index">
-                                <i class="bi bi-heart"></i> Adopciones
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Consultas" asp-action="Create">
-                                <i class="bi bi-calendar-plus"></i> Agendar cita
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Tienda" asp-action="Index">
-                                <i class="bi bi-bag-heart"></i> Tienda
-                            </a>
-                        </li>
-                    }
-                    else
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Account" asp-action="PanelDoctor">
-                                <i class="bi bi-grid-1x2"></i> Mi panel
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                    <div class="sidebar-section-label">Panel</div>
+                    <ul class="sidebar-nav" style="padding:0">
+                        <li class="sidebar-item"><a class="sidebar-link sidebar-link-dashboard" asp-controller="Account" asp-action="MiPanel"><i class="bi bi-grid-1x2-fill"></i> Mi panel</a></li>
+                        <li class="sidebar-item"><a class="sidebar-link sidebar-link-appointment" asp-controller="Consultas" asp-action="Create"><i class="bi bi-calendar-plus"></i> Agendar cita</a></li>
+                        <li class="sidebar-item"><a class="sidebar-link sidebar-link-adoption" asp-controller="AnimalesAdopcion" asp-action="Index"><i class="bi bi-heart"></i> Adopciones</a></li>
+                        <li class="sidebar-item"><a class="sidebar-link sidebar-link-store" asp-controller="Tienda" asp-action="Index"><i class="bi bi-bag-heart-fill"></i> Tienda</a></li>
+                    </ul>
+                }
+                else
+                {
+                    <div class="sidebar-section-label">Panel</div>
+                    <ul class="sidebar-nav" style="padding:0">
+                        <li class="sidebar-item"><a class="sidebar-link" asp-controller="Account" asp-action="PanelDoctor"><i class="bi bi-grid-1x2-fill"></i> Mi panel</a></li>
+
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" data-bs-toggle="collapse" href="#sidebarClinica" role="button" aria-expanded="false">
                                 <i class="bi bi-clipboard2-pulse"></i> Clínica
+                                <i class="bi bi-chevron-right sidebar-arrow"></i>
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="Mascotas" asp-action="Index">
-                                    <i class="bi bi-patch-heart text-success"></i> Mascotas
-                                </a></li>
-                                <li><a class="dropdown-item" asp-controller="Duenos" asp-action="Index">
-                                    <i class="bi bi-people text-primary"></i> Dueños
-                                </a></li>
-                                <li><a class="dropdown-item" asp-controller="Consultas" asp-action="Index">
-                                    <i class="bi bi-stethoscope text-info"></i> Consultas
-                                </a></li>
-                                @if (User.IsInRole("Administrador") || User.IsInRole("Doctor"))
+                            <ul class="sidebar-submenu collapse" id="sidebarClinica">
+                                <li class="sidebar-item"><a class="sidebar-link" asp-controller="Mascotas" asp-action="Index"><i class="bi bi-patch-heart"></i> Mascotas</a></li>
+                                <li class="sidebar-item"><a class="sidebar-link" asp-controller="Duenos" asp-action="Index"><i class="bi bi-people"></i> Dueños</a></li>
+                                <li class="sidebar-item"><a class="sidebar-link" asp-controller="Consultas" asp-action="Index"><i class="bi bi-stethoscope"></i> Consultas</a></li>
+                                @if (isAdmin || isDoctor || isOperador)
                                 {
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" asp-controller="Tratamientos" asp-action="Index">
-                                        <i class="bi bi-capsule text-warning"></i> Tratamientos
-                                    </a></li>
+                                    <li class="sidebar-item"><a class="sidebar-link" asp-controller="Tratamientos" asp-action="Index"><i class="bi bi-capsule"></i> Tratamientos</a></li>
                                 }
                             </ul>
                         </li>
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" data-bs-toggle="collapse" href="#sidebarAdopcion" role="button" aria-expanded="false">
                                 <i class="bi bi-heart"></i> Adopción
+                                <i class="bi bi-chevron-right sidebar-arrow"></i>
                             </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="AnimalesAdopcion" asp-action="Index">
-                                    <i class="bi bi-emoji-smile text-warning"></i> Animales
-                                </a></li>
-                                <li><a class="dropdown-item" asp-controller="SolicitudesAdopcion" asp-action="Index">
-                                    <i class="bi bi-file-earmark-text text-primary"></i> Solicitudes
-                                </a></li>
+                            <ul class="sidebar-submenu collapse" id="sidebarAdopcion">
+                                <li class="sidebar-item"><a class="sidebar-link" asp-controller="AnimalesAdopcion" asp-action="Index"><i class="bi bi-emoji-smile"></i> Animales</a></li>
+                                <li class="sidebar-item"><a class="sidebar-link" asp-controller="SolicitudesAdopcion" asp-action="Index"><i class="bi bi-file-earmark-text"></i> Solicitudes</a></li>
                             </ul>
                         </li>
 
-                        @if (User.IsInRole("Administrador"))
+                        @if (isAdmin || isSupervisor || isOperador || isAuditor)
                         {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <li class="sidebar-item"><a class="sidebar-link" asp-controller="Sucursales" asp-action="Index"><i class="bi bi-building"></i> Sucursales</a></li>
+                        }
+
+                        @if (isAdmin || isSupervisor || isOperador)
+                        {
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" data-bs-toggle="collapse" href="#sidebarInventario" role="button" aria-expanded="false">
                                     <i class="bi bi-box-seam"></i> Inventario
+                                    <i class="bi bi-chevron-right sidebar-arrow"></i>
                                 </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="Inventario" asp-action="Index">
-                                        <i class="bi bi-box text-primary"></i> Productos
-                                    </a></li>
-                                    <li><a class="dropdown-item" asp-controller="Categorias" asp-action="Index">
-                                        <i class="bi bi-tags text-success"></i> Categorías
-                                    </a></li>
-                                    <li><a class="dropdown-item" asp-controller="Proveedores" asp-action="Index">
-                                        <i class="bi bi-truck text-warning"></i> Proveedores
-                                    </a></li>
-                                    <li><a class="dropdown-item" asp-controller="Compras" asp-action="Index">
-                                        <i class="bi bi-cart-check text-info"></i> Compras
-                                    </a></li>
+                                <ul class="sidebar-submenu collapse" id="sidebarInventario">
+                                    <li class="sidebar-item"><a class="sidebar-link" asp-controller="Inventario" asp-action="Index"><i class="bi bi-box"></i> Productos</a></li>
+                                    <li class="sidebar-item"><a class="sidebar-link" asp-controller="Categorias" asp-action="Index"><i class="bi bi-tags"></i> Categorías</a></li>
+                                    <li class="sidebar-item"><a class="sidebar-link" asp-controller="Proveedores" asp-action="Index"><i class="bi bi-truck"></i> Proveedores</a></li>
+                                    <li class="sidebar-item"><a class="sidebar-link" asp-controller="Compras" asp-action="Index"><i class="bi bi-cart-check"></i> Compras</a></li>
+                                    <li class="sidebar-item"><a class="sidebar-link" asp-controller="Inventario" asp-action="Transferir"><i class="bi bi-arrow-left-right"></i> Transferir Stock</a></li>
                                 </ul>
                             </li>
                         }
 
-                        @if (User.IsInRole("Administrador"))
+                        @if (isAdmin || isSupervisor)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Empleados" asp-action="Index">
-                                    <i class="bi bi-person-badge"></i> Empleados
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Reportes" asp-action="Index">
-                                    <i class="bi bi-bar-chart-line"></i> Reportes
-                                </a>
-                            </li>
+                            <li class="sidebar-item"><a class="sidebar-link" asp-controller="Empleados" asp-action="Index"><i class="bi bi-person-badge"></i> Empleados</a></li>
                         }
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="IA" asp-action="Asistente">
-                                <i class="bi bi-robot"></i> Asistente IA
-                            </a>
-                        </li>
-
-                        @if (User.IsInRole("Administrador"))
+                        @if (isAdmin || isSupervisor || isAuditor)
                         {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <li class="sidebar-item"><a class="sidebar-link" asp-controller="Reportes" asp-action="Index"><i class="bi bi-bar-chart-line"></i> Reportes</a></li>
+                        }
+
+                        <li class="sidebar-item"><a class="sidebar-link" asp-controller="IA" asp-action="Asistente"><i class="bi bi-robot"></i> Asistente IA</a></li>
+
+                        @if (isAdmin)
+                        {
+                            <li class="sidebar-item">
+                                <a class="sidebar-link" data-bs-toggle="collapse" href="#sidebarAdmin" role="button" aria-expanded="false">
                                     <i class="bi bi-gear"></i> Admin
+                                    <i class="bi bi-chevron-right sidebar-arrow"></i>
                                 </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Usuarios">
-                                        <i class="bi bi-people-fill text-primary"></i> Usuarios
-                                    </a></li>
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="RegisterInterno">
-                                        <i class="bi bi-person-plus text-success"></i> Nuevo usuario
-                                    </a></li>
+                                <ul class="sidebar-submenu collapse" id="sidebarAdmin">
+                                    <li class="sidebar-item"><a class="sidebar-link" asp-controller="Account" asp-action="Usuarios"><i class="bi bi-people-fill"></i> Usuarios</a></li>
+                                    <li class="sidebar-item"><a class="sidebar-link" asp-controller="Account" asp-action="RegisterInterno"><i class="bi bi-person-plus"></i> Nuevo usuario</a></li>
                                 </ul>
                             </li>
                         }
-                    }
+                    </ul>
                 }
-                else
-                {
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="AnimalesAdopcion" asp-action="Index">
-                            <i class="bi bi-heart"></i> Adopción
-                        </a>
-                    </li>
-                }
-            </ul>
+            </nav>
 
-            <ul class="navbar-nav align-items-lg-center">
-                @if (User.IsInRole("Cliente"))
-                {
-                    var cartCount = Carrito.ContarItems();
-                    <li class="nav-item">
-                        <a class="nav-link position-relative" asp-controller="Carrito" asp-action="Index"
-                           style="padding:18px 14px">
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="sidebar-user-avatar">
+                        @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "?")
+                    </div>
+                    <div>
+                        <div class="sidebar-user-name">@(User.Identity?.Name?.Split('@')[0])</div>
+                        <div class="sidebar-user-role">
+                            @if (isAdmin) { <span>Administrador</span> }
+                            else if (isDoctor) { <span>Doctor</span> }
+                            else if (isSupervisor) { <span>Supervisor</span> }
+                            else if (isOperador) { <span>Operador</span> }
+                            else if (isAuditor) { <span>Auditor</span> }
+                            else if (isCliente) { <span>Cliente</span> }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="app-main">
+            <header class="hf-topbar">
+                <button class="topbar-btn sidebar-toggle" onclick="toggleSidebar()" title="Menú">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="topbar-title">@ViewData["Title"]</div>
+                <div class="topbar-actions">
+                    @if (isCliente)
+                    {
+                        var cartCount = Carrito.ContarItems();
+                        <a asp-controller="Carrito" asp-action="Index" class="topbar-btn position-relative">
                             <i class="bi bi-cart3"></i>
                             @if (cartCount > 0)
                             {
-                                <span style="position:absolute;top:10px;right:4px;background:#dc2626;color:white;
-                                              width:20px;height:20px;border-radius:50%;font-size:.7rem;font-weight:700;
-                                              display:flex;align-items:center;justify-content:center;
-                                              border:2px solid white;line-height:1">
-                                    @(cartCount > 99 ? "99+" : cartCount.ToString())
-                                </span>
+                                <span class="position-absolute" style="top:-4px;right:-4px;background:#dc2626;color:white;width:18px;height:18px;border-radius:50%;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid white;">@(cartCount > 99 ? "99+" : cartCount.ToString())</span>
                             }
                         </a>
-                    </li>
-                }
-                @if (User.Identity != null && User.Identity.IsAuthenticated)
-                {
-                    <li class="nav-item dropdown">
-                        <a class="nav-link user-pill dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                    }
+                    <div class="dropdown">
+                        <button class="topbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle"></i>
-                            @(User.Identity.Name?.Split('@')[0])
-                        </a>
+                        </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li class="px-3 py-2">
                                 <small class="text-muted d-block" style="font-size:.78rem">Conectado como</small>
-                                <strong style="font-size:.88rem">@User.Identity.Name</strong>
-                                <br>
-                                @if (User.IsInRole("Administrador"))
-                                    { <span class="badge-success-hf" style="font-size:.75rem">Administrador</span> }
-                                else if (User.IsInRole("Doctor"))
-                                    { <span class="badge-info-hf" style="font-size:.75rem">Doctor</span> }
-                                else if (User.IsInRole("Cliente"))
-                                    { <span class="badge-success-hf" style="font-size:.75rem">Cliente</span> }
+                                <strong style="font-size:.88rem">@User.Identity?.Name</strong>
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                            @if (User.IsInRole("Cliente"))
+                            @if (isCliente)
                             {
-                                <li>
-                                    <a class="dropdown-item" asp-area="Identity" asp-page="/Account/TwoFactorAuthentication">
-                                        <i class="bi bi-shield-lock text-success"></i> Configuración de cuenta
-                                    </a>
-                                </li>
+                                <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/TwoFactorAuthentication"><i class="bi bi-shield-lock text-success"></i> Configuración de cuenta</a></li>
                                 <li><hr class="dropdown-divider"></li>
                             }
                             <li>
                                 <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="px-1">
-                                    <button type="submit" class="dropdown-item text-danger rounded-2">
-                                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
-                                    </button>
+                                    <button type="submit" class="dropdown-item text-danger rounded-2"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</button>
                                 </form>
                             </li>
                         </ul>
-                    </li>
-                }
-                else
-                {
-                    <li class="nav-item">
-                        <a class="nav-link btn-nav-outline" asp-area="Identity" asp-page="/Account/Login">
-                            <i class="bi bi-box-arrow-in-right"></i> Ingresar
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn-nav-cta nav-link" asp-area="Identity" asp-page="/Account/Register">
-                            <i class="bi bi-person-plus"></i> Regístrate
-                        </a>
-                    </li>
-                }
-            </ul>
+                    </div>
+                </div>
+            </header>
+
+            <main>@RenderBody()</main>
+
+            <footer style="background:var(--color-white);border-top:1px solid var(--color-border);padding:14px 24px;margin-top:auto">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span style="font-size:.78rem;color:var(--color-text-secondary)">&copy; 2026 Huellitas Felices</span>
+                    <span style="font-size:.72rem;color:var(--color-text-secondary);opacity:.6">v3.0 · ASP.NET Core + PostgreSQL</span>
+                </div>
+            </footer>
         </div>
     </div>
-</nav>
+}
+else
+{
+    <!-- ═══════════ PUBLIC NAVBAR LAYOUT (Anonymous Users) ═══════════ -->
+    <nav class="navbar navbar-expand-lg hf-nav">
+        <div class="container">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                <span class="brand-icon"><img src="~/images/logo_huellitas.png" alt="" /></span>
+                Huellitas Felices
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav me-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="AnimalesAdopcion" asp-action="Index"><i class="bi bi-heart"></i> Adopción</a></li>
+                </ul>
+                <ul class="navbar-nav align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link btn-nav-outline" asp-area="Identity" asp-page="/Account/Login"><i class="bi bi-box-arrow-in-right"></i> Ingresar</a></li>
+                    <li class="nav-item"><a class="btn-nav-cta nav-link" asp-area="Identity" asp-page="/Account/Register"><i class="bi bi-person-plus"></i> Regístrate</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-<!-- ═══════════════ CONTENT ═══════════════ -->
-<main>@RenderBody()</main>
+    <main>@RenderBody()</main>
 
-<!-- ═══════════════ FOOTER ═══════════════ -->
-<footer class="hf-footer">
-    <div class="container">
-        <div class="row g-4 pb-2">
-            <div class="col-lg-4 col-md-6">
-                <div class="footer-brand">
-                    <span><i class="bi bi-heart-pulse-fill text-white"></i></span>
-                    Huellitas Felices
+    <footer class="hf-footer">
+        <div class="container">
+            <div class="row g-4 pb-2">
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-brand"><span><i class="bi bi-heart-pulse-fill"></i></span>Huellitas Felices</div>
+                    <p class="footer-desc">Clínica veterinaria comprometida con la salud y el bienestar de tus mascotas. Atención de calidad, precios accesibles.</p>
+                    <div class="footer-social">
+                        <a href="#" class="fs-facebook" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="fs-instagram" title="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="fs-whatsapp" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                    </div>
+                    <div class="footer-newsletter">
+                        <p>Recibe noticias y consejos para tu mascota</p>
+                        <div class="footer-newsletter-input">
+                            <input type="email" placeholder="tu@correo.com" />
+                            <button type="button"><i class="bi bi-send-fill"></i></button>
+                        </div>
+                    </div>
                 </div>
-                <p style="font-size:.9rem; line-height:1.7; max-width:300px">
-                    Clínica veterinaria comprometida con la salud y el bienestar
-                    de tus mascotas. Atención de calidad, precios accesibles.
-                </p>
-                <div class="d-flex gap-3 mt-3">
-                    <a href="#" style="color:rgba(255,255,255,.5); font-size:1.3rem"><i class="bi bi-facebook"></i></a>
-                    <a href="#" style="color:rgba(255,255,255,.5); font-size:1.3rem"><i class="bi bi-instagram"></i></a>
-                    <a href="#" style="color:rgba(255,255,255,.5); font-size:1.3rem"><i class="bi bi-whatsapp"></i></a>
+                <div class="col-lg-2 col-md-6">
+                    <h6>Servicios</h6>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="bi bi-dot"></i> Consultas</a></li>
+                        <li><a href="#"><i class="bi bi-dot"></i> Vacunación</a></li>
+                        <li><a href="#"><i class="bi bi-dot"></i> Salud dental</a></li>
+                        <li><a href="#"><i class="bi bi-dot"></i> Tratamientos</a></li>
+                        <li><a href="#"><i class="bi bi-dot"></i> Cirugía</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h6>Acceso</h6>
+                    <ul class="footer-links">
+                        <li><a asp-area="Identity" asp-page="/Account/Login"><i class="bi bi-box-arrow-in-right"></i> Iniciar sesión</a></li>
+                        <li><a asp-area="Identity" asp-page="/Account/Register"><i class="bi bi-person-plus"></i> Registrarse</a></li>
+                        <li><a asp-controller="AnimalesAdopcion" asp-action="Index"><i class="bi bi-heart"></i> Adopciones</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <h6>Contacto</h6>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-geo-alt"></i>
+                        <span class="footer-contact-text">Av. Amazonas y Naciones Unidas, Quito</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-telephone"></i>
+                        <span class="footer-contact-text"><strong>(02) 234-5678</strong></span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-phone"></i>
+                        <span class="footer-contact-text"><strong>099-123-4567</strong></span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-envelope"></i>
+                        <span class="footer-contact-text">info@huellitas.ec</span>
+                    </div>
+                    <div class="footer-hours">
+                        <div class="footer-hours-header"><i class="bi bi-clock"></i> Horario de atención</div>
+                        <div class="footer-hours-grid">
+                            <div><div class="footer-hours-day">Lun – Vie</div><div class="footer-hours-time">8:00 – 20:00</div></div>
+                            <div><div class="footer-hours-day">Sáb – Dom</div><div class="footer-hours-time">9:00 – 16:00</div></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-2 col-md-6">
-                <h6>Servicios</h6>
-                <a href="#"><i class="bi bi-dot"></i> Consultas</a>
-                <a href="#"><i class="bi bi-dot"></i> Vacunación</a>
-                <a href="#"><i class="bi bi-dot"></i> Salud dental</a>
-                <a href="#"><i class="bi bi-dot"></i> Tratamientos</a>
-                <a href="#"><i class="bi bi-dot"></i> Cirugía</a>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <h6>Acceso</h6>
-                <a asp-area="Identity" asp-page="/Account/Login">
-                    <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
-                </a>
-                <a asp-area="Identity" asp-page="/Account/Register">
-                    <i class="bi bi-person-plus"></i> Registrarse
-                </a>
-                <a asp-controller="AnimalesAdopcion" asp-action="Index">
-                    <i class="bi bi-heart"></i> Adopciones
-                </a>
-            </div>
-            <div class="col-lg-4 col-md-6">
-                <h6>Contacto</h6>
-                <a href="#"><i class="bi bi-geo-alt"></i> Av. Amazonas y Naciones Unidas, Quito</a>
-                <a href="tel:022345678"><i class="bi bi-telephone"></i> (02) 234-5678</a>
-                <a href="tel:0991234567"><i class="bi bi-phone"></i> 099-123-4567</a>
-                <a href="mailto:info@huellitas.ec"><i class="bi bi-envelope"></i> info@huellitas.ec</a>
-                <div class="mt-3 p-3 rounded-3" style="background:rgba(255,255,255,.06); font-size:.85rem">
-                    <i class="bi bi-clock me-1"></i>
-                    <strong>Lun – Vie</strong> 8:00 – 20:00 &nbsp;|&nbsp;
-                    <strong>Sáb – Dom</strong> 9:00 – 16:00
+            <div class="footer-bottom">
+                <div class="footer-bottom-inner">
+                    <span class="footer-copy">&copy; 2026 Huellitas Felices. Todos los derechos reservados.</span>
+                    <span class="footer-tech">ASP.NET Core + PostgreSQL</span>
                 </div>
             </div>
         </div>
-        <div class="footer-bottom d-flex flex-wrap justify-content-between align-items-center">
-            <span>&copy; 2026 Huellitas Felices. Todos los derechos reservados.</span>
-            <span style="font-size:.8rem; opacity:.5">
-                Desarrollado con ASP.NET Core + PostgreSQL
-            </span>
-        </div>
-    </div>
-</footer>
+    </footer>
+}
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
+
+<script>
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('show');
+    document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+// Back to top
+var backBtn = document.getElementById('backToTop');
+if (backBtn) {
+    window.addEventListener('scroll', function() {
+        backBtn.classList.toggle('visible', window.scrollY > 400);
+    });
+    backBtn.addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+</script>
+
+@if (!isAuth)
+{
+<button id="backToTop" class="footer-back-top" title="Volver arriba"><i class="bi bi-chevron-up"></i></button>
+}
+
 @await RenderSectionAsync("Scripts", required: false)
 
-@if (User.Identity?.IsAuthenticated == true)
+@if (isAuth)
 {
 <!-- Chatbot flotante -->
 <button id="chatbot-bubble" title="Asistente IA">
@@ -333,23 +348,19 @@
 
 <div id="chatbot-panel">
     <div class="chatbot-header">
-        <div class="chatbot-header-avatar">
-            <i class="bi bi-robot"></i>
-        </div>
+        <div class="chatbot-header-avatar"><i class="bi bi-robot"></i></div>
         <div class="chatbot-header-info">
             <h6>Asistente IA</h6>
             <small>Huellitas Felices</small>
         </div>
         <button id="chatbot-close" class="chatbot-header-close"><i class="bi bi-x-lg"></i></button>
     </div>
-
     <div class="chatbot-messages" id="chatbot-messages">
         <div class="chatbot-msg bot">
             <div class="chatbot-msg-avatar"><i class="bi bi-robot"></i></div>
             <div class="chatbot-msg-bubble">Hola! Soy el asistente de <strong>Huellitas Felices</strong>. Puedo responder preguntas sobre clientes, mascotas, consultas, ventas, inventario y mas.</div>
         </div>
     </div>
-
     <div class="chatbot-suggestions" id="chatbot-suggestions">
         <button class="chatbot-suggestion-btn">Cuantos clientes tenemos?</button>
         <button class="chatbot-suggestion-btn">Que mascotas hay?</button>
@@ -357,12 +368,9 @@
         <button class="chatbot-suggestion-btn">Hay bajo stock?</button>
         <button class="chatbot-suggestion-btn">Cuanto vendimos este mes?</button>
     </div>
-
     <form id="chatbot-form" class="chatbot-input-area">
         <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Escribe tu pregunta..." autocomplete="off" />
-        <button type="submit" id="chatbot-send" class="chatbot-send-btn">
-            <i class="bi bi-send-fill"></i>
-        </button>
+        <button type="submit" id="chatbot-send" class="chatbot-send-btn"><i class="bi bi-send-fill"></i></button>
     </form>
 </div>
 

@@ -193,6 +193,10 @@ namespace HuellitasFelices.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -207,6 +211,9 @@ namespace HuellitasFelices.Migrations
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("NumeroCompra")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -219,12 +226,17 @@ namespace HuellitasFelices.Migrations
                     b.Property<int>("ProveedorId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("SucursalId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("Total")
                         .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProveedorId");
+
+                    b.HasIndex("SucursalId");
 
                     b.ToTable("Compras", (string)null);
                 });
@@ -280,6 +292,9 @@ namespace HuellitasFelices.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<int?>("SucursalId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("VeterinarioId")
                         .HasColumnType("integer");
 
@@ -290,6 +305,8 @@ namespace HuellitasFelices.Migrations
                     b.HasIndex("FechaConsulta");
 
                     b.HasIndex("MascotaId");
+
+                    b.HasIndex("SucursalId");
 
                     b.HasIndex("VeterinarioId");
 
@@ -540,6 +557,9 @@ namespace HuellitasFelices.Migrations
                     b.Property<decimal>("Salario")
                         .HasColumnType("numeric");
 
+                    b.Property<int?>("SucursalId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Telefono")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
@@ -549,6 +569,8 @@ namespace HuellitasFelices.Migrations
                     b.HasIndex("Cargo");
 
                     b.HasIndex("Email");
+
+                    b.HasIndex("SucursalId");
 
                     b.ToTable("Empleados");
                 });
@@ -575,9 +597,14 @@ namespace HuellitasFelices.Migrations
                     b.Property<int>("StockActual")
                         .HasColumnType("integer");
 
+                    b.Property<int>("SucursalId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductoId")
+                    b.HasIndex("SucursalId");
+
+                    b.HasIndex("ProductoId", "SucursalId")
                         .IsUnique();
 
                     b.ToTable("Inventarios", (string)null);
@@ -678,6 +705,12 @@ namespace HuellitasFelices.Migrations
                     b.Property<int>("StockPosterior")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("SucursalDestinoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SucursalId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("TipoMovimiento")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -694,6 +727,10 @@ namespace HuellitasFelices.Migrations
                     b.HasIndex("FechaMovimiento");
 
                     b.HasIndex("ProductoId");
+
+                    b.HasIndex("SucursalDestinoId");
+
+                    b.HasIndex("SucursalId");
 
                     b.HasIndex("TipoMovimiento");
 
@@ -994,6 +1031,63 @@ namespace HuellitasFelices.Migrations
                     b.ToTable("SolicitudesAdopcion");
                 });
 
+            modelBuilder.Entity("HuellitasFelices.Models.Sucursal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Ciudad")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Direccion")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EliminadoPor")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("FechaEliminacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Ciudad");
+
+                    b.HasIndex("Nombre");
+
+                    b.ToTable("Sucursales", (string)null);
+                });
+
             modelBuilder.Entity("HuellitasFelices.Models.Tratamiento", b =>
                 {
                     b.Property<int>("Id")
@@ -1098,6 +1192,9 @@ namespace HuellitasFelices.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<int?>("SucursalId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("TotalConsulta")
                         .HasColumnType("numeric");
 
@@ -1112,6 +1209,8 @@ namespace HuellitasFelices.Migrations
                     b.HasIndex("DuenoId");
 
                     b.HasIndex("Estado");
+
+                    b.HasIndex("SucursalId");
 
                     b.ToTable("Ventas", (string)null);
                 });
@@ -1320,7 +1419,14 @@ namespace HuellitasFelices.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "Sucursal")
+                        .WithMany()
+                        .HasForeignKey("SucursalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Proveedor");
+
+                    b.Navigation("Sucursal");
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.Consulta", b =>
@@ -1331,12 +1437,19 @@ namespace HuellitasFelices.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "Sucursal")
+                        .WithMany()
+                        .HasForeignKey("SucursalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("HuellitasFelices.Models.Empleado", "Veterinario")
                         .WithMany()
                         .HasForeignKey("VeterinarioId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Mascota");
+
+                    b.Navigation("Sucursal");
 
                     b.Navigation("Veterinario");
                 });
@@ -1398,6 +1511,16 @@ namespace HuellitasFelices.Migrations
                     b.Navigation("Venta");
                 });
 
+            modelBuilder.Entity("HuellitasFelices.Models.Empleado", b =>
+                {
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "Sucursal")
+                        .WithMany()
+                        .HasForeignKey("SucursalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Sucursal");
+                });
+
             modelBuilder.Entity("HuellitasFelices.Models.Inventario", b =>
                 {
                     b.HasOne("HuellitasFelices.Models.Producto", "Producto")
@@ -1406,7 +1529,15 @@ namespace HuellitasFelices.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "Sucursal")
+                        .WithMany()
+                        .HasForeignKey("SucursalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Producto");
+
+                    b.Navigation("Sucursal");
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.Mascota", b =>
@@ -1431,9 +1562,23 @@ namespace HuellitasFelices.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "SucursalDestino")
+                        .WithMany()
+                        .HasForeignKey("SucursalDestinoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "Sucursal")
+                        .WithMany()
+                        .HasForeignKey("SucursalId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Compra");
 
                     b.Navigation("Producto");
+
+                    b.Navigation("Sucursal");
+
+                    b.Navigation("SucursalDestino");
                 });
 
             modelBuilder.Entity("HuellitasFelices.Models.Pago", b =>
@@ -1514,9 +1659,16 @@ namespace HuellitasFelices.Migrations
                         .HasForeignKey("DuenoId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("HuellitasFelices.Models.Sucursal", "Sucursal")
+                        .WithMany()
+                        .HasForeignKey("SucursalId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Consulta");
 
                     b.Navigation("Dueno");
+
+                    b.Navigation("Sucursal");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

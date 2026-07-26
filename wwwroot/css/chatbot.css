@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    Chatbot flotante — Huellitas Felices
+   Paleta: Azul marino + Turquesa
    ═══════════════════════════════════════════════════════════════════ */
 
 /* Burbuja flotante */
@@ -11,19 +12,19 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), #1a85e0);
+    background: linear-gradient(135deg, var(--accent), var(--primary-mid));
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 20px rgba(26, 133, 224, .4);
+    box-shadow: 0 4px 20px rgba(0, 188, 225, .4);
     transition: transform .3s, box-shadow .3s;
 }
 
 #chatbot-bubble:hover {
     transform: scale(1.1);
-    box-shadow: 0 6px 28px rgba(26, 133, 224, .55);
+    box-shadow: 0 6px 28px rgba(0, 188, 225, .55);
 }
 
 #chatbot-bubble i {
@@ -59,8 +60,8 @@
     max-width: calc(100vw - 48px);
     height: 520px;
     max-height: calc(100vh - 140px);
-    background: var(--bg-primary, #fff);
-    border: 1px solid var(--border, #e5e7eb);
+    background: var(--white, #fff);
+    border: 1px solid var(--border, #E5E7EB);
     border-radius: 16px;
     box-shadow: 0 12px 40px rgba(0,0,0,.15);
     display: none;
@@ -80,7 +81,7 @@
 
 /* Header */
 .chatbot-header {
-    background: linear-gradient(135deg, var(--primary), #1a85e0);
+    background: linear-gradient(135deg, var(--primary-dark), var(--accent));
     color: white;
     padding: 16px 18px;
     display: flex;
@@ -170,13 +171,13 @@
 }
 
 .chatbot-msg.bot .chatbot-msg-avatar {
-    background: var(--primary);
+    background: var(--accent);
     color: white;
 }
 
 .chatbot-msg.user .chatbot-msg-avatar {
-    background: var(--gray-200, #e5e7eb);
-    color: var(--text-main, #374151);
+    background: var(--gray-100, #E5E7EB);
+    color: var(--text-mid, #374151);
 }
 
 .chatbot-msg-bubble {
@@ -189,13 +190,13 @@
 }
 
 .chatbot-msg.bot .chatbot-msg-bubble {
-    background: var(--bg-secondary, #f3f4f6);
-    border: 1px solid var(--border, #e5e7eb);
+    background: var(--gray-50, #FAFBFC);
+    border: 1px solid var(--border, #E5E7EB);
     border-bottom-left-radius: 4px;
 }
 
 .chatbot-msg.user .chatbot-msg-bubble {
-    background: var(--primary);
+    background: var(--accent);
     color: white;
     border-bottom-right-radius: 4px;
 }
@@ -210,8 +211,8 @@
 
 .chatbot-suggestion-btn {
     background: none;
-    border: 1px solid var(--primary, #1a85e0);
-    color: var(--primary, #1a85e0);
+    border: 1px solid var(--accent, #00BCE1);
+    color: var(--primary-mid, #0074B7);
     border-radius: 20px;
     padding: 5px 12px;
     font-size: .78rem;
@@ -221,7 +222,7 @@
 }
 
 .chatbot-suggestion-btn:hover {
-    background: var(--primary, #1a85e0);
+    background: var(--accent, #00BCE1);
     color: white;
 }
 
@@ -235,7 +236,7 @@
 .chatbot-loading-dot {
     width: 8px;
     height: 8px;
-    background: var(--primary);
+    background: var(--accent);
     border-radius: 50%;
     animation: chatbot-bounce .6s infinite alternate;
 }
@@ -250,7 +251,7 @@
 /* Input */
 .chatbot-input-area {
     padding: 12px 16px;
-    border-top: 1px solid var(--border, #e5e7eb);
+    border-top: 1px solid var(--border, #E5E7EB);
     display: flex;
     gap: 8px;
     flex-shrink: 0;
@@ -258,25 +259,25 @@
 
 .chatbot-input {
     flex: 1;
-    border: 1px solid var(--border, #e5e7eb);
+    border: 1px solid var(--border, #E5E7EB);
     border-radius: 12px;
     padding: 10px 14px;
     font-size: .88rem;
     outline: none;
     transition: border-color .2s;
-    background: var(--bg-primary, #fff);
-    color: var(--text-main, #374151);
+    background: var(--white, #fff);
+    color: var(--text-mid, #374151);
 }
 
 .chatbot-input:focus {
-    border-color: var(--primary);
+    border-color: var(--accent);
 }
 
 .chatbot-send-btn {
     width: 40px;
     height: 40px;
     border: none;
-    background: var(--primary);
+    background: var(--accent);
     color: white;
     border-radius: 12px;
     cursor: pointer;
@@ -288,7 +289,7 @@
 }
 
 .chatbot-send-btn:hover {
-    background: #1565c0;
+    background: var(--accent-hover);
 }
 
 .chatbot-send-btn:disabled {

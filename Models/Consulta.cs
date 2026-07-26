@@ -57,6 +57,10 @@ namespace HuellitasFelices.Models
         public int MascotaId { get; set; }
         public Mascota? Mascota { get; set; }
 
+        [Display(Name = "Sucursal")]
+        public int? SucursalId { get; set; }
+        public Sucursal? Sucursal { get; set; }
+
         // Navegación
         public ICollection<Tratamiento> Tratamientos { get; set; } = new List<Tratamiento>();
         public ICollection<ConsultaMedicamento> Medicamentos { get; set; } = new List<ConsultaMedicamento>();

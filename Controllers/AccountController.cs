@@ -1,12 +1,9 @@
-using HuellitasFelices.Data;
-using HuellitasFelices.Models;
-using HuellitasFelices.Services;
 using HuellitasFelices.Areas.Identity.Pages.Account;
+using HuellitasFelices.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace HuellitasFelices.Controllers
 {
@@ -14,19 +11,16 @@ namespace HuellitasFelices.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly AppDbContext _context;
-        private readonly IEmailService _emailService;
+        private readonly IAccountService _accountService;
 
         public AccountController(
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            AppDbContext context,
-            IEmailService emailService)
+            IAccountService accountService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _context = context;
-            _emailService = emailService;
+            _accountService = accountService;
         }
 
         // ── PANEL DEL CLIENTE ─────────────────────────────────────────────────
@@ -36,91 +30,19 @@ namespace HuellitasFelices.Controllers
         public async Task<IActionResult> MiPanel()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            if (user?.Email == null)
                 return RedirectToAction("Index", "Home");
 
-            var dueno = _context.Duenos
-                .FirstOrDefault(d => d.Email != null && user.Email != null && d.Email.ToLower() == user.Email.ToLower() && d.Activo);
-
-            if (dueno == null)
+            var panel = await _accountService.ObtenerPanelClienteAsync(user.Email);
+            if (panel == null)
                 return RedirectToAction("Index", "Home");
 
-            var solicitudesAprobadas = _context.SolicitudesAdopcion
-                .Include(s => s.AnimalAdopcion)
-                .Where(s => s.Email != null && user.Email != null && s.Email.ToLower() == user.Email.ToLower() && s.Estado == "Aprobada" && s.Activo)
-                .ToList();
-
-            bool huboSincronizacion = false;
-            foreach (var sol in solicitudesAprobadas)
-            {
-                if (sol.AnimalAdopcion != null)
-                {
-                    string nombreBuscado = sol.AnimalAdopcion.Nombre.ToLower();
-                    var mascotaExiste = _context.Mascotas
-                        .Any(m => m.Nombre.ToLower() == nombreBuscado && m.DuenoId == dueno.Id && m.Activo);
-
-                    if (!mascotaExiste)
-                    {
-                        var nuevaMascota = new Mascota
-                        {
-                            Nombre = sol.AnimalAdopcion.Nombre,
-                            Especie = sol.AnimalAdopcion.Especie,
-                            Raza = sol.AnimalAdopcion.Raza ?? "Mestizo",
-                            Sexo = "Macho",
-                            FechaNacimiento = DateTime.UtcNow.AddYears(-sol.AnimalAdopcion.EdadAproximada),
-                            Peso = 5.0m,
-                            DuenoId = dueno.Id,
-                            Activo = true,
-                            FechaCreacion = DateTime.UtcNow,
-                            FechaActualizacion = DateTime.UtcNow
-                        };
-                        _context.Mascotas.Add(nuevaMascota);
-                        huboSincronizacion = true;
-                    }
-                }
-            }
-
-            if (huboSincronizacion)
-            {
-                await _context.SaveChangesAsync();
-            }
-
-            var mascotas = _context.Mascotas
-                .Where(m => m.DuenoId == dueno.Id && m.Activo)
-                .ToList();
-
-            var consultas = _context.Consultas
-                .Include(c => c.Medicamentos).ThenInclude(cm => cm.Producto)
-                .Include(c => c.Venta)
-                .Where(c => mascotas.Select(m => m.Id).Contains(c.MascotaId) && c.Activo)
-                .OrderByDescending(c => c.FechaConsulta)
-                .Take(10)
-                .ToList();
-
-            var consultasPendientesPago = consultas
-                .Where(c => c.Estado == "EnRevision" && c.Medicamentos.Any() && c.Venta == null)
-                .ToList();
-
-            var solicitudes = _context.SolicitudesAdopcion
-                .Where(s => s.Email != null && user.Email != null && s.Email.ToLower() == user.Email.ToLower() && s.Activo)
-                .OrderByDescending(s => s.FechaSolicitud)
-                .Take(5)
-                .ToList();
-
-            var productosDestacados = _context.Productos
-                .Include(p => p.Categoria)
-                .Include(p => p.Inventarios)
-                .Where(p => p.Activo && p.Inventarios.Any(i => i.StockActual > 0))
-                .OrderByDescending(p => p.FechaCreacion)
-                .Take(6)
-                .ToList();
-
-            ViewBag.Dueno = dueno;
-            ViewBag.Mascotas = mascotas;
-            ViewBag.Consultas = consultas;
-            ViewBag.ConsultasPendientesPago = consultasPendientesPago;
-            ViewBag.Solicitudes = solicitudes;
-            ViewBag.ProductosDestacados = productosDestacados;
+            ViewBag.Dueno = panel.Dueno;
+            ViewBag.Mascotas = panel.Mascotas;
+            ViewBag.Consultas = panel.Consultas;
+            ViewBag.ConsultasPendientesPago = panel.ConsultasPendientesPago;
+            ViewBag.Solicitudes = panel.Solicitudes;
+            ViewBag.ProductosDestacados = panel.ProductosDestacados;
 
             return View();
         }
@@ -132,41 +54,17 @@ namespace HuellitasFelices.Controllers
         public async Task<IActionResult> PanelDoctor()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            if (user?.Email == null)
                 return RedirectToAction("Index", "Home");
 
-            var doctorUser = await _context.Empleados
-                .FirstOrDefaultAsync(e => e.Email != null && user.Email != null && e.Email.ToLower() == user.Email.ToLower() && e.Activo);
-
-            if (doctorUser == null)
+            var panel = await _accountService.ObtenerPanelDoctorAsync(user.Email);
+            if (panel == null)
                 return RedirectToAction("Index", "Home");
 
-            var consultasPendientes = await _context.Consultas
-                .Include(c => c.Mascota)
-                    .ThenInclude(m => m!.Dueno)
-                .Where(c => c.Activo && c.VeterinarioId == doctorUser.Id && c.Estado == "Pendiente")
-                .OrderByDescending(c => c.FechaConsulta)
-                .ToListAsync();
-
-            var consultasEnRevision = await _context.Consultas
-                .Include(c => c.Mascota)
-                    .ThenInclude(m => m!.Dueno)
-                .Where(c => c.Activo && c.VeterinarioId == doctorUser.Id && c.Estado == "EnRevision")
-                .OrderByDescending(c => c.FechaConsulta)
-                .ToListAsync();
-
-            var consultasCompletadas = await _context.Consultas
-                .Include(c => c.Mascota)
-                    .ThenInclude(m => m!.Dueno)
-                .Where(c => c.Activo && c.VeterinarioId == doctorUser.Id && c.Estado == "Completada")
-                .OrderByDescending(c => c.FechaConsulta)
-                .Take(10)
-                .ToListAsync();
-
-            ViewBag.Doctor = doctorUser;
-            ViewBag.Pendientes = consultasPendientes;
-            ViewBag.EnRevision = consultasEnRevision;
-            ViewBag.Completadas = consultasCompletadas;
+            ViewBag.Doctor = panel.Doctor;
+            ViewBag.Pendientes = panel.ConsultasPendientes;
+            ViewBag.EnRevision = panel.ConsultasEnRevision;
+            ViewBag.Completadas = panel.ConsultasCompletadas;
 
             return View();
         }
@@ -177,16 +75,8 @@ namespace HuellitasFelices.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Usuarios()
         {
-            var usuarios = _userManager.Users.ToList();
-            var modelo = new List<(IdentityUser usuario, IList<string> roles)>();
-
-            foreach (var u in usuarios)
-            {
-                var roles = await _userManager.GetRolesAsync(u);
-                modelo.Add((u, roles));
-            }
-
-            return View(modelo);
+            var usuarios = await _accountService.ObtenerUsuariosAsync();
+            return View(usuarios);
         }
 
         // ── REGISTRO INTERNO (solo Administrador) ─────────────────────────────
@@ -214,37 +104,16 @@ namespace HuellitasFelices.Controllers
                 return View(model);
             }
 
-            // Limitar doctores a máximo 3
-            if (model.Rol == "Doctor")
-            {
-                var totalDoctores = await _context.Empleados.CountAsync(e => e.Cargo == "Veterinario" && e.Activo);
-                if (totalDoctores >= 3)
-                {
-                    ModelState.AddModelError("Rol", "Solo se permiten 3 doctores veterinarios en el sistema.");
-                    var rolesLimit = _roleManager.Roles.Where(r => r.Name != "Cliente").ToList();
-                    ViewBag.Roles = new SelectList(rolesLimit, "Name", "Name");
-                    return View(model);
-                }
-            }
+            var (exito, errores) = await _accountService.RegistrarUsuarioInternoAsync(model);
 
-            var user = new IdentityUser
+            if (exito)
             {
-                UserName = model.Email,
-                Email = model.Email,
-                EmailConfirmed = true
-            };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (result.Succeeded)
-            {
-                await _userManager.AddToRoleAsync(user, model.Rol);
                 TempData["Mensaje"] = $"Usuario {model.Email} creado con rol {model.Rol}.";
                 return RedirectToAction(nameof(Usuarios));
             }
 
-            foreach (var error in result.Errors)
-                ModelState.AddModelError(string.Empty, error.Description);
+            foreach (var error in errores)
+                ModelState.AddModelError(string.Empty, error);
 
             var rolesList = _roleManager.Roles.Where(r => r.Name != "Cliente").ToList();
             ViewBag.Roles = new SelectList(rolesList, "Name", "Name");
@@ -272,24 +141,16 @@ namespace HuellitasFelices.Controllers
             if (user == null)
                 return RedirectToAction("Index", "Home");
 
-            var result = await _userManager.ChangePasswordAsync(user, model.PasswordActual, model.NuevaPassword);
+            var (exito, errores) = await _accountService.CambiarPasswordAsync(user, model.PasswordActual, model.NuevaPassword);
 
-            if (result.Succeeded)
+            if (exito)
             {
-                try
-                {
-                    await _emailService.EnviarCambioPasswordAsync(
-                        user.Email!,
-                        user.Email!);
-                }
-                catch { }
-
                 TempData["Mensaje"] = "Contraseña cambiada correctamente. Se ha enviado una notificación a tu correo.";
                 return RedirectToAction("MiPanel");
             }
 
-            foreach (var error in result.Errors)
-                ModelState.AddModelError(string.Empty, error.Description);
+            foreach (var error in errores)
+                ModelState.AddModelError(string.Empty, error);
 
             return View(model);
         }

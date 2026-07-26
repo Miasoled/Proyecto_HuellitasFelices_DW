@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
@@ -11,11 +12,13 @@ namespace HuellitasFelices.Controllers
     public class ConsultasController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IAuditService _auditService;
         private const int TamanioPagina = 20;
 
-        public ConsultasController(AppDbContext context)
+        public ConsultasController(AppDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Consultas
@@ -67,7 +70,7 @@ namespace HuellitasFelices.Controllers
             }
 
             if (!string.IsNullOrEmpty(busqueda))
-                consultaQuery = consultaQuery.Where(c => c.Motivo.Contains(busqueda));
+                consultaQuery = consultaQuery.Where(c => EF.Functions.ILike(c.Motivo, $"%{busqueda}%"));
 
             var totalRegistros = await consultaQuery.CountAsync();
             var consultas = await consultaQuery
@@ -202,6 +205,10 @@ namespace HuellitasFelices.Controllers
 
                 _context.Add(consulta);
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("Creacion", "Consulta", consulta.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorNuevo: consulta.Motivo);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -401,6 +408,11 @@ namespace HuellitasFelices.Controllers
                     }
 
                     await _context.SaveChangesAsync();
+                    await _auditService.LogAsync("Edicion", "Consulta", consulta.Id,
+                        usuarioEmail: User.Identity?.Name,
+                        direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        valorAnterior: consultaExistente.Motivo,
+                        valorNuevo: consulta.Motivo);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -478,7 +490,13 @@ namespace HuellitasFelices.Controllers
             {
                 consulta.Activo = false;
                 consulta.FechaEliminacion = DateTime.UtcNow;
+                consulta.EliminadoPor = User.Identity?.Name;
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("EliminacionLogica", "Consulta", consulta.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorAnterior: "Registro activo",
+                    valorNuevo: "Registro eliminado lógicamente");
             }
             return RedirectToAction(nameof(Index));
         }

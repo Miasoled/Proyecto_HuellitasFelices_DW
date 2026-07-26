@@ -7,20 +7,27 @@
     var categoriaSel = ViewBag.CategoriaSeleccionada as int?;
 }
 
-<div class="page-header" style="background:linear-gradient(135deg,#14532d 0%,#166534 50%,#16a34a 100%)">
+<section class="store-header">
     <div class="container">
-        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
-            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" style="color:rgba(255,255,255,.7)">Inicio</a></li>
-            <li class="breadcrumb-item active" style="color:rgba(255,255,255,.9)">Tienda</li>
-        </ol></nav>
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="store-header-content">
             <div>
-                <h1 style="color:white"><i class="bi bi-bag-heart-fill me-2"></i>Tienda Huellitas</h1>
-                <small style="color:rgba(255,255,255,.75)">Productos para el cuidado de tu mascota</small>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb store-breadcrumb">
+                        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+                        <li class="breadcrumb-item active">Tienda</li>
+                    </ol>
+                </nav>
+                <div class="store-title-row">
+                    <span class="store-title-icon"><i class="bi bi-bag-heart-fill"></i></span>
+                    <div>
+                        <h1>Tienda Huellitas</h1>
+                        <p>Productos seleccionados para el cuidado de tu mascota</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
 <div class="content-wrapper">
     <div class="container">
@@ -38,13 +45,13 @@
             </form>
 
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <a asp-action="Index" class="btn @(categoriaSel == null ? "btn-success" : "btn-outline-secondary") btn-sm rounded-3" style="font-size:.82rem">
+                <a asp-action="Index" class="btn @(categoriaSel == null ? "btn-primary" : "btn-outline-secondary") btn-sm rounded-3" style="font-size:.82rem">
                     Todos
                 </a>
                 @foreach (var cat in categorias)
                 {
                     <a asp-action="Index" asp-route-categoriaId="@cat.Id" asp-route-busqueda="@p?.Busqueda"
-                       class="btn @(categoriaSel == cat.Id ? "btn-success" : "btn-outline-secondary") btn-sm rounded-3" style="font-size:.82rem">
+                       class="btn @(categoriaSel == cat.Id ? "btn-primary" : "btn-outline-secondary") btn-sm rounded-3" style="font-size:.82rem">
                         @cat.Nombre
                     </a>
                 }
@@ -58,7 +65,7 @@
                 var stock = item.Inventarios?.Sum(i => i.StockActual) ?? 0;
                 var disponible = stock > 0;
                 var catColor = item.Categoria?.Nombre?.ToLower() switch {
-                    "alimento" => "#16a34a",
+                    "alimento" => "#00BCE1",
                     "medicamento" => "#2563eb",
                     "accesorio" => "#d97706",
                     "higiene" => "#7c3aed",

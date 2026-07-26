@@ -48,9 +48,9 @@ namespace HuellitasFelices.Services
             
             if (!string.IsNullOrEmpty(busqueda))
                 query = query.Where(l =>
-                    (l.UsuarioEmail != null && l.UsuarioEmail.Contains(busqueda)) ||
-                    (l.Descripcion != null && l.Descripcion.Contains(busqueda)) ||
-                    (l.DireccionIP != null && l.DireccionIP.Contains(busqueda)));
+                    (l.UsuarioEmail != null && EF.Functions.ILike(l.UsuarioEmail, $"%{busqueda}%")) ||
+                    (l.Descripcion != null && EF.Functions.ILike(l.Descripcion, $"%{busqueda}%")) ||
+                    (l.DireccionIP != null && EF.Functions.ILike(l.DireccionIP, $"%{busqueda}%")));
             
             if (!string.IsNullOrEmpty(accion))
                 query = query.Where(l => l.Accion == accion);

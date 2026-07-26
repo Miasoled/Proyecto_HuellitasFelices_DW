@@ -43,7 +43,7 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
             }
 
             var result = await _signInManager.ExternalLoginSignInAsync(
-                info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+                info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
 
             if (result.Succeeded)
                 return LocalRedirect(returnUrl);

@@ -3,18 +3,21 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
-    [Authorize(Roles = "Administrador")]
-    public class CategoriasController : Controller
+[Authorize(Roles = "Administrador,Supervisor")]
+public class CategoriasController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IAuditService _auditService;
         private const int TamanioPagina = 20;
 
-        public CategoriasController(AppDbContext context)
+        public CategoriasController(AppDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Categorias
@@ -28,7 +31,7 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(busqueda))
-                query = query.Where(c => c.Nombre.Contains(busqueda) || (c.Descripcion != null && c.Descripcion.Contains(busqueda)));
+                query = query.Where(c => EF.Functions.ILike(c.Nombre, $"%{busqueda}%") || (c.Descripcion != null && EF.Functions.ILike(c.Descripcion, $"%{busqueda}%")));
 
             var totalRegistros = await query.CountAsync();
             var categorias = await query
@@ -131,7 +134,13 @@ namespace HuellitasFelices.Controllers
             {
                 categoria.Activo = false;
                 categoria.FechaEliminacion = DateTime.UtcNow;
+                categoria.EliminadoPor = User.Identity?.Name;
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("EliminacionLogica", "Categoria", categoria.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorAnterior: "Registro activo",
+                    valorNuevo: "Registro eliminado lógicamente");
             }
             return RedirectToAction(nameof(Index));
         }

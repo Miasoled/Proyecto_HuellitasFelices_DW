@@ -1,0 +1,49 @@
+@{ ViewData["Title"] = "Productos Más Vendidos"; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index">Reportes</a></li>
+            <li class="breadcrumb-item active">Productos más vendidos</li>
+        </ol></nav>
+        <h1><i class="bi bi-trophy me-2"></i>Productos Más Vendidos</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container">
+
+    <div class="hf-card mb-4">
+        <p class="fw-bold mb-2"><i class="bi bi-info-circle me-1"></i>Top @ViewBag.Total productos por cantidad vendida</p>
+    </div>
+
+    <div class="hf-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr>
+                    <th>#</th><th>Producto</th><th>Categoría</th>
+                    <th>Unidades Vendidas</th><th>Ingresos Totales</th>
+                </tr></thead>
+                <tbody>
+                @{
+                    int rank = 1;
+                    foreach (dynamic item in Model)
+                    {
+                        <tr>
+                            <td>@(rank++)</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Categoria</td>
+                            <td><strong>@item.TotalVendido</strong></td>
+                            <td>$@(((decimal)item.IngresosTotales).ToString("N2"))</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+    </div>
+</div></div>

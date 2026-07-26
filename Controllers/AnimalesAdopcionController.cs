@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HuellitasFelices.Data;
 using HuellitasFelices.Models;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Controllers
 {
@@ -10,11 +11,13 @@ namespace HuellitasFelices.Controllers
     public class AnimalesAdopcionController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IAuditService _auditService;
         private const int TamanioPagina = 20;
 
-        public AnimalesAdopcionController(AppDbContext context)
+        public AnimalesAdopcionController(AppDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: AnimalesAdopcion — público, cualquiera puede ver los animales
@@ -28,7 +31,7 @@ namespace HuellitasFelices.Controllers
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(busqueda))
-                consulta = consulta.Where(a => a.Nombre.Contains(busqueda) || a.Especie.Contains(busqueda));
+                consulta = consulta.Where(a => EF.Functions.ILike(a.Nombre, $"%{busqueda}%") || EF.Functions.ILike(a.Especie, $"%{busqueda}%"));
 
             var totalRegistros = await consulta.CountAsync();
             var animales = await consulta
@@ -154,7 +157,13 @@ namespace HuellitasFelices.Controllers
             {
                 animal.Activo           = false;
                 animal.FechaEliminacion = DateTime.UtcNow;
+                animal.EliminadoPor     = User.Identity?.Name;
                 await _context.SaveChangesAsync();
+                await _auditService.LogAsync("EliminacionLogica", "AnimalAdopcion", animal.Id,
+                    usuarioEmail: User.Identity?.Name,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    valorAnterior: "Registro activo",
+                    valorNuevo: "Registro eliminado lógicamente");
             }
             return RedirectToAction(nameof(Index));
         }

@@ -2,9 +2,11 @@ using HuellitasFelices.Data;
 using HuellitasFelices.Services;
 using HuellitasFelices.Services.PaymentGateway;
 using HuellitasFelices.Settings;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 // Permite enviar DateTime con Kind=Unspecified a PostgreSQL (legacy behavior)
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -74,8 +76,26 @@ builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHostedService<EmailWorker>();
 
-// ── Servicios de negocio ────────────────────────────────────────────────
-builder.Services.AddDistributedMemoryCache();
+// ── Sesión distribuida + Data Protection (Redis en Docker Swarm) ──
+var redisUrl = builder.Configuration["REDIS_URL"];
+if (!string.IsNullOrEmpty(redisUrl))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisUrl;
+        options.InstanceName = "Huellitas_";
+    });
+
+    // Data Protection compartido entre réplicas (clave para MFA/TOTP)
+    builder.Services.AddDataProtection()
+        .PersistKeysToStackExchangeRedis(
+            ConnectionMultiplexer.Connect(redisUrl), "Huellitas-DataProtection-Keys")
+        .SetApplicationName("HuellitasFelices");
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(2);
@@ -86,6 +106,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICarritoService, CarritoService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 // ── IA / Ollama ──────────────────────────────────────────────────────
 builder.Services.Configure<AiSettings>(builder.Configuration.GetSection("AI"));

@@ -91,63 +91,73 @@ namespace HuellitasFelices.Controllers
             var totalGeneral = consulta.Costo + totalMedicamentos;
             var numeroVenta = $"VTA-{DateTime.UtcNow:yyyyMMdd}-{consultaId}";
 
-            var venta = new Venta
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                NumeroVenta = numeroVenta,
-                ConsultaId = consultaId,
-                DuenoId = dueno.Id,
-                TotalConsulta = consulta.Costo,
-                TotalMedicamentos = totalMedicamentos,
-                Estado = "Pendiente",
-                MetodoPago = metodoPago,
-                FechaVenta = DateTime.UtcNow,
-                Activo = true
-            };
-
-            _context.Ventas.Add(venta);
-            await _context.SaveChangesAsync();
-
-            if (consulta.Medicamentos != null && consulta.Medicamentos.Count > 0)
-            {
-                var itemsParaReservar = consulta.Medicamentos
-                    .Select(m => (m.ProductoId, m.Cantidad))
-                    .ToList();
-
-                var reserva = await _inventoryService.ReservarStockParaVentaAsync(
-                    venta.Id, itemsParaReservar, user.Id);
-
-                if (reserva == null || reserva.Count == 0)
+                var venta = new Venta
                 {
-                    _context.Ventas.Remove(venta);
-                    await _context.SaveChangesAsync();
-                    TempData["ErrorMessage"] = "No hay stock suficiente para los medicamentos recetados.";
-                    return RedirectToAction("Pagar", new { consultaId });
-                }
-            }
+                    NumeroVenta = numeroVenta,
+                    ConsultaId = consultaId,
+                    DuenoId = dueno.Id,
+                    TotalConsulta = consulta.Costo,
+                    TotalMedicamentos = totalMedicamentos,
+                    Estado = "Pendiente",
+                    MetodoPago = metodoPago,
+                    FechaVenta = DateTime.UtcNow,
+                    Activo = true
+                };
 
-            string returnUrl = _paypalSettings.ReturnUrl;
-            string cancelUrl = _paypalSettings.CancelUrl;
+                _context.Ventas.Add(venta);
+                await _context.SaveChangesAsync();
 
-            var pago = await _paymentService.CrearPagoAsync(
-                venta.Id, totalGeneral, metodoPago, returnUrl, cancelUrl);
-
-            if (pago.Estado == "Fallido")
-            {
                 if (consulta.Medicamentos != null && consulta.Medicamentos.Count > 0)
                 {
-                    await _inventoryService.RevertirReservaAsync(venta.Id, user.Id, "Fallo al crear pago");
+                    var itemsParaReservar = consulta.Medicamentos
+                        .Select(m => (m.ProductoId, m.Cantidad))
+                        .ToList();
+
+                    var reserva = await _inventoryService.ReservarStockParaVentaAsync(
+                        venta.Id, itemsParaReservar, user.Id);
+
+                    if (reserva == null || reserva.Count == 0)
+                    {
+                        await transaction.RollbackAsync();
+                        TempData["ErrorMessage"] = "No hay stock suficiente para los medicamentos recetados.";
+                        return RedirectToAction("Pagar", new { consultaId });
+                    }
+                }
+
+                await transaction.CommitAsync();
+
+                string returnUrl = _paypalSettings.ReturnUrl;
+                string cancelUrl = _paypalSettings.CancelUrl;
+
+                var pago = await _paymentService.CrearPagoAsync(
+                    venta.Id, totalGeneral, metodoPago, returnUrl, cancelUrl);
+
+                if (pago.Estado == "Fallido")
+                {
+                    if (consulta.Medicamentos != null && consulta.Medicamentos.Count > 0)
+                    {
+                        await _inventoryService.RevertirReservaAsync(venta.Id, user.Id, "Fallo al crear pago");
+                    }
+                    return RedirectToAction("PagoFallido", "Payment");
+                }
+
+                if (!string.IsNullOrEmpty(pago.UrlAprobacion))
+                    return Redirect(pago.UrlAprobacion);
+
+                if (consulta.Medicamentos != null && consulta.Medicamentos.Count > 0)
+                {
+                    await _inventoryService.RevertirReservaAsync(venta.Id, user.Id, "No se obtuvo URL de aprobacion");
                 }
                 return RedirectToAction("PagoFallido", "Payment");
             }
-
-            if (!string.IsNullOrEmpty(pago.UrlAprobacion))
-                return Redirect(pago.UrlAprobacion);
-
-            if (consulta.Medicamentos != null && consulta.Medicamentos.Count > 0)
+            catch
             {
-                await _inventoryService.RevertirReservaAsync(venta.Id, user.Id, "No se obtuvo URL de aprobacion");
+                await transaction.RollbackAsync();
+                throw;
             }
-            return RedirectToAction("PagoFallido", "Payment");
         }
 
         [HttpGet]
