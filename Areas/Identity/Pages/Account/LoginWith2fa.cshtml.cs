@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using HuellitasFelices.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,17 +11,17 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
     public class LoginWith2faModel : PageModel
     {
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IAuditService _auditService;
 
-        public LoginWith2faModel(SignInManager<IdentityUser> signInManager)
+        public LoginWith2faModel(SignInManager<IdentityUser> signInManager, IAuditService auditService)
         {
             _signInManager = signInManager;
+            _auditService = auditService;
         }
 
         [BindProperty]
         public InputModel Input { get; set; } = new();
-
         public bool RememberMe { get; set; }
-
         public string ReturnUrl { get; set; } = string.Empty;
 
         public class InputModel
@@ -29,10 +30,8 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
             [StringLength(7, ErrorMessage = "El código debe tener entre 6 y 7 caracteres", MinimumLength = 6)]
             [Display(Name = "Código de autenticación")]
             public string AuthenticatorCode { get; set; } = string.Empty;
-
             [Display(Name = "Recordar este dispositivo")]
             public bool RememberMachine { get; set; }
-
             public bool RememberMe { get; set; }
         }
 
@@ -47,30 +46,32 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
             ReturnUrl = returnUrl;
-
-            if (!ModelState.IsValid)
-                return Page();
+            if (!ModelState.IsValid) return Page();
 
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-            if (user == null)
-                return RedirectToPage("Login");
+            if (user == null) return RedirectToPage("Login");
 
-            var authenticatorCode = Input.AuthenticatorCode
-                .Replace(" ", string.Empty)
-                .Replace("-", string.Empty);
-
-            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(
-                authenticatorCode, Input.RememberMachine, rememberMe);
+            var code = Input.AuthenticatorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(code, Input.RememberMachine, rememberMe);
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
             if (result.Succeeded)
+            {
+                await _auditService.LogAsync("LoginMfaExitoso", "IdentityUser", usuarioId: user.Id, usuarioEmail: user.Email,
+                    direccionIP: ip, descripcion: "Inicio de sesión confirmado mediante MFA.");
                 return LocalRedirect(returnUrl);
+            }
 
             if (result.IsLockedOut)
             {
+                await _auditService.LogAsync("CuentaBloqueadaMfa", "IdentityUser", usuarioId: user.Id, usuarioEmail: user.Email,
+                    direccionIP: ip, descripcion: "Cuenta bloqueada por códigos MFA inválidos.", nivel: "Warning");
                 ModelState.AddModelError(string.Empty, "Su cuenta ha sido bloqueada temporalmente por demasiados intentos fallidos.");
                 return Page();
             }
 
+            await _auditService.LogAsync("LoginMfaFallido", "IdentityUser", usuarioId: user.Id, usuarioEmail: user.Email,
+                direccionIP: ip, descripcion: "Código MFA inválido.", nivel: "Warning");
             ModelState.AddModelError(string.Empty, "Código de autenticación inválido. Intente de nuevo.");
             return Page();
         }

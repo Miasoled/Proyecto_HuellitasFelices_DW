@@ -16,17 +16,20 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly IAuditService _auditService;
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
             AppDbContext context,
-            IEmailService emailService)
+            IEmailService emailService,
+            IAuditService auditService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
             _emailService = emailService;
+            _auditService = auditService;
         }
 
         [BindProperty]
@@ -58,6 +61,10 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, "Cliente");
+                await _auditService.LogAsync("UsuarioRegistrado", "IdentityUser", usuarioId: user.Id,
+                    usuarioEmail: user.Email,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    valorNuevo: "Rol: Cliente", descripcion: "Nueva cuenta registrada, pendiente de confirmación de correo.");
 
                 var dueno = new Dueno
                 {

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/chatbot.css" asp-append-version="true" />
 </head>
-<body>
+<body class="@(ViewData["BodyClass"] ?? string.Empty)">
 
 @using HuellitasFelices.Services
 @inject ICarritoService Carrito

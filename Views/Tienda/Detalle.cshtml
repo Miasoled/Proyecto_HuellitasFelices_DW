@@ -18,6 +18,7 @@
         "higiene" => "bi-droplet-fill",
         _ => "bi-box-seam"
     };
+    var imagenUrl = FotoUrlHelper.Normalizar(Model.ImagenUrl);
 }
 
 <div class="page-header">
@@ -36,8 +37,17 @@
         <div class="row g-5">
             <!-- Imagen / Icono -->
             <div class="col-md-5">
-                <div style="background:@(catColor)10;border:1px solid var(--border);border-radius:var(--radius-lg);height:360px;display:flex;align-items:center;justify-content:center;position:relative">
-                    <i class="bi @catIcon" style="font-size:7rem;color:@catColor;opacity:.25"></i>
+                <div style="background:@(catColor)10;border:1px solid var(--border);border-radius:var(--radius-lg);height:360px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+                    @if (!string.IsNullOrWhiteSpace(imagenUrl))
+                    {
+                        <img src="@imagenUrl" alt="@Model.Nombre" style="width:100%;height:100%;object-fit:cover"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+                        <i class="bi @catIcon" style="display:none;font-size:7rem;color:@catColor;opacity:.25"></i>
+                    }
+                    else
+                    {
+                        <i class="bi @catIcon" style="font-size:7rem;color:@catColor;opacity:.25"></i>
+                    }
                     <div style="position:absolute;top:16px;right:16px;background:@catColor;color:white;padding:5px 14px;border-radius:20px;font-size:.78rem;font-weight:600">
                         @(Model.Categoria?.Nombre ?? "General")
                     </div>
@@ -141,9 +151,19 @@
                     @foreach (var r in relacionados)
                     {
                         var rStock = r.Inventarios?.Sum(i => i.StockActual) ?? 0;
+                        var imagenRelacionada = FotoUrlHelper.Normalizar(r.ImagenUrl);
                         <div class="col-6 col-md-3">
                             <div style="background:white;border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;transition:transform .3s,box-shadow .3s;height:100%;display:flex;flex-direction:column;align-items:center">
-                                <i class="bi @catIcon" style="font-size:2.2rem;color:@catColor;opacity:.3;margin-bottom:10px"></i>
+                                @if (!string.IsNullOrWhiteSpace(imagenRelacionada))
+                                {
+                                    <img src="@imagenRelacionada" alt="@r.Nombre" style="width:100%;height:100px;object-fit:cover;border-radius:10px;margin-bottom:10px"
+                                         onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+                                    <i class="bi @catIcon" style="display:none;font-size:2.2rem;color:@catColor;opacity:.3;margin-bottom:10px"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi @catIcon" style="font-size:2.2rem;color:@catColor;opacity:.3;margin-bottom:10px"></i>
+                                }
                                 <h6 style="font-weight:700;font-size:.88rem;margin:0 0 6px">@r.Nombre</h6>
                                 <div style="font-weight:800;color:var(--primary);font-size:1.05rem;margin-top:auto">$@r.PrecioVenta.ToString("F2")</div>
                                 <a asp-action="Detalle" asp-route-id="@r.Id" class="btn-outline-hf mt-2" style="padding:5px 12px;font-size:.78rem">

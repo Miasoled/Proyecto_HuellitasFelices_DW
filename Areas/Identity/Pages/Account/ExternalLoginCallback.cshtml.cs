@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Security.Claims;
+using HuellitasFelices.Services;
 
 namespace HuellitasFelices.Areas.Identity.Pages.Account
 {
@@ -14,15 +15,18 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly AppDbContext _context;
+        private readonly IAuditService _auditService;
 
         public ExternalLoginCallbackModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
-            AppDbContext context)
+            AppDbContext context,
+            IAuditService auditService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _context = context;
+            _auditService = auditService;
         }
 
         public async Task<IActionResult> OnGetAsync(string? returnUrl = null, string? remoteError = null)
@@ -46,7 +50,15 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
                 info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
 
             if (result.Succeeded)
+            {
+                var existingUser = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                if (existingUser != null)
+                    await _auditService.LogAsync("LoginExternoExitoso", "IdentityUser", usuarioId: existingUser.Id,
+                        usuarioEmail: existingUser.Email,
+                        direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        descripcion: $"Inicio de sesión exitoso con {info.LoginProvider}.");
                 return LocalRedirect(returnUrl);
+            }
 
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             var nombre = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email ?? "Usuario Google";
@@ -76,6 +88,10 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
                 }
 
                 await _userManager.AddToRoleAsync(user, "Cliente");
+                await _auditService.LogAsync("UsuarioRegistradoExterno", "IdentityUser", usuarioId: user.Id,
+                    usuarioEmail: user.Email,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    valorNuevo: "Rol: Cliente", descripcion: $"Nueva cuenta creada mediante {info.LoginProvider}.");
 
                 var duenoExistente = _context.Duenos.FirstOrDefault(d => d.Email == email);
                 if (duenoExistente == null)
@@ -101,6 +117,10 @@ namespace HuellitasFelices.Areas.Identity.Pages.Account
             }
 
             await _signInManager.SignInAsync(user, isPersistent: false);
+            await _auditService.LogAsync("LoginExternoExitoso", "IdentityUser", usuarioId: user.Id,
+                usuarioEmail: user.Email,
+                direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                descripcion: $"Inicio de sesión exitoso con {info.LoginProvider}.");
             return LocalRedirect(returnUrl);
         }
     }

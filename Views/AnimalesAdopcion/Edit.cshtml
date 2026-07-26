@@ -55,7 +55,7 @@
                         @if (!string.IsNullOrEmpty(Model.FotoUrl))
                         {
                             <div class="mb-2" style="border:1px solid var(--border);border-radius:12px;overflow:hidden;max-height:200px">
-                                <img id="urlPreviewImg" src="@Model.FotoUrl" alt="@Model.Nombre"
+                                <img id="urlPreviewImg" src="@FotoUrlHelper.Normalizar(Model.FotoUrl)" alt="@Model.Nombre"
                                      style="width:100%;max-height:200px;object-fit:cover" />
                             </div>
                         }

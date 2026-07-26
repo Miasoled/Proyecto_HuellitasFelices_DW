@@ -35,6 +35,12 @@
                     <textarea asp-for="Descripcion" class="form-control" rows="2"></textarea>
                     <span asp-validation-for="Descripcion" class="text-danger"></span>
                 </div>
+                <div class="col-12">
+                    <label asp-for="ImagenUrl" class="form-label"></label>
+                    <input asp-for="ImagenUrl" type="url" class="form-control" placeholder="https://ejemplo.com/producto.jpg" />
+                    <div class="form-text">Pega la URL directa de la imagen (.jpg, .png o .webp). Se guardará en la base de datos.</div>
+                    <span asp-validation-for="ImagenUrl" class="text-danger"></span>
+                </div>
                 <div class="col-md-4">
                     <label asp-for="PrecioCompra" class="form-label"></label>
                     <div class="input-group">

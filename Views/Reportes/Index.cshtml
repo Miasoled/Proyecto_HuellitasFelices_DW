@@ -12,7 +12,7 @@
     </div>
 </div>
 
-<div class="content-wrapper"><div class="container">
+<div class="content-wrapper reports-dashboard"><div class="container">
 
     <!-- KPIs -->
     <div class="row g-3 mb-4">
@@ -170,10 +170,10 @@
     </div>
 
     <!-- Reportes disponibles -->
-    <div class="hf-card mb-4">
+    <div class="hf-card reports-directory-section mb-4">
         <div class="hf-card-header"><i class="bi bi-files me-2"></i>Reportes disponibles</div>
         <div class="card-body">
-            <div class="row g-3">
+            <div class="reports-directory">
                 @{
                     var reportes = new[] {
                         ("ReporteConsultas", "bi-clipboard2-pulse", "color:var(--color-primary)", "Consultas"),
@@ -195,15 +195,14 @@
                 }
                 @foreach (var (accion, icono, color, titulo) in reportes)
                 {
-                    <div class="col-sm-6 col-md-4 col-lg-3">
-                        <a asp-action="@accion" class="d-block hf-card p-3 text-center text-decoration-none"
-                           style="border:1px solid var(--color-border); transition:transform .15s"
-                           onmouseover="this.style.transform='translateY(-3px)'"
-                           onmouseout="this.style.transform='none'">
-                            <i class="bi @icono" style="@color; font-size:1.6rem"></i>
-                            <div class="fw-bold mt-2" style="font-size:.9rem; color:#374151">@titulo</div>
-                        </a>
-                    </div>
+                    <a asp-action="@accion" class="report-directory-card text-decoration-none">
+                        <span class="report-directory-icon"><i class="bi @icono" style="@color"></i></span>
+                        <span class="report-directory-copy">
+                            <strong>@titulo</strong>
+                            <small>Ver análisis y detalles</small>
+                        </span>
+                        <i class="bi bi-arrow-up-right report-directory-arrow"></i>
+                    </a>
                 }
             </div>
         </div>

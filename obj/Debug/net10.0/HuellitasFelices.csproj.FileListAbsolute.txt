@@ -419,4 +419,4 @@ C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\StackExchange.Redis.dll
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\zn3qo7sk8v-{0}-tsooupij5e-tsooupij5e.gz
 C:\Users\User\Desktop\HuellitasFelices\bin\Debug\net10.0\Microsoft.AspNetCore.DataProtection.StackExchangeRedis.dll
 C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\1okw5r3oty-{0}-mf5u78cbyc-mf5u78cbyc.gz
-C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\nqdo4othwe-{0}-lsi8z3dbjv-lsi8z3dbjv.gz
+C:\Users\User\Desktop\HuellitasFelices\obj\Debug\net10.0\compressed\nqdo4othwe-{0}-irpulqsle1-irpulqsle1.gz

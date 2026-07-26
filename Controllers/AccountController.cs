@@ -12,15 +12,18 @@ namespace HuellitasFelices.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IAccountService _accountService;
+        private readonly IAuditService _auditService;
 
         public AccountController(
             UserManager<IdentityUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            IAccountService accountService)
+            IAccountService accountService,
+            IAuditService auditService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _accountService = accountService;
+            _auditService = auditService;
         }
 
         // ── PANEL DEL CLIENTE ─────────────────────────────────────────────────
@@ -108,6 +111,15 @@ namespace HuellitasFelices.Controllers
 
             if (exito)
             {
+                var administrador = await _userManager.GetUserAsync(User);
+                await _auditService.LogAsync(
+                    accion: "UsuarioInternoCreado",
+                    entidad: "IdentityUser",
+                    usuarioId: administrador?.Id,
+                    usuarioEmail: administrador?.Email,
+                    direccionIP: HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    valorNuevo: $"Usuario: {model.Email}; Rol: {model.Rol}",
+                    descripcion: $"El administrador creó una cuenta interna y asignó el rol {model.Rol}.");
                 TempData["Mensaje"] = $"Usuario {model.Email} creado con rol {model.Rol}.";
                 return RedirectToAction(nameof(Usuarios));
             }

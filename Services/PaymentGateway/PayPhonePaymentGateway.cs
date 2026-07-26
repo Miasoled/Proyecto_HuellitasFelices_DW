@@ -49,9 +49,10 @@ public class PayPhonePaymentGateway : IPaymentGateway
                 isAmountEditable = false
             };
 
+            var baseUrl = _settings.BaseUrl.TrimEnd('/');
             using var httpRequest = new HttpRequestMessage(
                 HttpMethod.Post,
-                "https://pay.payphonetodoesposible.com/api/Links");
+                $"{baseUrl}/api/Links");
 
             httpRequest.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", _settings.Token);
@@ -97,21 +98,35 @@ public class PayPhonePaymentGateway : IPaymentGateway
                 _logger.LogWarning("PayPhone Verify: IdentificadorExterno vacío para pago {PagoId}", pago.Id);
                 return new PaymentVerificationResult
                 {
-                    Exito = true,
-                    Aprobado = true,
-                    Estado = "Approved"
+                    Exito = false,
+                    Aprobado = false,
+                    Estado = "PENDING",
+                    MensajeError = "PayPhone no devolvió el identificador de la transacción."
+                };
+            }
+
+            if (!int.TryParse(payPhoneId, out var payPhoneTransactionId))
+            {
+                _logger.LogWarning("PayPhone Verify: identificador externo inválido para pago {PagoId}", pago.Id);
+                return new PaymentVerificationResult
+                {
+                    Exito = false,
+                    Aprobado = false,
+                    Estado = "PENDING",
+                    MensajeError = "El identificador de transacción de PayPhone no es válido."
                 };
             }
 
             var confirmRequest = new
             {
-                id = int.Parse(payPhoneId),
+                id = payPhoneTransactionId,
                 clientTxId = clientTransactionId ?? ""
             };
 
+            var baseUrl = _settings.BaseUrl.TrimEnd('/');
             using var httpRequest = new HttpRequestMessage(
                 HttpMethod.Post,
-                "https://pay.payphonetodoesposible.com/api/button/V2/Confirm");
+                $"{baseUrl}/api/button/V2/Confirm");
 
             httpRequest.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", _settings.Token);
@@ -126,9 +141,10 @@ public class PayPhonePaymentGateway : IPaymentGateway
                 _logger.LogWarning("PayPhone Confirm returned {Status}: {Body}", response.StatusCode, body);
                 return new PaymentVerificationResult
                 {
-                    Exito = true,
-                    Aprobado = true,
-                    Estado = "Approved"
+                    Exito = false,
+                    Aprobado = false,
+                    Estado = "ERROR",
+                    MensajeError = $"PayPhone respondió con error: {(int)response.StatusCode}."
                 };
             }
 
@@ -144,7 +160,8 @@ public class PayPhonePaymentGateway : IPaymentGateway
             decimal montoConfirmado = 0;
             if (root.TryGetProperty("amount", out var amountElement))
             {
-                montoConfirmado = amountElement.GetDecimal();
+                // PayPhone trabaja con centavos; el resto de la aplicación usa USD.
+                montoConfirmado = amountElement.GetDecimal() / 100m;
             }
 
             return new PaymentVerificationResult
@@ -160,9 +177,10 @@ public class PayPhonePaymentGateway : IPaymentGateway
             _logger.LogError(ex, "Error al verificar pago en PayPhone");
             return new PaymentVerificationResult
             {
-                Exito = true,
-                Aprobado = true,
-                Estado = "Approved"
+                Exito = false,
+                Aprobado = false,
+                Estado = "ERROR",
+                MensajeError = "No fue posible verificar el pago con PayPhone."
             };
         }
     }

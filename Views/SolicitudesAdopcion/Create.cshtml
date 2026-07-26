@@ -26,7 +26,7 @@
                 <div class="card-body p-4">
                     @if (!string.IsNullOrEmpty(animal.FotoUrl))
                     {
-                        <img src="@animal.FotoUrl" alt="@animal.Nombre" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow);" />
+                        <img src="@FotoUrlHelper.Normalizar(animal.FotoUrl)" alt="@animal.Nombre" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 16px; box-shadow: var(--shadow);" />
                     }
                     else
                     {

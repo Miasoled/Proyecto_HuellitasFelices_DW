@@ -47,18 +47,16 @@ public class PaymentController : Controller
             .FirstOrDefaultAsync(d => d.Email != null && d.Email == user.Email && d.Activo);
         if (dueno == null) return Forbid();
 
-        Pago? pago = null;
+        Pago? pago;
 
         if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(clientTransactionId))
         {
-            int ventaId = 0;
-            if (int.TryParse(clientTransactionId, out ventaId))
-            {
-                pago = await _context.Pagos
-                    .Where(p => p.VentaId == ventaId && p.Estado == "Pendiente")
-                    .OrderByDescending(p => p.FechaCreacion)
-                    .FirstOrDefaultAsync();
-            }
+            // PayPhone devuelve el mismo clientTransactionId que enviamos al crear el link.
+            pago = await _context.Pagos
+                .FirstOrDefaultAsync(p => p.DuenoId == dueno.Id &&
+                    p.ProveedorPago == "PayPhone" &&
+                    p.TokenPasarela == clientTransactionId &&
+                    p.Estado == "Pendiente");
 
             if (pago != null)
             {
@@ -66,14 +64,16 @@ public class PaymentController : Controller
                 await _context.SaveChangesAsync();
             }
         }
-
-        if (pago == null)
+        else if (!string.IsNullOrEmpty(token))
         {
             pago = await _context.Pagos
-                .Where(p => p.DuenoId == dueno.Id && p.Estado == "Pendiente")
-                .OrderByDescending(p => p.FechaCreacion)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(p => p.DuenoId == dueno.Id &&
+                    p.ProveedorPago == "PayPal" &&
+                    p.TokenPasarela == token &&
+                    p.Estado == "Pendiente");
         }
+        else
+            pago = null;
 
         if (pago == null)
             return RedirectToAction("PagoFallido", "Payment", new { motivo = "No se encontró un pago pendiente" });
@@ -101,7 +101,7 @@ public class PaymentController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Cancel()
+    public async Task<IActionResult> Cancel(string? token, string? clientTransactionId)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return RedirectToAction("Index", "Home");
@@ -110,10 +110,11 @@ public class PaymentController : Controller
             .FirstOrDefaultAsync(d => d.Email != null && d.Email == user.Email && d.Activo);
         if (dueno == null) return Forbid();
 
-        var pago = await _context.Pagos
-            .Where(p => p.DuenoId == dueno.Id && p.Estado == "Pendiente")
-            .OrderByDescending(p => p.FechaCreacion)
-            .FirstOrDefaultAsync();
+        var identificador = clientTransactionId ?? token;
+        var pago = string.IsNullOrWhiteSpace(identificador)
+            ? null
+            : await _context.Pagos.FirstOrDefaultAsync(p => p.DuenoId == dueno.Id &&
+                p.TokenPasarela == identificador && p.Estado == "Pendiente");
 
         if (pago != null)
             await _paymentService.CancelarPagoAsync(pago.Id);
@@ -171,7 +172,9 @@ public class PaymentController : Controller
         if (dueno == null) return Json(new { success = false, message = "Acceso denegado" });
 
         var pago = await _context.Pagos
-            .FirstOrDefaultAsync(p => p.Id == request.PagoId && p.DuenoId == dueno.Id && p.Estado == "Pendiente");
+            .FirstOrDefaultAsync(p => p.Id == request.PagoId && p.DuenoId == dueno.Id &&
+                p.ProveedorPago == "PayPal" && p.TokenPasarela == request.PayPalOrderId &&
+                p.Estado == "Pendiente");
 
         if (pago == null)
         {
@@ -226,6 +229,7 @@ public class PaymentController : Controller
             pago.MetodoPago = metodo;
             pago.ProveedorPago = metodo;
             pago.TokenPasarela = null;
+            pago.IdentificadorExterno = null;
             pago.UrlAprobacion = null;
             pago.Estado = "Pendiente";
             pago.FechaActualizacion = DateTime.UtcNow;
@@ -252,6 +256,9 @@ public class PaymentController : Controller
                 {
                     pago.TokenPasarela = result.TokenPago;
                     pago.UrlAprobacion = result.UrlAprobacion;
+                    pago.IdentificadorExterno = metodo.Equals("PayPhone", StringComparison.OrdinalIgnoreCase)
+                        ? null
+                        : result.TokenPago;
                 }
                 else
                 {

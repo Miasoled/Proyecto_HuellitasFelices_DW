@@ -12,6 +12,11 @@ namespace HuellitasFelices.Models
         
         [StringLength(300)]
         public string? Descripcion { get; set; }
+
+        [StringLength(500)]
+        [Display(Name = "Imagen del producto")]
+        [Url(ErrorMessage = "Ingresa una URL válida para la imagen.")]
+        public string? ImagenUrl { get; set; }
         
         [Required]
         [Range(0.01, 99999)]

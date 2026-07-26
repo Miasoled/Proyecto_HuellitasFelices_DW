@@ -1,94 +1,118 @@
 @model HuellitasFelices.Models.Producto
 @using Microsoft.AspNetCore.Mvc.Rendering
 @{
-    ViewData["Title"] = "Editar Producto";
+    ViewData["Title"] = "Editar producto";
+    var imagenInicial = FotoUrlHelper.Normalizar(Model.ImagenUrl);
 }
 
-<div class="page-header">
+<div class="page-header inventory-edit-header">
     <div class="container">
         <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
             <li class="breadcrumb-item"><a asp-action="Index">Inventario</a></li>
-            <li class="breadcrumb-item active">Editar</li>
+            <li class="breadcrumb-item active">@Model.Nombre</li>
         </ol></nav>
-        <h1><i class="bi bi-pencil me-2"></i>Editar Producto</h1>
+        <div class="inventory-edit-heading">
+            <div>
+                <h1><i class="bi bi-pencil-square"></i>Editar producto</h1>
+                <p>Actualiza la información comercial y la presentación en tienda.</p>
+            </div>
+            <span class="inventory-product-code"><i class="bi bi-upc-scan"></i> @(Model.CodigoBarras ?? "Sin código")</span>
+        </div>
     </div>
 </div>
 
-<div class="content-wrapper"><div class="container">
-    <div class="hf-card" style="max-width:700px">
-        <form asp-action="Edit" method="post">
-            <input type="hidden" asp-for="Id" />
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-            <div class="row g-3">
-                <div class="col-md-8">
-                    <label asp-for="Nombre" class="form-label"></label>
-                    <input asp-for="Nombre" class="form-control" />
-                    <span asp-validation-for="Nombre" class="text-danger"></span>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="CodigoBarras" class="form-label"></label>
-                    <input asp-for="CodigoBarras" class="form-control" />
-                    <span asp-validation-for="CodigoBarras" class="text-danger"></span>
-                </div>
-                <div class="col-12">
-                    <label asp-for="Descripcion" class="form-label"></label>
-                    <textarea asp-for="Descripcion" class="form-control" rows="2"></textarea>
-                    <span asp-validation-for="Descripcion" class="text-danger"></span>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="PrecioCompra" class="form-label"></label>
-                    <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input asp-for="PrecioCompra" class="form-control" type="number" step="0.01" />
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="PrecioVenta" class="form-label"></label>
-                    <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input asp-for="PrecioVenta" class="form-control" type="number" step="0.01" />
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <label asp-for="StockMinimo" class="form-label"></label>
-                    <input asp-for="StockMinimo" class="form-control" type="number" />
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="CategoriaId" class="form-label">Categoría</label>
-                    <select asp-for="CategoriaId" class="form-select" asp-items="ViewBag.CategoriaId"></select>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="ProveedorId" class="form-label">Proveedor</label>
-                    <select asp-for="ProveedorId" class="form-select" asp-items="ViewBag.ProveedorId">
-                        <option value="">— Sin proveedor —</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="UnidadMedida" class="form-label"></label>
-                    <select asp-for="UnidadMedida" class="form-select">
-                        <option value="Unidad">Unidad</option>
-                        <option value="Kg">Kilogramo</option>
-                        <option value="Litro">Litro</option>
-                        <option value="Paquete">Paquete</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Sucursal</label>
-                    <select name="SucursalId" class="form-select" asp-items="ViewBag.SucursalId">
-                        <option value="">— Seleccione sucursal —</option>
-                    </select>
+<div class="content-wrapper inventory-edit-page"><div class="container">
+    <form asp-action="Edit" method="post" class="inventory-edit-form">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-4"></div>
+
+        <aside class="inventory-image-panel">
+            <div class="inventory-image-preview" id="imagePreview">
+                <img id="productImage" src="@imagenInicial" alt="Vista previa de @Model.Nombre" class="@(string.IsNullOrWhiteSpace(imagenInicial) ? "d-none" : "")" />
+                <div id="productImageFallback" class="inventory-image-fallback @(string.IsNullOrWhiteSpace(imagenInicial) ? "" : "d-none")">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Vista del producto</span>
                 </div>
             </div>
-            <hr />
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn-search"><i class="bi bi-check-lg"></i> Guardar</button>
-                <a asp-action="Index" class="btn-back">Cancelar</a>
+            <div class="inventory-image-caption">
+                <span class="inventory-section-kicker">Imagen en tienda</span>
+                <p>La foto aparecerá en el catálogo para clientes.</p>
             </div>
-        </form>
-    </div>
+        </aside>
+
+        <div class="inventory-edit-content">
+            <section class="inventory-form-section">
+                <div class="inventory-section-title"><span><i class="bi bi-box2-heart"></i></span><div><h2>Información del producto</h2><p>Datos que identifican el artículo.</p></div></div>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label asp-for="Nombre" class="form-label"></label>
+                        <input asp-for="Nombre" class="form-control" />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="CodigoBarras" class="form-label"></label>
+                        <input asp-for="CodigoBarras" class="form-control" />
+                        <span asp-validation-for="CodigoBarras" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Descripcion" class="form-label"></label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Describe brevemente el producto..."></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="ImagenUrl" class="form-label"></label>
+                        <div class="input-group inventory-image-input">
+                            <span class="input-group-text"><i class="bi bi-image"></i></span>
+                            <input asp-for="ImagenUrl" type="url" class="form-control" id="ImagenUrl" placeholder="https://ejemplo.com/producto.jpg" />
+                        </div>
+                        <div class="form-text">Usa una URL directa de imagen (.jpg, .png o .webp).</div>
+                        <span asp-validation-for="ImagenUrl" class="text-danger"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="inventory-form-section">
+                <div class="inventory-section-title"><span><i class="bi bi-tag"></i></span><div><h2>Precios y disponibilidad</h2><p>Define los valores de venta y control.</p></div></div>
+                <div class="row g-3">
+                    <div class="col-md-4"><label asp-for="PrecioCompra" class="form-label"></label><div class="input-group"><span class="input-group-text">$</span><input asp-for="PrecioCompra" class="form-control" type="number" step="0.01" /></div><span asp-validation-for="PrecioCompra" class="text-danger"></span></div>
+                    <div class="col-md-4"><label asp-for="PrecioVenta" class="form-label"></label><div class="input-group"><span class="input-group-text">$</span><input asp-for="PrecioVenta" class="form-control" type="number" step="0.01" /></div><span asp-validation-for="PrecioVenta" class="text-danger"></span></div>
+                    <div class="col-md-4"><label asp-for="StockMinimo" class="form-label"></label><input asp-for="StockMinimo" class="form-control" type="number" /><span asp-validation-for="StockMinimo" class="text-danger"></span></div>
+                </div>
+            </section>
+
+            <section class="inventory-form-section">
+                <div class="inventory-section-title"><span><i class="bi bi-sliders"></i></span><div><h2>Organización</h2><p>Clasifica y asigna el producto.</p></div></div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label asp-for="CategoriaId" class="form-label">Categoría</label><select asp-for="CategoriaId" class="form-select" asp-items="ViewBag.CategoriaId"></select></div>
+                    <div class="col-md-6"><label asp-for="ProveedorId" class="form-label">Proveedor</label><select asp-for="ProveedorId" class="form-select" asp-items="ViewBag.ProveedorId"><option value="">— Sin proveedor —</option></select></div>
+                    <div class="col-md-6"><label asp-for="UnidadMedida" class="form-label"></label><select asp-for="UnidadMedida" class="form-select"><option value="Unidad">Unidad</option><option value="Kg">Kilogramo</option><option value="Litro">Litro</option><option value="Paquete">Paquete</option></select></div>
+                    <div class="col-md-6"><label class="form-label">Sucursal</label><select name="SucursalId" class="form-select" asp-items="ViewBag.SucursalId"><option value="">— Seleccione sucursal —</option></select></div>
+                </div>
+            </section>
+
+            <div class="inventory-edit-actions">
+                <a asp-action="Index" class="btn-back"><i class="bi bi-arrow-left"></i> Volver al inventario</a>
+                <button type="submit" class="btn-primary-hf"><i class="bi bi-check2-circle"></i> Guardar cambios</button>
+            </div>
+        </div>
+    </form>
 </div></div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        const imageInput = document.getElementById('ImagenUrl');
+        const image = document.getElementById('productImage');
+        const fallback = document.getElementById('productImageFallback');
+        function updatePreview() {
+            const url = imageInput.value.trim();
+            if (!url) { image.classList.add('d-none'); fallback.classList.remove('d-none'); return; }
+            image.src = url;
+            image.classList.remove('d-none');
+            fallback.classList.add('d-none');
+        }
+        imageInput.addEventListener('input', updatePreview);
+        image.addEventListener('error', () => { image.classList.add('d-none'); fallback.classList.remove('d-none'); });
+    </script>
 }

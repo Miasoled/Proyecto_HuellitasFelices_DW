@@ -70,7 +70,7 @@ public class InventarioController : Controller
         // POST: Inventario/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Nombre,Descripcion,PrecioCompra,PrecioVenta,CodigoBarras,UnidadMedida,StockMinimo,CategoriaId,ProveedorId")] Producto producto, int? SucursalId)
+        public async Task<IActionResult> Create([Bind("Nombre,Descripcion,ImagenUrl,PrecioCompra,PrecioVenta,CodigoBarras,UnidadMedida,StockMinimo,CategoriaId,ProveedorId")] Producto producto, int? SucursalId)
         {
             if (ModelState.IsValid)
             {
@@ -114,7 +114,7 @@ public class InventarioController : Controller
         // POST: Inventario/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,PrecioCompra,PrecioVenta,CodigoBarras,UnidadMedida,StockMinimo,CategoriaId,ProveedorId")] Producto producto, int? SucursalId)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,ImagenUrl,PrecioCompra,PrecioVenta,CodigoBarras,UnidadMedida,StockMinimo,CategoriaId,ProveedorId")] Producto producto, int? SucursalId)
         {
             if (id != producto.Id) return NotFound();
             if (ModelState.IsValid)
@@ -123,6 +123,7 @@ public class InventarioController : Controller
                 if (existing == null) return NotFound();
                 existing.Nombre = producto.Nombre;
                 existing.Descripcion = producto.Descripcion;
+                existing.ImagenUrl = producto.ImagenUrl;
                 existing.PrecioCompra = producto.PrecioCompra;
                 existing.PrecioVenta = producto.PrecioVenta;
                 existing.CodigoBarras = producto.CodigoBarras;

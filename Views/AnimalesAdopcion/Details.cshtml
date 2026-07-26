@@ -14,10 +14,10 @@
         <div class="hf-card-header"><i class="bi bi-house-heart me-2"></i>Información del animal</div>
         <div class="card-body p-4">
             <div class="row g-3">
-                @if (!string.IsNullOrEmpty(Model.FotoUrl))
+                @if (!string.IsNullOrEmpty(FotoUrlHelper.Normalizar(Model.FotoUrl)))
                 {
                     <div class="col-12 text-center mb-2">
-                        <img src="@Model.FotoUrl" alt="@Model.Nombre"
+                        <img src="@FotoUrlHelper.Normalizar(Model.FotoUrl)" alt="@Model.Nombre"
                              style="max-height:280px;max-width:100%;object-fit:cover;border-radius:14px;box-shadow:var(--shadow)" />
                     </div>
                 }

@@ -82,7 +82,11 @@ public class PaymentService : IPaymentService
             {
                 pago.TokenPasarela = result.TokenPago;
                 pago.UrlAprobacion = result.UrlAprobacion;
-                pago.IdentificadorExterno = result.TokenPago;
+                // PayPal usa el identificador de la orden desde el inicio. En PayPhone
+                // este campo se completa únicamente con el id que llega en su callback.
+                pago.IdentificadorExterno = proveedor.Equals("PayPhone", StringComparison.OrdinalIgnoreCase)
+                    ? null
+                    : result.TokenPago;
             }
             else
             {
@@ -129,6 +133,22 @@ public class PaymentService : IPaymentService
         pago.FechaActualizacion = DateTime.UtcNow;
 
         var verification = await gateway.VerifyPaymentAsync(pago);
+
+        if (verification.Exito && verification.Aprobado &&
+            Math.Abs(verification.MontoConfirmado - pago.Monto) > 0.01m)
+        {
+            _logger.LogError(
+                "Monto no coincide para pago {PagoId}. Esperado: {Esperado}; recibido: {Recibido}",
+                pago.Id, pago.Monto, verification.MontoConfirmado);
+
+            verification = new PaymentVerificationResult
+            {
+                Exito = true,
+                Aprobado = false,
+                Estado = "AMOUNT_MISMATCH",
+                MensajeError = "El monto confirmado por la pasarela no coincide con el pago registrado."
+            };
+        }
 
         pago.EstadoExterno = verification.Estado;
         pago.MensajeRespuesta = verification.MensajeError != null && verification.MensajeError.Length > 500
