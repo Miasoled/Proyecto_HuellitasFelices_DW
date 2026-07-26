@@ -1,5 +1,17 @@
 @using HuellitasFelices.Models
+@using Microsoft.AspNetCore.WebUtilities
 @model PaginacionViewModel
+
+@functions {
+    string UrlPagina(int pagina)
+    {
+        var parametros = Context.Request.Query
+            .Where(q => !string.Equals(q.Key, "pagina", StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(q => q.Key, q => (string?)q.Value.ToString());
+        parametros["pagina"] = pagina.ToString();
+        return QueryHelpers.AddQueryString(Context.Request.Path, parametros);
+    }
+}
 
 @if (Model != null && Model.TotalPaginas > 1)
 {
@@ -12,12 +24,12 @@
         <nav>
             <ul class="pagination pagination-sm mb-0 gap-1">
                 <li class="page-item @(!Model.TienePaginaAnterior ? "disabled" : "")">
-                    <a class="page-link" href="?pagina=1&busqueda=@Model.Busqueda">
+                    <a class="page-link" href="@UrlPagina(1)" aria-label="Primera página">
                         <i class="bi bi-chevron-double-left"></i>
                     </a>
                 </li>
                 <li class="page-item @(!Model.TienePaginaAnterior ? "disabled" : "")">
-                    <a class="page-link" href="?pagina=@(Model.PaginaActual - 1)&busqueda=@Model.Busqueda">
+                    <a class="page-link" href="@UrlPagina(Model.PaginaActual - 1)" aria-label="Página anterior">
                         <i class="bi bi-chevron-left"></i>
                     </a>
                 </li>
@@ -25,17 +37,17 @@
                 @for (int i = Math.Max(1, Model.PaginaActual - 2); i <= Math.Min(Model.TotalPaginas, Model.PaginaActual + 2); i++)
                 {
                     <li class="page-item @(i == Model.PaginaActual ? "active" : "")">
-                        <a class="page-link" href="?pagina=@i&busqueda=@Model.Busqueda">@i</a>
+                        <a class="page-link" href="@UrlPagina(i)">@i</a>
                     </li>
                 }
 
                 <li class="page-item @(!Model.TienePaginaSiguiente ? "disabled" : "")">
-                    <a class="page-link" href="?pagina=@(Model.PaginaActual + 1)&busqueda=@Model.Busqueda">
+                    <a class="page-link" href="@UrlPagina(Model.PaginaActual + 1)" aria-label="Página siguiente">
                         <i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
                 <li class="page-item @(!Model.TienePaginaSiguiente ? "disabled" : "")">
-                    <a class="page-link" href="?pagina=@Model.TotalPaginas&busqueda=@Model.Busqueda">
+                    <a class="page-link" href="@UrlPagina(Model.TotalPaginas)" aria-label="Última página">
                         <i class="bi bi-chevron-double-right"></i>
                     </a>
                 </li>

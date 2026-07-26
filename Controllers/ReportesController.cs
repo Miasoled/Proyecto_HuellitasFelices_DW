@@ -10,11 +10,29 @@ namespace HuellitasFelices.Controllers
 [Authorize(Roles = "Administrador,Supervisor,Auditor")]
 public class ReportesController : Controller
     {
+        private const int TamanioPagina = 20;
         private readonly AppDbContext _context;
 
         public ReportesController(AppDbContext context)
         {
             _context = context;
+        }
+
+        private void ConfigurarPaginacion(int pagina, int totalRegistros)
+        {
+            ViewBag.Paginacion = new PaginacionViewModel
+            {
+                PaginaActual = pagina,
+                TotalPaginas = (int)Math.Ceiling(totalRegistros / (double)TamanioPagina),
+                TotalRegistros = totalRegistros,
+                TamanioPagina = TamanioPagina
+            };
+        }
+
+        private static int PaginaValida(int pagina, int totalRegistros)
+        {
+            var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalRegistros / (double)TamanioPagina));
+            return Math.Clamp(pagina, 1, totalPaginas);
         }
 
         // GET: /Reportes
@@ -98,41 +116,51 @@ public class ReportesController : Controller
 
         // ── Reportes separados ──────────────────────────────────────────────
 
-        public async Task<IActionResult> ReporteConsultas(DateTime? desde, DateTime? hasta)
+        public async Task<IActionResult> ReporteConsultas(DateTime? desde, DateTime? hasta, int pagina = 1)
         {
             var d = desde ?? DateTime.UtcNow.AddMonths(-6);
             var h = hasta ?? DateTime.UtcNow;
             ViewBag.Desde = d.ToString("yyyy-MM-dd");
             ViewBag.Hasta = h.ToString("yyyy-MM-dd");
 
-            var consultas = await _context.Consultas
+            var query = _context.Consultas
                 .AsNoTracking()
                 .Include(c => c.Mascota).ThenInclude(m => m!.Dueno)
                 .Where(c => c.Activo && c.FechaConsulta >= d && c.FechaConsulta <= h)
-                .OrderByDescending(c => c.FechaConsulta)
+                .AsQueryable();
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var consultas = await query.OrderByDescending(c => c.FechaConsulta)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
-            ViewBag.TotalCosto = consultas.Sum(c => c.Costo);
-            ViewBag.TotalConsultas = consultas.Count;
+            ViewBag.TotalCosto = await query.SumAsync(c => (decimal?)c.Costo) ?? 0;
+            ViewBag.TotalConsultas = total;
+            ConfigurarPaginacion(pagina, total);
             return View(consultas);
         }
 
-        public async Task<IActionResult> ReporteMascotas()
+        public async Task<IActionResult> ReporteMascotas(int pagina = 1)
         {
-            var mascotas = await _context.Mascotas
+            var query = _context.Mascotas
                 .AsNoTracking()
                 .Include(m => m.Dueno)
                 .Where(m => m.Activo)
-                .OrderBy(m => m.Nombre)
+                .AsQueryable();
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var mascotas = await query.OrderBy(m => m.Nombre)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
-            ViewBag.Total = mascotas.Count;
+            ViewBag.Total = total;
+            ConfigurarPaginacion(pagina, total);
             return View(mascotas);
         }
 
-        public async Task<IActionResult> ReporteDuenos()
+        public async Task<IActionResult> ReporteDuenos(int pagina = 1)
         {
-            var duenos = await _context.Duenos
+            var query = _context.Duenos
                 .AsNoTracking()
                 .Where(d => d.Activo)
                 .Select(d => new ResumenDueno
@@ -141,43 +169,59 @@ public class ReportesController : Controller
                     Email = d.Email,
                     TotalMascotas = d.Mascotas.Count(m => m.Activo)
                 })
-                .OrderByDescending(r => r.TotalMascotas)
+                .AsQueryable();
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var duenos = await query.OrderByDescending(r => r.TotalMascotas)
+                .ThenBy(r => r.Nombre)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
-            ViewBag.Total = duenos.Count;
+            ViewBag.Total = total;
+            ConfigurarPaginacion(pagina, total);
             return View(duenos);
         }
 
-        public async Task<IActionResult> ReporteEmpleados()
+        public async Task<IActionResult> ReporteEmpleados(int pagina = 1)
         {
-            var empleados = await _context.Empleados
+            var query = _context.Empleados
                 .AsNoTracking()
                 .Where(e => e.Activo)
-                .OrderBy(e => e.Cargo).ThenBy(e => e.Nombre)
+                .AsQueryable();
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var empleados = await query.OrderBy(e => e.Cargo).ThenBy(e => e.Nombre)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
-            ViewBag.Total = empleados.Count;
-            ViewBag.SalarioTotal = empleados.Sum(e => e.Salario);
+            ViewBag.Total = total;
+            ViewBag.SalarioTotal = await query.SumAsync(e => (decimal?)e.Salario) ?? 0;
+            ConfigurarPaginacion(pagina, total);
             return View(empleados);
         }
 
-        public async Task<IActionResult> ReporteAdopciones()
+        public async Task<IActionResult> ReporteAdopciones(int pagina = 1)
         {
-            var solicitudes = await _context.SolicitudesAdopcion
+            var query = _context.SolicitudesAdopcion
                 .AsNoTracking()
                 .Include(s => s.AnimalAdopcion)
-                .OrderByDescending(s => s.FechaSolicitud)
+                .AsQueryable();
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var solicitudes = await query.OrderByDescending(s => s.FechaSolicitud)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
-            ViewBag.Total = solicitudes.Count;
-            ViewBag.Aprobadas = solicitudes.Count(s => s.Estado == "Aprobada");
-            ViewBag.Pendientes = solicitudes.Count(s => s.Estado == "Pendiente");
+            ViewBag.Total = total;
+            ViewBag.Aprobadas = await query.CountAsync(s => s.Estado == "Aprobada");
+            ViewBag.Pendientes = await query.CountAsync(s => s.Estado == "Pendiente");
+            ConfigurarPaginacion(pagina, total);
             return View(solicitudes);
         }
 
-        public async Task<IActionResult> ReporteServicios()
+        public async Task<IActionResult> ReporteServicios(int pagina = 1)
         {
-            var motivos = await _context.Consultas
+            var query = _context.Consultas
                 .AsNoTracking()
                 .Where(c => c.Activo)
                 .GroupBy(c => c.Motivo)
@@ -187,30 +231,41 @@ public class ReportesController : Controller
                     Cantidad = g.Count(),
                     TotalIngresos = g.Sum(c => c.Costo)
                 })
-                .OrderByDescending(r => r.Cantidad)
+                .AsQueryable();
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var motivos = await query.OrderByDescending(r => r.Cantidad)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
+            ConfigurarPaginacion(pagina, total);
             return View(motivos);
         }
 
-        public async Task<IActionResult> ReporteInventario()
+        public async Task<IActionResult> ReporteInventario(int pagina = 1)
         {
-            var productos = await _context.Productos
+            var query = _context.Productos
                 .AsNoTracking()
                 .Include(p => p.Categoria)
                 .Include(p => p.Inventarios)
                 .Where(p => p.Activo)
-                .OrderBy(p => p.Nombre)
+                .AsQueryable();
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var productos = await query.OrderBy(p => p.Nombre)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
-            ViewBag.TotalProductos = productos.Count;
-            ViewBag.StockTotal = productos.SelectMany(p => p.Inventarios).Sum(i => i.StockActual);
+            ViewBag.TotalProductos = total;
+            ViewBag.StockTotal = await _context.Inventarios
+                .Where(i => i.Producto != null && i.Producto.Activo)
+                .SumAsync(i => (int?)i.StockActual) ?? 0;
+            ConfigurarPaginacion(pagina, total);
             return View(productos);
         }
 
         public async Task<IActionResult> ReporteAuditoria(int pagina = 1, string? accion = null, string? entidad = null)
         {
-            const int tamPagina = 50;
             var query = _context.AuditLogs.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrEmpty(accion))
@@ -219,19 +274,21 @@ public class ReportesController : Controller
                 query = query.Where(a => a.Entidad == entidad);
 
             var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
             var logs = await query
                 .OrderByDescending(a => a.FechaCreacion)
-                .Skip((pagina - 1) * tamPagina)
-                .Take(tamPagina)
+                .Skip((pagina - 1) * TamanioPagina)
+                .Take(TamanioPagina)
                 .ToListAsync();
 
             ViewBag.PaginaActual = pagina;
-            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)tamPagina);
+            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)TamanioPagina);
             ViewBag.TotalRegistros = total;
             ViewBag.Accion = accion;
             ViewBag.Entidad = entidad;
             ViewBag.Acciones = await _context.AuditLogs.Select(a => a.Accion).Distinct().ToListAsync();
             ViewBag.Entidades = await _context.AuditLogs.Select(a => a.Entidad).Distinct().ToListAsync();
+            ConfigurarPaginacion(pagina, total);
 
             return View(logs);
         }
@@ -240,8 +297,6 @@ public class ReportesController : Controller
             int pagina = 1, string? busqueda = null, string? estado = null,
             string? proveedor = null, DateTime? desde = null, DateTime? hasta = null)
         {
-            const int tamPagina = 20;
-
             var query = _context.Pagos
                 .AsNoTracking()
                 .Include(p => p.Venta).ThenInclude(v => v!.Consulta).ThenInclude(c => c!.Mascota)
@@ -265,10 +320,11 @@ public class ReportesController : Controller
                 query = query.Where(p => p.FechaCreacion <= hasta.Value);
 
             var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
             var pagos = await query
                 .OrderByDescending(p => p.FechaCreacion)
-                .Skip((pagina - 1) * tamPagina)
-                .Take(tamPagina)
+                .Skip((pagina - 1) * TamanioPagina)
+                .Take(TamanioPagina)
                 .ToListAsync();
 
             var resumen = await _context.Pagos
@@ -285,7 +341,7 @@ public class ReportesController : Controller
                 .ToListAsync();
 
             ViewBag.PaginaActual = pagina;
-            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)tamPagina);
+            ViewBag.TotalPaginas = (int)Math.Ceiling(total / (double)TamanioPagina);
             ViewBag.TotalRegistros = total;
             ViewBag.Busqueda = busqueda;
             ViewBag.Estado = estado;
@@ -293,13 +349,14 @@ public class ReportesController : Controller
             ViewBag.Desde = desde?.ToString("yyyy-MM-dd");
             ViewBag.Hasta = hasta?.ToString("yyyy-MM-dd");
             ViewBag.Resumen = resumen;
+            ConfigurarPaginacion(pagina, total);
 
             return View(pagos);
         }
 
         // ── Reportes adicionales para el tercer parcial ──────────────────
 
-        public async Task<IActionResult> ReporteVentas(DateTime? desde, DateTime? hasta, string? sucursal)
+        public async Task<IActionResult> ReporteVentas(DateTime? desde, DateTime? hasta, string? sucursal, int pagina = 1)
         {
             var d = desde ?? DateTime.UtcNow.AddMonths(-6);
             var h = hasta ?? DateTime.UtcNow;
@@ -314,21 +371,26 @@ public class ReportesController : Controller
             if (!string.IsNullOrEmpty(sucursal))
                 query = query.Where(v => v.Sucursal != null && v.Sucursal.Nombre == sucursal);
 
-            var ventas = await query.OrderByDescending(v => v.FechaVenta).ToListAsync();
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var montoTotal = await query.SumAsync(v => (decimal?)v.Total) ?? 0;
+            var ventas = await query.OrderByDescending(v => v.FechaVenta)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina).ToListAsync();
 
             ViewBag.Desde = d.ToString("yyyy-MM-dd");
             ViewBag.Hasta = h.ToString("yyyy-MM-dd");
-            ViewBag.TotalVentas = ventas.Count;
-            ViewBag.MontoTotal = ventas.Sum(v => v.Total);
+            ViewBag.TotalVentas = total;
+            ViewBag.MontoTotal = montoTotal;
             ViewBag.Sucursales = await _context.Sucursales.Where(s => s.Activo).Select(s => s.Nombre).ToListAsync();
             ViewBag.SucursalSeleccionada = sucursal;
+            ConfigurarPaginacion(pagina, total);
 
             return View(ventas);
         }
 
-        public async Task<IActionResult> ReporteProductosMasVendidos()
+        public async Task<IActionResult> ReporteProductosMasVendidos(int pagina = 1)
         {
-            var productos = await _context.DetallesVenta
+            var query = _context.DetallesVenta
                 .AsNoTracking()
                 .Include(dv => dv.Producto).ThenInclude(p => p!.Categoria)
                 .Where(dv => dv.Venta != null && dv.Venta.Activo)
@@ -341,17 +403,22 @@ public class ReportesController : Controller
                     TotalVendido = g.Sum(dv => dv.Cantidad),
                     IngresosTotales = g.Sum(dv => dv.Cantidad * dv.PrecioUnitario)
                 })
-                .OrderByDescending(x => x.TotalVendido)
-                .Take(50)
+                .AsQueryable();
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var productos = await query.OrderByDescending(x => x.TotalVendido)
+                .ThenBy(x => x.Nombre)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
-            ViewBag.Total = productos.Count;
+            ViewBag.Total = total;
+            ConfigurarPaginacion(pagina, total);
             return View(productos);
         }
 
-        public async Task<IActionResult> ReporteBajoInventario()
+        public async Task<IActionResult> ReporteBajoInventario(int pagina = 1)
         {
-            var productos = await _context.Productos
+            var query = _context.Productos
                 .AsNoTracking()
                 .Include(p => p.Categoria)
                 .Include(p => p.Inventarios)
@@ -365,17 +432,21 @@ public class ReportesController : Controller
                     StockActual = p.Inventarios.Sum(i => i.StockActual),
                     p.PrecioVenta
                 })
-                .Where(x => x.StockActual <= x.StockMinimo)
-                .OrderBy(x => x.StockActual)
+                .Where(x => x.StockActual <= x.StockMinimo);
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var productos = await query.OrderBy(x => x.StockActual).ThenBy(x => x.Nombre)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
-            ViewBag.Total = productos.Count;
+            ViewBag.Total = total;
+            ConfigurarPaginacion(pagina, total);
             return View(productos);
         }
 
-        public async Task<IActionResult> ReporteClientesCompras()
+        public async Task<IActionResult> ReporteClientesCompras(int pagina = 1)
         {
-            var clientes = await _context.Duenos
+            var query = _context.Duenos
                 .AsNoTracking()
                 .Where(d => d.Activo)
                 .Select(d => new
@@ -386,16 +457,20 @@ public class ReportesController : Controller
                     TotalMascotas = d.Mascotas.Count(m => m.Activo),
                     MontoTotal = d.Mascotas.SelectMany(m => m.Consultas).Where(c => c.Activo).Sum(c => c.Costo)
                 })
-                .Where(x => x.TotalConsultas > 0)
-                .OrderByDescending(x => x.MontoTotal)
-                .Take(50)
+                .Where(x => x.TotalConsultas > 0);
+            var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
+            var clientes = await query.OrderByDescending(x => x.MontoTotal)
+                .ThenBy(x => x.Nombre)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
-            ViewBag.Total = clientes.Count;
+            ViewBag.Total = total;
+            ConfigurarPaginacion(pagina, total);
             return View(clientes);
         }
 
-        public async Task<IActionResult> ReporteMFA()
+        public async Task<IActionResult> ReporteMFA(int pagina = 1)
         {
             if (!User.Identity?.IsAuthenticated ?? true) return Forbid();
 
@@ -420,11 +495,15 @@ public class ReportesController : Controller
             ViewBag.Total = resultado.Count;
             ViewBag.ConMFA = conMFA;
             ViewBag.SinMFA = resultado.Count - conMFA;
+            var total = resultado.Count;
+            pagina = PaginaValida(pagina, total);
+            resultado = resultado.Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina).ToList();
+            ConfigurarPaginacion(pagina, total);
 
             return View(resultado);
         }
 
-        public async Task<IActionResult> ReporteAccesosFallidos(DateTime? desde, DateTime? hasta)
+        public async Task<IActionResult> ReporteAccesosFallidos(DateTime? desde, DateTime? hasta, int pagina = 1)
         {
             var d = desde ?? DateTime.UtcNow.AddMonths(-1);
             var h = hasta ?? DateTime.UtcNow;
@@ -436,14 +515,16 @@ public class ReportesController : Controller
                 .AsQueryable();
 
             var total = await query.CountAsync();
+            pagina = PaginaValida(pagina, total);
             var logs = await query
                 .OrderByDescending(a => a.FechaCreacion)
-                .Take(200)
+                .Skip((pagina - 1) * TamanioPagina).Take(TamanioPagina)
                 .ToListAsync();
 
             ViewBag.Total = total;
             ViewBag.Desde = d.ToString("yyyy-MM-dd");
             ViewBag.Hasta = h.ToString("yyyy-MM-dd");
+            ConfigurarPaginacion(pagina, total);
 
             return View(logs);
         }

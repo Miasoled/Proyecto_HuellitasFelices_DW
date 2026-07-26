@@ -95,6 +95,14 @@ if (!string.IsNullOrEmpty(redisUrl))
 else
 {
     builder.Services.AddDistributedMemoryCache();
+
+    var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+    if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+    {
+        builder.Services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+            .SetApplicationName("HuellitasFelices");
+    }
 }
 builder.Services.AddSession(options =>
 {
@@ -155,6 +163,9 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    if (app.Configuration.GetValue<bool>("Database:AutoMigrate"))
+        await context.Database.MigrateAsync();
+
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     await SeedData.Initialize(context, userManager, roleManager);

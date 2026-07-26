@@ -146,6 +146,36 @@ http://localhost:5248
 
 ---
 
+## Ejecución con Docker
+
+Docker Compose levanta la aplicación y una base independiente con PostgreSQL 17. Los datos quedan persistidos en un volumen de Docker.
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edita `.env` y coloca las claves reales de SMTP, PayPal, PayPhone y Google. Después ejecuta:
+
+```powershell
+docker compose up --build -d
+```
+
+La aplicación estará disponible en `http://localhost:8080`. Las migraciones se aplican al iniciar el contenedor web. Para revisar el arranque:
+
+```powershell
+docker compose logs -f web
+```
+
+Para detener los contenedores sin borrar los datos:
+
+```powershell
+docker compose down
+```
+
+> No subas `.env` al repositorio. Para PayPal y PayPhone en producción configura una URL pública HTTPS en lugar de `localhost`.
+
+---
+
 ## Paquetes NuGet instalados
 
 | Paquete | Versión | Función |
