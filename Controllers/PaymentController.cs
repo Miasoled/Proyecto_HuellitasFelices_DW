@@ -157,6 +157,7 @@ public class PaymentController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> CapturePayPalButtonOrderJson([FromBody] PayPalButtonCaptureRequest request)
     {
         if (request == null || request.PagoId <= 0 || string.IsNullOrWhiteSpace(request.PayPalOrderId))

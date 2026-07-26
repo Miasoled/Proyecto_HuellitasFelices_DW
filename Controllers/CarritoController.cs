@@ -183,6 +183,7 @@ namespace HuellitasFelices.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Cliente")]
         public async Task<IActionResult> CrearPagoBotonJson()
         {

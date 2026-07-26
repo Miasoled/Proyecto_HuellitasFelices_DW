@@ -8,13 +8,16 @@ namespace HuellitasFelices.Services
     {
         private readonly AppDbContext _context;
         private readonly IAuditService _auditService;
+        private readonly IEmailService _emailService;
         private readonly ILogger<InventoryService> _logger;
         private const int MaxRetries = 3;
 
-        public InventoryService(AppDbContext context, IAuditService auditService, ILogger<InventoryService> logger)
+        public InventoryService(AppDbContext context, IAuditService auditService,
+            IEmailService emailService, ILogger<InventoryService> logger)
         {
             _context = context;
             _auditService = auditService;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -138,6 +141,8 @@ namespace HuellitasFelices.Services
                     await _auditService.LogAsync("InventarioVenta", "Producto", productoId, usuarioId: usuarioId,
                         valorAnterior: $"Stock: {stockAnterior}", valorNuevo: $"Venta -{cantidad} unidades. Stock: {inventario.StockActual}");
 
+                    await NotificarStockCriticoSiCorrespondeAsync(productoId, stockAnterior, inventario.StockActual);
+
                     return movimiento;
                 }
                 catch (DbUpdateConcurrencyException ex)
@@ -197,6 +202,8 @@ namespace HuellitasFelices.Services
 
                     await _auditService.LogAsync("InventarioAjuste", "Producto", productoId, usuarioId: usuarioId,
                         valorAnterior: $"Stock: {stockAnterior}", valorNuevo: $"Stock: {nuevoStock}. Motivo: {motivo}");
+
+                    await NotificarStockCriticoSiCorrespondeAsync(productoId, stockAnterior, nuevoStock);
 
                     return movimiento;
                 }
@@ -347,6 +354,12 @@ namespace HuellitasFelices.Services
                         await _auditService.LogAsync("InventarioReserva", "Producto", mov.ProductoId,
                             usuarioId: usuarioId,
                             valorNuevo: $"Reserva -{mov.Cantidad} unidades. Stock: {mov.StockAnterior} → {mov.StockPosterior}");
+                    }
+
+                    foreach (var mov in movimientos)
+                    {
+                        await NotificarStockCriticoSiCorrespondeAsync(
+                            mov.ProductoId, mov.StockAnterior, mov.StockPosterior);
                     }
 
                     _logger.LogInformation("[InventoryService] Reserva creada para venta {VentaId}: {CantidadProductos} productos",
@@ -586,6 +599,42 @@ namespace HuellitasFelices.Services
             if (hasta.HasValue) query = query.Where(m => m.FechaMovimiento <= hasta.Value);
 
             return await query.CountAsync();
+        }
+
+        private async Task NotificarStockCriticoSiCorrespondeAsync(
+            int productoId, int stockAnterior, int stockActual)
+        {
+            var producto = await _context.Productos
+                .AsNoTracking()
+                .Where(p => p.Id == productoId && p.Activo)
+                .Select(p => new { p.Nombre, p.StockMinimo })
+                .FirstOrDefaultAsync();
+
+            // Solo se avisa al cruzar el umbral; así no se manda un correo por cada venta.
+            if (producto == null || stockAnterior <= producto.StockMinimo || stockActual > producto.StockMinimo)
+                return;
+
+            var destinatarios = await (
+                from usuario in _context.Users.AsNoTracking()
+                join usuarioRol in _context.UserRoles.AsNoTracking() on usuario.Id equals usuarioRol.UserId
+                join rol in _context.Roles.AsNoTracking() on usuarioRol.RoleId equals rol.Id
+                where usuario.Email != null && (rol.Name == "Administrador" || rol.Name == "Supervisor")
+                select usuario.Email)
+                .Distinct()
+                .ToListAsync();
+
+            foreach (var email in destinatarios)
+            {
+                await _emailService.EnviarInventarioCriticoAsync(
+                    email!, producto.Nombre, stockActual, producto.StockMinimo);
+            }
+
+            await _auditService.LogAsync("InventarioCritico", "Producto", productoId,
+                valorNuevo: $"Stock crítico: {stockActual} unidades; mínimo configurado: {producto.StockMinimo}.");
+
+            _logger.LogWarning(
+                "Alerta de inventario crítico enviada para producto {ProductoId}. Stock={Stock}, mínimo={Minimo}, destinatarios={Destinatarios}",
+                productoId, stockActual, producto.StockMinimo, destinatarios.Count);
         }
     }
 }

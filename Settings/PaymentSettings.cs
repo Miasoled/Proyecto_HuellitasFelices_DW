@@ -4,6 +4,8 @@ public class PaymentSettings
 {
     public PayPalSettings PayPal { get; set; } = new();
     public PayPhoneSettings PayPhone { get; set; } = new();
+    public int PendingPaymentExpirationMinutes { get; set; } = 30;
+    public int PendingPaymentWorkerIntervalMinutes { get; set; } = 5;
 }
 
 public class PayPalSettings

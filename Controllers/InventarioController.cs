@@ -27,6 +27,7 @@ public class InventarioController : Controller
             var query = _context.Productos
                 .AsNoTracking()
                 .Include(p => p.Categoria)
+                .Include(p => p.Inventarios)
                 .Where(p => p.Activo)
                 .OrderBy(p => p.Nombre)
                 .AsQueryable();

@@ -1,4 +1,4 @@
-@model List<(Microsoft.AspNetCore.Identity.IdentityUser usuario, IList<string> roles)>
+@model List<HuellitasFelices.Models.Dtos.UsuarioConRolesDto>
 @{ ViewData["Title"] = "Usuarios"; }
 
 <div class="page-header">
@@ -30,9 +30,10 @@
                     <th><i class="bi bi-envelope me-1"></i>Email</th>
                     <th><i class="bi bi-shield-check me-1"></i>Rol(es)</th>
                     <th><i class="bi bi-check-circle me-1"></i>Estado</th>
+                    <th class="text-end">Acciones</th>
                 </tr></thead>
                 <tbody>
-                    @foreach (var (usuario, roles) in Model)
+                    @foreach (var usuario in Model)
                     {
                         <tr>
                             <td>
@@ -44,7 +45,7 @@
                                 </div>
                             </td>
                             <td>
-                                @foreach (var rol in roles)
+                                @foreach (var rol in usuario.Roles)
                                 {
                                     var cls = rol switch {
                                         "Administrador" => "badge-danger",
@@ -58,6 +59,11 @@
                                 { <span class="badge-success"><i class="bi bi-check2 me-1"></i>Activo</span> }
                                 else
                                 { <span class="badge-warning"><i class="bi bi-clock me-1"></i>Pendiente</span> }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="EditarRoles" asp-route-id="@usuario.UserId" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-shield-gear me-1"></i>Roles
+                                </a>
                             </td>
                         </tr>
                     }

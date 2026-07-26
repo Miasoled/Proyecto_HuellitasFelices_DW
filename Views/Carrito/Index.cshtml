@@ -259,7 +259,8 @@
                 fetch('@Url.Action("CapturePayPalButtonOrderJson", "Payment")', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                     },
                     body: JSON.stringify({
                         PayPalOrderId: data.orderID,

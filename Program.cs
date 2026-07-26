@@ -123,6 +123,7 @@ builder.Services.Configure<PayPhoneSettings>(builder.Configuration.GetSection("P
 builder.Services.AddHttpClient<IPaymentGateway, PayPalPaymentGateway>();
 builder.Services.AddHttpClient<IPaymentGateway, PayPhonePaymentGateway>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddHostedService<PaymentExpirationWorker>();
 
 // MVC
 builder.Services.AddRazorPages();

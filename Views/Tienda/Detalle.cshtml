@@ -79,19 +79,6 @@
                     <p style="color:var(--text-mid);font-size:.95rem;line-height:1.7">@Model.Descripcion</p>
                 }
 
-                <div class="d-flex gap-3 flex-wrap" style="margin-top:20px">
-                    <div style="background:var(--gray-50);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1;min-width:140px;text-align:center">
-                        <small style="color:var(--text-soft);font-size:.78rem;display:block">Stock disponible</small>
-                        <strong style="font-size:1.2rem;color:@(disponible ? "var(--primary)" : "#dc2626")">
-                            @stock @Model.UnidadMedida
-                        </strong>
-                    </div>
-                    <div style="background:var(--gray-50);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1;min-width:140px;text-align:center">
-                        <small style="color:var(--text-soft);font-size:.78rem;display:block">Stock mínimo</small>
-                        <strong style="font-size:1.2rem">@Model.StockMinimo</strong>
-                    </div>
-                </div>
-
                 <div style="margin-top:24px">
                     @if (disponible)
                     {
@@ -119,9 +106,9 @@
                                     class="btn btn-sm btn-outline-secondary" style="border:none;border-radius:0;padding:10px 14px;font-size:1rem">
                                 <i class="bi bi-dash"></i>
                             </button>
-                            <input type="number" name="cantidad" value="1" min="1" max="@stock"
+                            <input type="number" name="cantidad" value="1" min="1"
                                    class="form-control text-center" style="width:60px;border:none;border-radius:0;font-weight:700;font-size:1rem" />
-                            <button type="button" onclick="var inp=this.previousElementSibling;var v=parseInt(inp.value);if(v<@stock)inp.value=v+1"
+                            <button type="button" onclick="var inp=this.previousElementSibling;var v=parseInt(inp.value);inp.value=v+1"
                                     class="btn btn-sm btn-outline-secondary" style="border:none;border-radius:0;padding:10px 14px;font-size:1rem">
                                 <i class="bi bi-plus"></i>
                             </button>

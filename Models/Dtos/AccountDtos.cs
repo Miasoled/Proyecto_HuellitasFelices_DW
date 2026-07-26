@@ -26,3 +26,11 @@ public class UsuarioConRolesDto
     public bool EmailConfirmed { get; set; }
     public IList<string> Roles { get; set; } = new List<string>();
 }
+
+public class EditarRolesUsuarioViewModel
+{
+    public string UserId { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public List<string> RolesSeleccionados { get; set; } = new();
+    public List<string> RolesDisponibles { get; set; } = new();
+}

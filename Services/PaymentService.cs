@@ -195,6 +195,42 @@ public class PaymentService : IPaymentService
                             });
                         }
                     }
+                    else if (detallesExistentes == 0)
+                    {
+                        // Las compras de tienda ya reservaron el inventario al iniciar el pago.
+                        // Esa reserva identifica exactamente los productos y cantidades vendidos.
+                        var productosReservados = await _context.MovimientosInventario
+                            .Where(m => m.TipoMovimiento == "Reserva" &&
+                                m.Referencia == $"Venta-{pago.Venta.Id}")
+                            .GroupBy(m => m.ProductoId)
+                            .Select(grupo => new
+                            {
+                                ProductoId = grupo.Key,
+                                Cantidad = grupo.Sum(m => m.Cantidad)
+                            })
+                            .ToListAsync();
+
+                        var idsProductos = productosReservados.Select(r => r.ProductoId).ToList();
+                        var precios = await _context.Productos
+                            .Where(p => idsProductos.Contains(p.Id))
+                            .Select(p => new { p.Id, p.PrecioVenta })
+                            .ToDictionaryAsync(p => p.Id, p => p.PrecioVenta);
+
+                        foreach (var reserva in productosReservados)
+                        {
+                            if (!precios.TryGetValue(reserva.ProductoId, out var precioUnitario))
+                                throw new InvalidOperationException(
+                                    $"No se encontró el producto reservado {reserva.ProductoId} para la venta {pago.Venta.Id}.");
+
+                            _context.DetallesVenta.Add(new DetalleVenta
+                            {
+                                VentaId = pago.Venta.Id,
+                                ProductoId = reserva.ProductoId,
+                                Cantidad = reserva.Cantidad,
+                                PrecioUnitario = precioUnitario
+                            });
+                        }
+                    }
 
                     if (pago.Venta.Consulta != null)
                     {
@@ -215,7 +251,11 @@ public class PaymentService : IPaymentService
                 {
                     var detalle = pago.Venta.Consulta?.Medicamentos != null
                         ? string.Join(", ", pago.Venta.Consulta.Medicamentos.Select(m => m.Producto?.Nombre ?? ""))
-                        : "Consulta veterinaria";
+                        : string.Join(", ", await _context.DetallesVenta
+                            .Where(dv => dv.VentaId == pago.Venta.Id)
+                            .Include(dv => dv.Producto)
+                            .Select(dv => dv.Producto!.Nombre)
+                            .ToListAsync());
 
                     await _emailService.EnviarVentaAprobadaAsync(
                         pago.Dueno.Email,
@@ -278,7 +318,7 @@ public class PaymentService : IPaymentService
         return pago;
     }
 
-    public async Task<Pago?> CancelarPagoAsync(int pagoId)
+    public async Task<Pago?> CancelarPagoAsync(int pagoId, bool cancelarEnPasarela = true)
     {
         var pago = await _context.Pagos
             .Include(p => p.Dueno)
@@ -289,10 +329,16 @@ public class PaymentService : IPaymentService
         var gateway = _gateways.FirstOrDefault(g =>
             g.ProviderName.Equals(pago.ProveedorPago, StringComparison.OrdinalIgnoreCase));
 
-        if (gateway != null && !string.IsNullOrEmpty(pago.TokenPasarela))
+        if (cancelarEnPasarela && gateway != null && !string.IsNullOrEmpty(pago.TokenPasarela))
         {
             var result = await gateway.CancelPaymentAsync(pago.TokenPasarela);
             pago.EstadoExterno = result.Estado;
+        }
+        else if (!cancelarEnPasarela)
+        {
+            // Una orden abandonada no debe bloquear la devolución del stock local.
+            // La pasarela expirará la orden no capturada por su propio ciclo de vida.
+            pago.EstadoExterno = "expired";
         }
 
         pago.Estado = "Cancelado";

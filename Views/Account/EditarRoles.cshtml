@@ -1,0 +1,41 @@
+@model HuellitasFelices.Models.Dtos.EditarRolesUsuarioViewModel
+@{ ViewData["Title"] = "Editar roles"; }
+
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+            <li class="breadcrumb-item"><a asp-action="Usuarios">Usuarios</a></li>
+            <li class="breadcrumb-item active">Roles</li>
+        </ol></nav>
+        <h1><i class="bi bi-shield-gear me-2"></i>Editar roles</h1>
+    </div>
+</div>
+
+<div class="content-wrapper"><div class="container"><div class="row justify-content-center"><div class="col-lg-6">
+    <div class="hf-card">
+        <div class="hf-card-header"><i class="bi bi-person-badge me-2"></i>@Model.Email</div>
+        <div class="card-body p-4">
+            <form asp-action="EditarRoles" method="post">
+                <input asp-for="UserId" type="hidden" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3"></div>
+                <p class="text-muted">Selecciona los permisos que tendrá este usuario.</p>
+                <div class="d-grid gap-2 mb-4">
+                    @foreach (var rol in Model.RolesDisponibles)
+                    {
+                        var seleccionado = Model.RolesSeleccionados.Contains(rol);
+                        <label class="border rounded-3 p-3 d-flex align-items-center gap-2" style="cursor:pointer">
+                            <input class="form-check-input m-0" type="checkbox" name="RolesSeleccionados" value="@rol" checked="@seleccionado" />
+                            <span class="fw-semibold"><i class="bi bi-shield-check text-primary me-1"></i>@rol</span>
+                        </label>
+                    }
+                </div>
+                <span asp-validation-for="RolesSeleccionados" class="text-danger d-block mb-3"></span>
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn-hf-primary"><i class="bi bi-check-lg"></i> Guardar roles</button>
+                    <a asp-action="Usuarios" class="btn-hf-outline">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div></div></div></div>
