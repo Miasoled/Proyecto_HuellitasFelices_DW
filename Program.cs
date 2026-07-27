@@ -42,19 +42,20 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 .AddDefaultTokenProviders()
 .AddRoles<IdentityRole>();
 
-// Autenticación externa con Google
-builder.Services.AddAuthentication()
-    .AddGoogle(options =>
+// Autenticación externa con Google (opcional)
+var authentication = builder.Services.AddAuthentication();
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(googleClientId) &&
+    !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    authentication.AddGoogle(options =>
     {
-        var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
-        var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-        if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
-        {
-            options.ClientId = googleClientId;
-            options.ClientSecret = googleClientSecret;
-            options.CallbackPath = "/signin-google";
-        }
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+        options.CallbackPath = "/signin-google";
     });
+}
 
 // Configurar rutas de login
 builder.Services.ConfigureApplicationCookie(options =>
@@ -74,22 +75,25 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddHostedService<EmailWorker>();
+var appRole = builder.Configuration["APP_ROLE"]?.ToLowerInvariant() ?? "all";
+if (appRole is "all" or "worker")
+    builder.Services.AddHostedService<EmailWorker>();
 
 // ── Sesión distribuida + Data Protection (Redis en Docker Swarm) ──
 var redisUrl = builder.Configuration["REDIS_URL"];
 if (!string.IsNullOrEmpty(redisUrl))
 {
+    var redisConfiguration = $"{redisUrl},abortConnect=false";
     builder.Services.AddStackExchangeRedisCache(options =>
     {
-        options.Configuration = redisUrl;
+        options.Configuration = redisConfiguration;
         options.InstanceName = "Huellitas_";
     });
 
     // Data Protection compartido entre réplicas (clave para MFA/TOTP)
     builder.Services.AddDataProtection()
         .PersistKeysToStackExchangeRedis(
-            ConnectionMultiplexer.Connect(redisUrl), "Huellitas-DataProtection-Keys")
+            ConnectionMultiplexer.Connect(redisConfiguration), "Huellitas-DataProtection-Keys")
         .SetApplicationName("HuellitasFelices");
 }
 else
@@ -131,11 +135,13 @@ builder.Services.Configure<PayPhoneSettings>(builder.Configuration.GetSection("P
 builder.Services.AddHttpClient<IPaymentGateway, PayPalPaymentGateway>();
 builder.Services.AddHttpClient<IPaymentGateway, PayPhonePaymentGateway>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddHostedService<PaymentExpirationWorker>();
+if (appRole is "all" or "worker")
+    builder.Services.AddHostedService<PaymentExpirationWorker>();
 
 // MVC
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -154,6 +160,7 @@ app.UseSession();
 
 app.MapStaticAssets();
 app.MapRazorPages();
+app.MapHealthChecks("/health");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
@@ -166,10 +173,18 @@ using (var scope = app.Services.CreateScope())
     if (app.Configuration.GetValue<bool>("Database:AutoMigrate"))
         await context.Database.MigrateAsync();
 
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await SeedData.Initialize(context, userManager, roleManager);
-    await CargaMasivaService.GenerarDatos(context);
+    if (app.Configuration.GetValue<bool>("Database:Seed"))
+    {
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        await SeedData.Initialize(context, userManager, roleManager);
+
+        if (app.Configuration.GetValue<bool>("Database:GenerateMassData"))
+            await CargaMasivaService.GenerarDatos(context);
+    }
 }
+
+if (appRole == "migrate")
+    return;
 
 app.Run();

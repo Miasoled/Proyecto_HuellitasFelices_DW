@@ -34,14 +34,6 @@ namespace HuellitasFelices.Migrations
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "NumeroPago",
-                table: "Pagos",
-                type: "character varying(20)",
-                maxLength: 20,
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AddColumn<string>(
                 name: "EliminadoPor",
                 table: "Mascotas",
                 type: "character varying(100)",

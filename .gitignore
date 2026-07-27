@@ -1,7 +1,4 @@
 .env
-.dockerignore
-Dockerfile
-compose.yaml
 bin/
 obj/
 .vs/

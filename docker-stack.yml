@@ -1,0 +1,215 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: huellitas_felices
+      POSTGRES_USER: huellitas_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U huellitas_user -d huellitas_felices"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 2s
+      placement:
+        constraints:
+          - node.role == manager
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 2s
+
+  migrate:
+    image: ${HUELLITAS_IMAGE:-huellitasfelices:latest}
+    environment:
+      APP_ROLE: migrate
+      ASPNETCORE_ENVIRONMENT: Production
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: huellitas_felices
+      POSTGRES_USER: huellitas_user
+      Database__AutoMigrate: "true"
+      Database__Seed: "true"
+      Database__GenerateMassData: "${GENERATE_MASS_DATA:-false}"
+    secrets:
+      - postgres_password
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+
+  web:
+    image: ${HUELLITAS_IMAGE:-huellitasfelices:latest}
+    environment:
+      APP_ROLE: web
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: huellitas_felices
+      POSTGRES_USER: huellitas_user
+      Database__AutoMigrate: "false"
+      Database__Seed: "false"
+      REDIS_URL: redis:6379
+      AI__BaseUrl: http://ollama:11434
+      AI__ModelName: qwen2.5:0.5b
+      AI__TimeoutSeconds: "60"
+      EmailSettings__SmtpServer: smtp.gmail.com
+      EmailSettings__SmtpPort: "587"
+      EmailSettings__SenderName: Huellitas Felices
+      PaymentSettings__PayPal__BaseUrl: https://api-m.sandbox.paypal.com
+      PaymentSettings__PayPal__ReturnUrl: "${PUBLIC_URL:-http://localhost:8081}/Payment/Success"
+      PaymentSettings__PayPal__CancelUrl: "${PUBLIC_URL:-http://localhost:8081}/Payment/Cancel"
+      PayPhone__BaseUrl: https://pay.payphonetodoesposible.com
+    secrets:
+      - postgres_password
+      - smtp_password
+      - email_sender_email
+      - paypal_client_id
+      - paypal_client_secret
+      - payphone_token
+      - payphone_store_id
+    ports:
+      - "8081:8080"
+    networks:
+      - frontend
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 2s
+
+  email-worker:
+    image: ${HUELLITAS_IMAGE:-huellitasfelices:latest}
+    environment:
+      APP_ROLE: worker
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: huellitas_felices
+      POSTGRES_USER: huellitas_user
+      Database__AutoMigrate: "false"
+      Database__Seed: "false"
+      REDIS_URL: redis:6379
+      EmailSettings__SmtpServer: smtp.gmail.com
+      EmailSettings__SmtpPort: "587"
+      EmailSettings__SenderName: Huellitas Felices
+    secrets:
+      - postgres_password
+      - smtp_password
+      - email_sender_email
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 2s
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        reservations:
+          memory: 1G
+
+  ollama-init:
+    image: curlimages/curl:latest
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        until curl -sf http://ollama:11434/api/tags; do sleep 5; done;
+        curl -sf http://ollama:11434/api/pull
+        -H 'Content-Type: application/json'
+        -d '{"name":"qwen2.5:0.5b","stream":false}'
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: none
+
+networks:
+  frontend:
+    driver: overlay
+  backend:
+    driver: overlay
+
+volumes:
+  postgres_data:
+  redis_data:
+  ollama_data:
+
+secrets:
+  postgres_password:
+    name: huellitas_postgres_password
+    external: true
+  smtp_password:
+    name: huellitas_email_password
+    external: true
+  email_sender_email:
+    name: huellitas_email_sender_email
+    external: true
+  paypal_client_id:
+    name: huellitas_paypal_client_id
+    external: true
+  paypal_client_secret:
+    name: huellitas_paypal_client_secret
+    external: true
+  payphone_token:
+    name: huellitas_payphone_token
+    external: true
+  payphone_store_id:
+    name: huellitas_payphone_store_id
+    external: true

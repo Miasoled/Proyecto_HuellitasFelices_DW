@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: huellitas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: huellitas-web
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Database__AutoMigrate: "true"
+      Database__Seed: "true"
+      Database__GenerateMassData: "false"
+      DataProtection__KeysPath: /app/keys
+    ports:
+      - "8081:8080"
+    volumes:
+      - dataprotection_keys:/app/keys
+
+volumes:
+  postgres_data:
+  dataprotection_keys:
