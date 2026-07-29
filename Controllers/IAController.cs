@@ -41,20 +41,26 @@ public class IAController : Controller
         {
             var contexto = await _contextProvider.ObtenerContextoAsync(peticion.Prompt);
 
-            var promptCompleto = $@"Eres el asistente inteligente de la clinica veterinaria Huellitas Felices.
-Responde de forma clara, profesional y en español. Sé conciso y útil.
+            var promptCompleto = $@"Eres el asistente de la clinica Huellitas Felices. Puedes responder sobre salud de mascotas Y sobre datos de la clinica (ventas, inventario, consultas, clientes, etc). Si el contexto incluye datos de la clinica, USALOS para responder directamente. Nunca digas que no puedes o que no tienes informacion.
 
-INSTRUCCIONES:
-- Si el contexto incluye datos de la clinica, úsalos para responder.
-- Si el contexto incluye CUIDADO GENERAL, usa esa información para dar consejos prácticos y accionables.
-- Si el contexto indica que no hay datos, responde con un mensaje amable y sugiere consultar al veterinario.
-- Siempre termina recomendando acudir al veterinario para un diagnóstico profesional.
-- No inventes nombres de medicamentos ni dosis. No uses información que no esté en el contexto.
+Para preguntas de SINTOMAS de mascota, responde con este formato:
 
-Contexto disponible: {contexto}
+Posibles causas: puede ser por alergia, hongos, estres o problemas hormonales.
+Nivel de urgencia: bajo.
+Que hacer ahora: revise si hay rascado, manchas rojas o cambios en la alimentacion. Mantenga la higiene del pelaje y observe por unos dias.
+Señales de alarma: si hay perdida de pelo en zonas grandes, piel irritada o si no come en 24 horas, acuda al veterinario.
+Este analisis es orientativo. Para un diagnostico definitivo, acuda a su veterinario.
 
-Pregunta del usuario: {peticion.Prompt}
+Para preguntas sobre la CLINICA (ventas, inventario, mascotas, consultas, etc), responde directamente con los datos que te da el contexto. Ejemplo: 'Ultimas ventas: el 15/07 se vendio Royal Canin x2 por $45.00'.
 
+REGLAS:
+- Si el contexto contiene datos de la clinica, RESPONDE con esos datos. NUNCA digas que no puedes proporcionar informacion.
+- NUNCA hagas preguntas al usuario.
+- Solo pon el disclaimer del veterinario cuando la pregunta sea sobre salud o sintomas.
+- Escribe en texto plano. Sin asteriscos ni negritas.
+
+Contexto: {contexto}
+Pregunta: {peticion.Prompt}
 Respuesta:";
 
             var respuesta = await _ai.GenerateAsync(promptCompleto);

@@ -418,4 +418,5 @@ C:\Users\User\Desktop\HuellitasFelices\obj\Release\net10.0\refint\HuellitasFelic
 C:\Users\User\Desktop\HuellitasFelices\obj\Release\net10.0\HuellitasFelices.pdb
 C:\Users\User\Desktop\HuellitasFelices\obj\Release\net10.0\HuellitasFelices.genruntimeconfig.cache
 C:\Users\User\Desktop\HuellitasFelices\obj\Release\net10.0\ref\HuellitasFelices.dll
-C:\Users\User\Desktop\HuellitasFelices\obj\Release\net10.0\compressed\nqdo4othwe-{0}-4q14wy6yfg-4q14wy6yfg.gz
+C:\Users\User\Desktop\HuellitasFelices\obj\Release\net10.0\compressed\nqdo4othwe-{0}-irpulqsle1-irpulqsle1.gz
+C:\Users\User\Desktop\HuellitasFelices\obj\Release\net10.0\compressed\1okw5r3oty-{0}-mf5u78cbyc-mf5u78cbyc.gz

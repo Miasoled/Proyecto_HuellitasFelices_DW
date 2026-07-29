@@ -43,7 +43,7 @@
     <div class="hf-card"><div class="table-responsive">
         <table class="hf-table">
             <thead><tr>
-                <th>Código</th><th>Nombre</th><th>Categoría</th><th>P. Compra</th><th>P. Venta</th><th>Stock actual</th><th>Stock mín.</th><th style="width:130px">Acciones</th>
+                <th>Código</th><th>Nombre</th><th>Categoría</th><th>P. Compra</th><th>P. Venta</th><th>Stock total</th><th>Sede principal</th><th>Otras sedes</th><th>Stock mín.</th><th style="width:130px">Acciones</th>
             </tr></thead>
             <tbody>
                 @foreach (var item in Model)
@@ -54,11 +54,38 @@
                         <td>@item.Categoria?.Nombre</td>
                         <td>$@item.PrecioCompra.ToString("N2")</td>
                         <td>$@item.PrecioVenta.ToString("N2")</td>
-                        @{ var stockTotal = item.Inventarios.Sum(i => i.StockActual); }
+                        @{
+                            var stockTotal = item.Inventarios.Sum(i => i.StockActual);
+                            var stockPrincipal = item.Inventarios
+                                .Where(i => i.Sucursal?.EsPrincipal == true)
+                                .Sum(i => i.StockActual);
+                            var otrasSedes = item.Inventarios
+                                .Where(i => i.Sucursal?.EsPrincipal != true)
+                                .OrderBy(i => i.Sucursal?.Nombre)
+                                .ToList();
+                        }
                         <td>
                             <span class="@(stockTotal <= item.StockMinimo ? "badge-danger-hf" : "badge-success-hf")">
                                 @stockTotal @item.UnidadMedida
                             </span>
+                        </td>
+                        <td><strong>@stockPrincipal @item.UnidadMedida</strong></td>
+                        <td>
+                            @if (otrasSedes.Count == 0)
+                            {
+                                <span class="text-muted">Sin stock en otras sedes</span>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-column gap-1">
+                                    @foreach (var inventario in otrasSedes)
+                                    {
+                                        <span class="badge text-bg-light border text-dark">
+                                            @(inventario.Sucursal?.Nombre ?? "Sucursal"): @inventario.StockActual @item.UnidadMedida
+                                        </span>
+                                    }
+                                </div>
+                            }
                         </td>
                         <td>@item.StockMinimo</td>
                         <td><div class="d-flex gap-1">

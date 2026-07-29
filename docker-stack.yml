@@ -86,8 +86,8 @@ services:
       EmailSettings__SmtpPort: "587"
       EmailSettings__SenderName: Huellitas Felices
       PaymentSettings__PayPal__BaseUrl: https://api-m.sandbox.paypal.com
-      PaymentSettings__PayPal__ReturnUrl: "${PUBLIC_URL:-http://localhost:8081}/Payment/Success"
-      PaymentSettings__PayPal__CancelUrl: "${PUBLIC_URL:-http://localhost:8081}/Payment/Cancel"
+      PaymentSettings__PayPal__ReturnUrl: "${PUBLIC_URL:-http://localhost:8090}/Payment/Success"
+      PaymentSettings__PayPal__CancelUrl: "${PUBLIC_URL:-http://localhost:8090}/Payment/Cancel"
       PayPhone__BaseUrl: https://pay.payphonetodoesposible.com
     secrets:
       - postgres_password
@@ -98,7 +98,10 @@ services:
       - payphone_token
       - payphone_store_id
     ports:
-      - "8081:8080"
+      - target: 8080
+        published: 8090
+        protocol: tcp
+        mode: ingress
     networks:
       - frontend
       - backend

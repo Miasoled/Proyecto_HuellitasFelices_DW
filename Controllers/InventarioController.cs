@@ -28,6 +28,7 @@ public class InventarioController : Controller
                 .AsNoTracking()
                 .Include(p => p.Categoria)
                 .Include(p => p.Inventarios)
+                    .ThenInclude(i => i.Sucursal)
                 .Where(p => p.Activo)
                 .OrderBy(p => p.Nombre)
                 .AsQueryable();
