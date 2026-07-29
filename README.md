@@ -216,7 +216,8 @@ AnimalAdopcion 1 ─── N SolicitudAdopcion
 
 Diagrama histórico del modelo:
 
-<img width="1380" height="1471" alt="Diagrama de base de datos de Huellitas Felices" src="https://github.com/user-attachments/assets/b9eec9b0-996b-4a31-8c38-196250e23c22" />
+ <img width="3463" height="3751" alt="Untitled" src="https://github.com/user-attachments/assets/7f9deb8d-5237-4287-aa5b-31bd8e4c5e04" />
+
 
 ## Optimización y paginación
 
